@@ -2,18 +2,15 @@
 
 import { NextResponse } from 'next/server';
 
-interface CheckJsonRequestBody {
-    url: string;
-}
-
 interface CheckJsonResponse {
     isJson: boolean;
     error?: string;
 }
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
     try {
-        const { url } = (await request.json()) as CheckJsonRequestBody;
+        const { searchParams } = new URL(request.url);
+        const url = searchParams.get('url');
 
         if (!url) {
             return NextResponse.json(

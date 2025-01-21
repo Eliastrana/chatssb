@@ -9,13 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "axios": "^1.7.9",
     "d3": "^7.9.0",
     "linkify-react": "^4.2.0",
     "linkifyjs": "^4.2.0",
     "next": "15.1.4",
     "openai": "^4.78.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^19.0.0",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

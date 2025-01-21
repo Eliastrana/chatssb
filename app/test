@@ -1,0 +1,72 @@
+curl -X POST \
+     -H "Content-Type: application/json" \
+     -d '{
+       "query": [
+         {
+           "code": "Skadested",
+           "selection": {
+             "filter": "item",
+             "values": [
+               "01",
+               "02",
+               "03",
+               "04",
+               "05",
+               "06",
+               "07",
+               "08",
+               "09",
+               "10"
+             ]
+           }
+         },
+         {
+           "code": "Aktivitet",
+           "selection": {
+             "filter": "item",
+             "values": [
+               "01",
+               "02",
+               "03",
+               "04",
+               "05"
+             ]
+           }
+         },
+         {
+           "code": "ContentsCode",
+           "selection": {
+             "filter": "item",
+             "values": [
+               "Dodsfall"
+             ]
+           }
+         },
+         {
+           "code": "Tid",
+           "selection": {
+             "filter": "item",
+             "values": [
+               "1996",
+               "1997",
+               "1998",
+               "1999",
+               "2000",
+               "2001",
+               "2002",
+               "2003",
+               "2004",
+               "2005",
+               "2006",
+               "2007",
+               "2008",
+               "2009"
+             ]
+           }
+         }
+       ],
+       "response": {
+         "format": "json-stat2"
+       }
+     }' \
+     https://data.ssb.no/api/v0/no/table/03516
