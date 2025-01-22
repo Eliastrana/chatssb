@@ -2,10 +2,10 @@
 
 import { NextResponse } from 'next/server';
 
-interface CheckJsonResponse {
-    isJson: boolean;
-    error?: string;
-}
+// interface CheckJsonResponse {
+//     isJson: boolean;
+//     error?: string;
+// }
 
 export async function GET(request: Request) {
     try {
@@ -23,7 +23,8 @@ export async function GET(request: Request) {
         let parsedUrl: URL;
         try {
             parsedUrl = new URL(url);
-        } catch (err) {
+        } catch {
+            // Removed `err` since we don't use it
             return NextResponse.json(
                 { isJson: false, error: 'Invalid URL format.' },
                 { status: 400 }
@@ -51,7 +52,8 @@ export async function GET(request: Request) {
         try {
             await response.json();
             return NextResponse.json({ isJson: true });
-        } catch (err) {
+        } catch {
+            // Removed `err` since we don't use it
             return NextResponse.json({ isJson: false, error: 'Response is not valid JSON.' });
         }
     } catch (error: unknown) {

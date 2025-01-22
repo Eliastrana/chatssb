@@ -1,6 +1,9 @@
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
+
+    type?: 'json';
+    jsonData?: unknown;
 }
 
 export interface Link {

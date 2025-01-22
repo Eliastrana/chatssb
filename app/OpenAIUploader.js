@@ -8,7 +8,7 @@ const openai = new OpenAI({ apiKey: "API NØKKEL HER" });
 
 async function main() {
     const file = await openai.files.create({
-        file: fs.createReadStream("structure_jsonl.jsonl"),
+        file: fs.createReadStream("alltables.jsonl"),
         purpose: "fine-tune"
     });
 

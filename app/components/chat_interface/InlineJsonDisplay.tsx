@@ -1,17 +1,14 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
-interface JsonDisplayProps {
+interface InlineJsonDisplayProps {
     /** The URL to fetch and display as JSON. */
     url: string;
-    /**
-     * Callback triggered when the user wants to close the modal,
-     * e.g. clicks the background overlay or "X" button.
-     */
+    /** Called when the user wants to hide/close this inline JSON panel. */
     onClose: () => void;
 }
 
-const JsonDisplay: React.FC<JsonDisplayProps> = ({ url, onClose }) => {
+const InlineJsonDisplay: React.FC<InlineJsonDisplayProps> = ({ url, onClose }) => {
     const [jsonData, setJsonData] = useState<unknown>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,7 +23,6 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ url, onClose }) => {
                 if (!response.ok) {
                     throw new Error(`Failed to fetch JSON data. Status: ${response.status}`);
                 }
-
                 const data = await response.json();
                 setJsonData(data);
             } catch (err: unknown) {
@@ -44,7 +40,6 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ url, onClose }) => {
         fetchJson();
     }, [url]);
 
-    // Decide what to display in the modal content
     let content: React.ReactNode;
     if (loading) {
         content = <p>Loading JSON data...</p>;
@@ -59,27 +54,17 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ url, onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Dimmed background overlay. Clicking it calls onClose */}
-            <div
-                className="absolute inset-0 bg-black bg-opacity-50"
+        <div className="border border-gray-300 p-2 rounded bg-white mt-2 relative">
+            {/* Close button in top-right, inside the bubble */}
+            <button
                 onClick={onClose}
-            />
-
-            {/* The modal "box" itself */}
-            <div className="relative bg-white p-4 rounded shadow-md w-full max-w-2xl max-h-[80vh] overflow-auto z-50">
-                {/* Close ("X") button in top-right corner */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                >
-                    &times;
-                </button>
-
-                {content}
-            </div>
+                className="absolute top-1 right-2 text-gray-500 hover:text-gray-700"
+            >
+                &times;
+            </button>
+            {content}
         </div>
     );
 };
 
-export default JsonDisplay;
+export default InlineJsonDisplay;

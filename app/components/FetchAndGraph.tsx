@@ -1,9 +1,3 @@
-/*
-Denne er foreløpig ikke i bruk, men tanken var at denne filen tar i mot en
-URL og kjører en en CURL på den slik at den får returnert data, og så skal
-ChartComponent ta i mot disse verdiene og visualisere de.
- */
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,11 +5,17 @@ import ChartComponent from "./ChartComponent";
 
 interface FetchAndGraphProps {
     url: string;
-    queryBody: any;
+    queryBody: unknown;
+}
+
+// Define an interface for the expected server response shape
+interface ApiData {
+    labels?: string[];
+    values?: number[];
 }
 
 export default function FetchAndGraph({ url, queryBody }: FetchAndGraphProps) {
-    const [fetchedData, setFetchedData] = useState<any>(null);
+    // Removed 'fetchedData' since it was never used
     const [parsedData, setParsedData] = useState<{ labels: string[]; values: number[] } | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -39,8 +39,8 @@ export default function FetchAndGraph({ url, queryBody }: FetchAndGraphProps) {
                 }
 
                 const data = await response.json();
-                setFetchedData(data);
 
+                // Use a safe parsing function to handle any shape of "data"
                 const chartData = parseData(data);
                 setParsedData(chartData);
             } catch (err) {
@@ -58,25 +58,22 @@ export default function FetchAndGraph({ url, queryBody }: FetchAndGraphProps) {
         fetchData();
     }, [url, queryBody]);
 
-    function parseData(apiData: any) {
-
-
-        if (apiData?.labels && apiData?.values) {
+    function parseData(apiData: unknown): { labels: string[]; values: number[] } {
+        // Basic type guard to check if apiData is an object
+        if (apiData !== null && typeof apiData === "object") {
+            // Cast to ApiData so we can access labels and values
+            const typedData = apiData as ApiData;
             return {
-                labels: apiData.labels,
-                values: apiData.values,
+                labels: Array.isArray(typedData.labels) ? typedData.labels : [],
+                values: Array.isArray(typedData.values) ? typedData.values : [],
             };
         }
-
         return { labels: [], values: [] };
     }
 
     if (!url || !queryBody) return null;
-
     if (loading) return <div>Loading data from {url}...</div>;
     if (error) return <div className="text-red-500">Error: {error}</div>;
-
-
 
     return (
         <div>
