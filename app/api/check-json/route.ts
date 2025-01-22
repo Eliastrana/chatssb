@@ -19,22 +19,18 @@ export async function GET(request: Request) {
             );
         }
 
-        // Validate URL
         let parsedUrl: URL;
         try {
             parsedUrl = new URL(url);
         } catch {
-            // Removed `err` since we don't use it
             return NextResponse.json(
                 { isJson: false, error: 'Invalid URL format.' },
                 { status: 400 }
             );
         }
 
-        // Fetch the URL
         const response = await fetch(parsedUrl.toString());
 
-        // Check if response is OK
         if (!response.ok) {
             return NextResponse.json(
                 { isJson: false, error: `Failed to fetch URL. Status: ${response.status}` },
@@ -42,18 +38,15 @@ export async function GET(request: Request) {
             );
         }
 
-        // Check Content-Type header
         const contentType = response.headers.get('Content-Type');
         if (contentType && contentType.includes('application/json')) {
             return NextResponse.json({ isJson: true });
         }
 
-        // Alternatively, attempt to parse JSON
         try {
             await response.json();
             return NextResponse.json({ isJson: true });
         } catch {
-            // Removed `err` since we don't use it
             return NextResponse.json({ isJson: false, error: 'Response is not valid JSON.' });
         }
     } catch (error: unknown) {
