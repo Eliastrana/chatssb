@@ -1,6 +1,8 @@
 "use client";
 import Image from 'next/image';
 import { useEffect } from 'react';
+import "./chat.css"
+
 
 interface TitleSectionProps {
     showTitle: boolean;
@@ -11,7 +13,7 @@ export default function TitleSection({ showTitle, setShowTitle }: TitleSectionPr
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowTitle(false);
-        }, 3000);
+        }, 1000);
 
         return () => clearTimeout(timer);
     }, [setShowTitle]);
