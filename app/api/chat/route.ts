@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import {ChatOpenAI, OpenAI} from '@langchain/openai';
+import { OpenAI} from '@langchain/openai';
 import { BufferMemory } from 'langchain/memory';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
@@ -50,14 +50,19 @@ export async function POST(request: Request) {
 
         // Build our system prompt
         const systemPrompt = `
-            Du skal finne den mest relevante tabellen som vi kan hente fra følgende api:
+            Du skal finne den/de mest relevante kortnavnene som kan legges på denne url-en
             'https://data.ssb.no/api/v0/no/table/'
+            
+            API-strutkeren har hovedemne -> delemne -> Statistikk
+            Hvert hovedemne har en emnekode, hvert delemne har en emnekode og hver Statistikk har et kortnavn.
 
-            Hver tabell har en id og vi kan hente tabellen med følgende url:
-            https://data.ssb.no/api/v0/no/table/<kortnavn>
+            Du skal hente ut den/de mest relevante kortnavnene med strukturen til API-en og svaret ditt må være formatert slik:
+            https://data.ssb.no/api/v0/no/table/<emnekode>/<emnekode>/<kortnavn>
+            
+            Du skal aldri hente ut mer enn 5 url-er.
             
             Du skal bare returnere url-er som er relevante til forespørselen.
-            Bruk tabellenes beskrivelse for å identifisere hvilket tabeller som passer best.
+            Bruk titlene til å identifisere hvilket kortnavn som passer best.
                         
             Bare returner url. Har du flere url-er så skal de være skilt med en ny linje. 
             Ingen andre tegn skal inkluderes i svaret.
@@ -106,6 +111,7 @@ export async function POST(request: Request) {
 
         // Extract the bot's message
         const botMessage = response || 'No response from the bot.';
+        console.log(botMessage)
 
         // Save the context to memory
         await memory.saveContext({ input: message }, { output: botMessage });

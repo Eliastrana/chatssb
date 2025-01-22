@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { find } from 'linkifyjs';
+import TitleSection from './components/chat_interface/TitleSection';
 import ChatMessages from './components/chat_interface/ChatMessages';
 import ChatInput from './components/chat_interface/ChatInput';
-import TitleSection from './components/chat_interface/TitleSection';
-import { Message, Link } from './types';
-import './styles/chat.css';
+
+import { Message } from './types';
+import { extractUrls, filterJsonLinks } from '@/app/utils/urlExtraction';
+import { fetchAndPostJson, fetchSsbTable } from '@/app/services/api';
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -22,48 +23,61 @@ export default function Home() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 1) Called if we want to show JSON data for a URL (either auto or via button)
-    //    Instead of a full-screen JSON, we add a new BOT message with JSON data.
-    // ───────────────────────────────────────────────────────────────────────────
+    // Brukes når man vil vise JSON data for en URL
     const handleActivateJson = async (url: string) => {
-        console.log('Fetching JSON for:', url);
-        setIsLoading(true);
+        console.log(`handleActivateJson → ${url}`);
 
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Feil ved henting av JSON. Status: ${response.status}`);
-            }
-            const data = await response.json();
-
-            // Insert a new bot message with the JSON
+            const postData = await fetchAndPostJson(url);
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: 'bot',
                     type: 'json',
-                    text: '', // not used since type= json
-                    jsonData: data,
+                    text: '',
+                    jsonUrl: url,
+                    jsonData: postData,
                 },
             ]);
-        } catch (err) {
-            console.error('Error fetching JSON:', err);
+        } catch (error) {
+            console.error('Error in handleActivateJson:', error);
             setMessages((prev) => [
                 ...prev,
                 {
                     sender: 'bot',
-                    text: 'Whoops, her fant vi ikke det du lette etter 😩',
+                    text: 'Beklager, noe gikk galt under henting av data.',
                 },
             ]);
-        } finally {
-            setIsLoading(false);
         }
     };
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 2) Send user message to the backend, handle single-URL auto JSON
-    // ───────────────────────────────────────────────────────────────────────────
+    // Viser table data basert på tableID
+    async function handleShowTable(tableId: string) {
+        try {
+            const postData = await fetchSsbTable(tableId);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    sender: 'bot',
+                    type: 'json',
+                    text: '',
+                    jsonUrl: `https://data.ssb.no/api/v0/no/table/${tableId}`,
+                    jsonData: postData,
+                },
+            ]);
+        } catch (error) {
+            console.error('Error in handleShowTable:', error);
+            setMessages((prev) => [
+                ...prev,
+                {
+                    sender: 'bot',
+                    text: 'Beklager, vi klarte ikke å finne frem tabellen 😔 👎',
+                },
+            ]);
+        }
+    }
+
+    // Sender brukermelding, bruker: /api/chat/route.ts
     const handleSend = async () => {
         if (!input.trim()) return;
 
@@ -81,38 +95,25 @@ export default function Home() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                setMessages((prev) => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        text: errorData.error || 'Beklager, noe gikk galt. Prøv igjen senere.',
-                    },
-                ]);
-                setError(errorData.error || 'An unexpected error occurred.');
-            } else {
-                const data = await response.json();
-                // Show the bot's text
-                setMessages((prev) => [...prev, { sender: 'bot', text: data.message }]);
+                throw new Error(errorData.error || 'Noe gikk galt.');
+            }
 
-                // Extract & check URLs
-                const extractedUrls = extractUrls(data.message);
-                if (extractedUrls.length > 0) {
-                    // Among them, see which are JSON
-                    const jsonLinks = await filterJsonLinks(extractedUrls);
+            const data = await response.json();
+            setMessages((prev) => [...prev, { sender: 'bot', text: data.message }]);
 
-                    // If exactly one JSON link, auto display it in a new bot message
-                    if (jsonLinks.length === 1) {
-                        handleActivateJson(jsonLinks[0]);
-                    }
-                    // If multiple, the ChatMessages UI will show “Vis JSON” buttons for each
+            const extractedUrls = extractUrls(data.message);
+            if (extractedUrls.length > 0) {
+                const jsonLinks = await filterJsonLinks(extractedUrls);
+                if (jsonLinks.length === 1) {
+                    handleActivateJson(jsonLinks[0]);
                 }
             }
         } catch (error: unknown) {
+            let errMsg = 'En uventet feil oppstod.';
             if (error instanceof Error) {
-                setError(error.message);
-            } else {
-                setError('En uventet feil oppstod.');
+                errMsg = error.message;
             }
+            setError(errMsg);
             setMessages((prev) => [
                 ...prev,
                 { sender: 'bot', text: 'Beklager, noe gikk galt. Prøv igjen senere.' },
@@ -122,74 +123,33 @@ export default function Home() {
         }
     };
 
-    // ───────────────────────────────────────────────────────────────────────────
-    // 3) Standard link extraction & JSON link filtering (unchanged)
-    // ───────────────────────────────────────────────────────────────────────────
-    const extractUrls = (text: string): string[] => {
-        const links = find(text, 'url');
-        return links.map((link: Link) => link.href);
-    };
-
-    const filterJsonLinks = async (urls: string[]): Promise<string[]> => {
-        const jsonUrls: string[] = [];
-        for (const url of urls) {
-            try {
-                const encodedUrl = encodeURIComponent(url);
-                const response = await fetch(`/api/check-json?url=${encodedUrl}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error(`API Error for URL ${url}:`, errorData.error);
-                    continue;
-                }
-
-                const data = await response.json();
-                if (data.isJson) {
-                    jsonUrls.push(url);
-                }
-            } catch (err) {
-                console.error(`Failed to check JSON for URL ${url}:`, err);
-            }
-        }
-        return jsonUrls;
-    };
-
+    // Bare veldig clean komponentbasert layout
     return (
-        <div className="relative flex items-center justify-center min-h-screen p-8 sm:p-20 mb-10">
-            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
+        <div className="relative flex items-center justify-center min-h-screen p-4  mb-10">
+            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>
 
             <div
-                className={`w-[50rem] p-6 flex flex-col transition-opacity duration-500 ${
+                className={`w-full md:w-1/2 flex flex-col transition-opacity duration-500 ${
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
-                style={{ pointerEvents: showTitle ? 'none' : 'auto' }}
             >
                 <ChatMessages
                     messages={messages}
-                    // We don't need jsonUrls anymore (unless your code depends on it)
-                    jsonUrls={[]}
+                    handleShowTable={handleShowTable}
+                    jsonUrls={[]} // Denne brukes ikke nå fordi jeg prøver å omstille fetchen.
                     isLoading={isLoading}
                     messagesEndRef={messagesEndRef}
-                    // Pass in the function to fetch & create new JSON message
                     handleActivateJson={handleActivateJson}
-                    // If you have multiple-URL scenario and want a “send link as message,” you can
-                    // pass a function. But not strictly required for “Vis JSON.”
                     handleUserSelectedLink={(url) => {
-                        // Example if you want to just put the link in the chat:
-                        setMessages((prev) => [
-                            ...prev,
-                            { sender: 'bot', text: url },
-                        ]);
-                        // Then optionally auto fetch JSON
+                        setMessages((prev) => [...prev, {sender: 'bot', text: url}]);
+                        // Denne kan utkommenteres hvis ønsket:
                         // handleActivateJson(url);
                     }}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
             </div>
+
 
             <ChatInput
                 input={input}
