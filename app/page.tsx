@@ -71,7 +71,7 @@ export default function Home() {
                 ...prev,
                 {
                     sender: 'bot',
-                    text: 'Beklager, noe gikk galt under henting av tabellen.',
+                    text: 'Beklager, vi klarte ikke å finne frem tabellen 😔 👎',
                 },
             ]);
         }
@@ -125,11 +125,11 @@ export default function Home() {
 
     // Bare veldig clean komponentbasert layout
     return (
-        <div className="relative flex items-center justify-center min-h-screen p-8 sm:p-20 mb-10">
-            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
+        <div className="relative flex items-center justify-center min-h-screen p-4  mb-10">
+            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>
 
             <div
-                className={`w-[50rem] p-6 flex flex-col transition-opacity duration-500 ${
+                className={`w-full md:w-1/2 flex flex-col transition-opacity duration-500 ${
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
@@ -141,14 +141,15 @@ export default function Home() {
                     messagesEndRef={messagesEndRef}
                     handleActivateJson={handleActivateJson}
                     handleUserSelectedLink={(url) => {
-                        setMessages((prev) => [...prev, { sender: 'bot', text: url }]);
-                        //Denne kan utkommenteres hvis ønsket:
+                        setMessages((prev) => [...prev, {sender: 'bot', text: url}]);
+                        // Denne kan utkommenteres hvis ønsket:
                         // handleActivateJson(url);
                     }}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
             </div>
+
 
             <ChatInput
                 input={input}

@@ -17,20 +17,19 @@ interface ChatMessagesProps {
 
 export default function ChatMessages({
                                          messages,
-                                         jsonUrls,
+                                         //jsonUrls,
                                          isLoading,
                                          messagesEndRef,
                                          handleActivateJson,
-                                         handleUserSelectedLink,
+                                         //handleUserSelectedLink,
                                          handleShowTable,
                                      }: ChatMessagesProps) {
     return (
-        <div className="flex-1 overflow-y-auto mb-4 z-10">
+        <div className="flex-1 overflow-y-auto mb-10 z-10 text-xs md:text-base">
             {messages.map((msg, index) => {
-                // JSON bubble:
                 if (msg.type === 'json') {
                     return (
-                        <div key={index} className="mb-2 flex justify-start">
+                        <div key={index} className="mb-2 md:flex justify-start max-w-full">
                             <div className="flex items-center mr-2">
                                 <Image
                                     src={'/ssb_logosymbol_dark.svg'}
@@ -50,19 +49,15 @@ export default function ChatMessages({
                     );
                 }
 
-                // BOT message:
                 if (msg.sender === 'bot') {
-                    // Chat skal svare med linker, denne leser hver linje og viser linken
-                    // frem i hver sin knapp.
                     const lines = msg.text
                         .split('\n')
                         .map((line) => line.trim())
                         .filter((l) => l.startsWith('http'));
 
-                    // Her visualiseres de hvis den finner mer enn 1 link
                     if (lines.length > 1) {
                         return (
-                            <div key={index} className="mb-2 flex justify-start">
+                            <div key={index} className="mb-2 md:flex justify-start max-w-full">
                                 <div className="flex items-center mr-2">
                                     <Image
                                         src={'/ssb_logosymbol_dark.svg'}
@@ -72,8 +67,9 @@ export default function ChatMessages({
                                         className="min-w-[50px] min-h-[50px]"
                                     />
                                 </div>
-                                <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
-                                    <p className="mb-2 font-bold">Flere tilgjengelige lenker:</p>
+                                <div
+                                    className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
+                                    <h1 className="mb-2">Ser dette ut som noe du leter etter?</h1>
                                     <div className="flex flex-col gap-2">
                                         {lines.map((url, i) => (
                                             <button
@@ -90,12 +86,10 @@ export default function ChatMessages({
                         );
                     }
 
-                    // Her visualiserer den innholdet hvis det bare er en link,
-                    // fordi da trenger den ikke å lede brukeren videre
                     if (lines.length === 1) {
                         const [url] = lines;
                         return (
-                            <div key={index} className="mb-2 flex justify-start">
+                            <div key={index} className="mb-2 md:flex justify-start max-w-full">
                                 <div className="flex items-center mr-2">
                                     <Image
                                         src={'/ssb_logosymbol_dark.svg'}
@@ -105,7 +99,8 @@ export default function ChatMessages({
                                         className="min-w-[50px] min-h-[50px]"
                                     />
                                 </div>
-                                <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
+                                <div
+                                    className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
                                     <a
                                         href={url}
                                         target="_blank"
@@ -125,9 +120,8 @@ export default function ChatMessages({
                         );
                     }
 
-                    // Dette er vanlige tekst respons, og fungerer som "else" i denne situasjonen
                     return (
-                        <div key={index} className="mb-2 flex justify-start">
+                        <div key={index} className="mb-2 md:flex  justify-start max-w-full">
                             <div className="flex items-center mr-2">
                                 <Image
                                     src={'/ssb_logosymbol_dark.svg'}
@@ -137,7 +131,8 @@ export default function ChatMessages({
                                     className="min-w-[50px] min-h-[50px]"
                                 />
                             </div>
-                            <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
+                            <div
+                                className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
                                 <Linkify
                                     options={{
                                         defaultProtocol: 'https',
@@ -152,9 +147,8 @@ export default function ChatMessages({
                     );
                 }
 
-                // Formatering av brukeren sine meldinger
                 return (
-                    <div key={index} className="mb-2 flex justify-end">
+                    <div key={index} className="mb-2 flex justify-end max-w-full">
                         <div className="px-4 py-2 border-2 border-[#274247] bg-[#274247] text-white">
                             {msg.text}
                         </div>
@@ -162,9 +156,8 @@ export default function ChatMessages({
                 );
             })}
 
-            {/* Viser "Svarer..." mens den jobber */}
             {isLoading && (
-                <div className="mb-2 flex justify-start">
+                <div className="mb-2 flex justify-start max-w-full">
                     <Image
                         src={'/ssb_logosymbol_dark.svg'}
                         alt="Chatbot"
@@ -177,7 +170,8 @@ export default function ChatMessages({
                 </div>
             )}
 
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef}/>
         </div>
+
     );
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import {ChatOpenAI, OpenAI} from '@langchain/openai';
+import { OpenAI} from '@langchain/openai';
 import { BufferMemory } from 'langchain/memory';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';

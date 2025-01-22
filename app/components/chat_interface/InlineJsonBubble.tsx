@@ -11,7 +11,7 @@ interface InlineJsonBubbleProps {
 
 export default function InlineJsonBubble({
                                              data,
-                                             parentUrl,
+                                             //parentUrl,
                                              onActivateJson,
                                              onShowTable,
                                          }: InlineJsonBubbleProps) {
@@ -43,7 +43,7 @@ export default function InlineJsonBubble({
             {/* 2) Show sub-items if any */}
             {subItems.length > 0 && (
                 <div className="mt-4">
-                    <p className="font-bold">Underkategorier:</p>
+                    <h1 className="">Vi trenger litt flere detaljer:</h1>
                     <div className="flex flex-col gap-2 mt-2">
                         {subItems.map((item, i) => (
                             <button
