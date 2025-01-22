@@ -54,13 +54,11 @@ export async function POST(request: Request) {
             'https://data.ssb.no/api/v0/no/table/'
 
             Hver tabell har en id og vi kan hente tabellen med følgende url:
-            https://data.ssb.no/api/v0/no/table/<id>
+            https://data.ssb.no/api/v0/no/table/<kortnavn>
             
             Du skal bare returnere url-er som er relevante til forespørselen.
             Bruk tabellenes beskrivelse for å identifisere hvilket tabeller som passer best.
-            
-            Husk å bruk API-ens ID etter /table/, ikke tittel.
-            
+                        
             Bare returner url. Har du flere url-er så skal de være skilt med en ny linje. 
             Ingen andre tegn skal inkluderes i svaret.
 

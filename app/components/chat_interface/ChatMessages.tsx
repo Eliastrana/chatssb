@@ -13,18 +13,15 @@ function InlineJsonBubble({ data }: { data: unknown }) {
     );
 }
 
-interface ParsedLinkItem {
-    title: string;
-    url: string;
-}
-
-function parseMarkdownUrlList(text: string) {
-    const regex = /^\d+\.\s+\*\*(.+?)\*\*\s*:\s*-\s*(https?:\/\/\S+)/gm;
-    const matches = [...text.matchAll(regex)];
-    return matches.map((match) => ({
-        title: match[1].trim(),
-        url: match[2].trim(),
-    }));
+/**
+ * Splits the message text by newlines and returns only lines that look like URLs.
+ * You can customize the `startsWith('http')` to be stricter or more lenient if needed.
+ */
+function parseUrlLines(text: string): string[] {
+    return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.startsWith('http'));
 }
 
 interface ChatMessagesProps {
@@ -47,9 +44,7 @@ export default function ChatMessages({
     return (
         <div className="flex-1 overflow-y-auto mb-4 z-10">
             {messages.map((msg, index) => {
-                // ─────────────────────────────────────────────────────────────────
-                // 1) If this is a JSON message, show a new bubble with the data
-                // ─────────────────────────────────────────────────────────────────
+                // 1) If this is a JSON message, show a JSON bubble.
                 if (msg.type === 'json') {
                     return (
                         <div key={index} className="mb-2 flex justify-start">
@@ -62,22 +57,18 @@ export default function ChatMessages({
                                     className="min-w-[50px] min-h-[50px]"
                                 />
                             </div>
-
-
                             <InlineJsonBubble data={msg.jsonData} />
-
                         </div>
                     );
                 }
 
-                // ─────────────────────────────────────────────────────────────────
-                // 2) If from bot (normal text), check for multiple/single item
-                // ─────────────────────────────────────────────────────────────────
+                // 2) If the message is from the bot
                 if (msg.sender === 'bot') {
-                    const parsedItems = parseMarkdownUrlList(msg.text);
+                    // We grab lines that are URLs:
+                    const urlLines = parseUrlLines(msg.text);
 
-                    // a) Multiple items → show list of "Vis JSON" buttons
-                    if (parsedItems.length > 1) {
+                    // a) Multiple URL lines → show each as a button:
+                    if (urlLines.length > 1) {
                         return (
                             <div key={index} className="mb-2 flex justify-start">
                                 <div className="flex items-center mr-2">
@@ -90,29 +81,16 @@ export default function ChatMessages({
                                     />
                                 </div>
                                 <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
-                                    <p className="mb-2 font-bold">Her er flere tabeller du kan klikke på:</p>
+                                    <p className="mb-2 font-bold">Flere tilgjengelige lenker:</p>
                                     <div className="flex flex-col gap-2">
-                                        {parsedItems.map((item, i) => (
-                                            <div
+                                        {urlLines.map((url, i) => (
+                                            <button
                                                 key={i}
-                                                className="flex flex-col sm:flex-row items-start sm:items-center gap-2"
+                                                onClick={() => handleActivateJson(url)}
+                                                className="inline-block px-3 py-2 bg-[#274247] text-white hover:bg-[#1b2f30] text-left hover:cursor-pointer"
                                             >
-                                                <button
-                                                    className="inline-block px-3 py-2 bg-[#274247] text-white hover:bg-[#1b2f30] text-left hover:cursor-pointer rounded"
-
-                                                    onClick={() => handleActivateJson(item.url)}
-
-                                                >
-                                                    {item.title}
-                                                </button>
-
-                                                {/*<button*/}
-                                                {/*    className="inline-block px-2 py-1 bg-[#274247] text-white hover:bg-[#1b2f30] rounded"*/}
-                                                {/*    onClick={() => handleUserSelectedLink(item.url)}*/}
-                                                {/*>*/}
-                                                {/*    Link*/}
-                                                {/*</button>*/}
-                                            </div>
+                                                {url}
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -120,9 +98,9 @@ export default function ChatMessages({
                         );
                     }
 
-                    // b) Single item → show one "Vis JSON"
-                    if (parsedItems.length === 1) {
-                        const [item] = parsedItems;
+                    // b) Exactly one URL line → show single button:
+                    if (urlLines.length === 1) {
+                        const [url] = urlLines;
                         return (
                             <div key={index} className="mb-2 flex justify-start">
                                 <div className="flex items-center mr-2">
@@ -135,17 +113,16 @@ export default function ChatMessages({
                                     />
                                 </div>
                                 <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
-                                    <p className="mb-2 font-bold">{item.title}</p>
                                     <a
-                                        href={item.url}
+                                        href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-blue-600 underline break-all mr-4"
                                     >
-                                        {item.url}
+                                        {url}
                                     </a>
                                     <button
-                                        onClick={() => handleActivateJson(item.url)}
+                                        onClick={() => handleActivateJson(url)}
                                         className="inline-block ml-0 mt-2 sm:mt-0 sm:ml-2 px-2 py-1 bg-[#274247] text-white hover:bg-[#1b2f30] rounded"
                                     >
                                         Vis JSON
@@ -155,7 +132,7 @@ export default function ChatMessages({
                         );
                     }
 
-                    // c) No items (normal text only)
+                    // c) No URL lines → plain text message:
                     return (
                         <div key={index} className="mb-2 flex justify-start">
                             <div className="flex items-center mr-2">
@@ -182,9 +159,7 @@ export default function ChatMessages({
                     );
                 }
 
-                // ─────────────────────────────────────────────────────────────────
                 // 3) User message
-                // ─────────────────────────────────────────────────────────────────
                 return (
                     <div key={index} className="mb-2 flex justify-end">
                         <div className="px-4 py-2 border-2 border-[#274247] bg-[#274247] text-white">
