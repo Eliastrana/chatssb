@@ -61,6 +61,7 @@ export async function POST(request: Request) {
                         
             Bare returner url. Har du flere url-er så skal de være skilt med en ny linje. 
             Ingen andre tegn skal inkluderes i svaret.
+            
 
             Dette er strukturen av hele API-en:
             -- CONTENT FROM UPLOADED FILE STARTS --
