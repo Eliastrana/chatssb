@@ -1,28 +1,9 @@
 "use client";
-import Image from 'next/image';
-import Linkify from 'linkify-react';
-import { Message } from '@/app/types';
 import React from 'react';
-
-// A simple inline JSON bubble
-function InlineJsonBubble({ data }: { data: unknown }) {
-    return (
-        <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 whitespace-pre-wrap break-words max-w-xl h-96 overflow-auto">
-            {JSON.stringify(data, null, 2)}
-        </div>
-    );
-}
-
-/**
- * Splits the message text by newlines and returns only lines that look like URLs.
- * You can customize the `startsWith('http')` to be stricter or more lenient if needed.
- */
-function parseUrlLines(text: string): string[] {
-    return text
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.startsWith('http'));
-}
+import Linkify from 'linkify-react';
+import Image from 'next/image';
+import { Message } from '@/app/types';
+import InlineJsonBubble from './InlineJsonBubble';
 
 interface ChatMessagesProps {
     messages: Message[];
@@ -31,23 +12,24 @@ interface ChatMessagesProps {
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     handleActivateJson: (url: string) => void;
     handleUserSelectedLink: (url: string) => void;
+    handleShowTable: (tableId: string) => void;
 }
 
 export default function ChatMessages({
                                          messages,
-                                         jsonUrls,
+                                         //jsonUrls,
                                          isLoading,
                                          messagesEndRef,
                                          handleActivateJson,
-                                         handleUserSelectedLink,
+                                         //handleUserSelectedLink,
+                                         handleShowTable,
                                      }: ChatMessagesProps) {
     return (
-        <div className="flex-1 overflow-y-auto mb-4 z-10">
+        <div className="flex-1 overflow-y-auto mb-10 z-10 text-xs md:text-base">
             {messages.map((msg, index) => {
-                // 1) If this is a JSON message, show a JSON bubble.
                 if (msg.type === 'json') {
                     return (
-                        <div key={index} className="mb-2 flex justify-start">
+                        <div key={index} className="mb-2 md:flex justify-start max-w-full">
                             <div className="flex items-center mr-2">
                                 <Image
                                     src={'/ssb_logosymbol_dark.svg'}
@@ -57,20 +39,25 @@ export default function ChatMessages({
                                     className="min-w-[50px] min-h-[50px]"
                                 />
                             </div>
-                            <InlineJsonBubble data={msg.jsonData} />
+                            <InlineJsonBubble
+                                data={msg.jsonData}
+                                parentUrl={msg.jsonUrl ?? ''}
+                                onActivateJson={handleActivateJson}
+                                onShowTable={handleShowTable}
+                            />
                         </div>
                     );
                 }
 
-                // 2) If the message is from the bot
                 if (msg.sender === 'bot') {
-                    // We grab lines that are URLs:
-                    const urlLines = parseUrlLines(msg.text);
+                    const lines = msg.text
+                        .split('\n')
+                        .map((line) => line.trim())
+                        .filter((l) => l.startsWith('http'));
 
-                    // a) Multiple URL lines → show each as a button:
-                    if (urlLines.length > 1) {
+                    if (lines.length > 1) {
                         return (
-                            <div key={index} className="mb-2 flex justify-start">
+                            <div key={index} className="mb-2 md:flex justify-start max-w-full">
                                 <div className="flex items-center mr-2">
                                     <Image
                                         src={'/ssb_logosymbol_dark.svg'}
@@ -80,14 +67,15 @@ export default function ChatMessages({
                                         className="min-w-[50px] min-h-[50px]"
                                     />
                                 </div>
-                                <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
-                                    <p className="mb-2 font-bold">Flere tilgjengelige lenker:</p>
+                                <div
+                                    className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
+                                    <h1 className="mb-2">Ser dette ut som noe du leter etter?</h1>
                                     <div className="flex flex-col gap-2">
-                                        {urlLines.map((url, i) => (
+                                        {lines.map((url, i) => (
                                             <button
                                                 key={i}
                                                 onClick={() => handleActivateJson(url)}
-                                                className="inline-block px-3 py-2 bg-[#274247] text-white hover:bg-[#1b2f30] text-left hover:cursor-pointer"
+                                                className="inline-block px-3 py-2 bg-[#274247] text-white hover:bg-[#1b2f30] text-left hover:cursor-pointer rounded"
                                             >
                                                 {url}
                                             </button>
@@ -98,11 +86,10 @@ export default function ChatMessages({
                         );
                     }
 
-                    // b) Exactly one URL line → show single button:
-                    if (urlLines.length === 1) {
-                        const [url] = urlLines;
+                    if (lines.length === 1) {
+                        const [url] = lines;
                         return (
-                            <div key={index} className="mb-2 flex justify-start">
+                            <div key={index} className="mb-2 md:flex justify-start max-w-full">
                                 <div className="flex items-center mr-2">
                                     <Image
                                         src={'/ssb_logosymbol_dark.svg'}
@@ -112,7 +99,8 @@ export default function ChatMessages({
                                         className="min-w-[50px] min-h-[50px]"
                                     />
                                 </div>
-                                <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
+                                <div
+                                    className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
                                     <a
                                         href={url}
                                         target="_blank"
@@ -132,9 +120,8 @@ export default function ChatMessages({
                         );
                     }
 
-                    // c) No URL lines → plain text message:
                     return (
-                        <div key={index} className="mb-2 flex justify-start">
+                        <div key={index} className="mb-2 md:flex  justify-start max-w-full">
                             <div className="flex items-center mr-2">
                                 <Image
                                     src={'/ssb_logosymbol_dark.svg'}
@@ -144,7 +131,8 @@ export default function ChatMessages({
                                     className="min-w-[50px] min-h-[50px]"
                                 />
                             </div>
-                            <div className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-xl">
+                            <div
+                                className="px-4 py-2 border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 max-w-full md:max-w-xl">
                                 <Linkify
                                     options={{
                                         defaultProtocol: 'https',
@@ -159,9 +147,8 @@ export default function ChatMessages({
                     );
                 }
 
-                // 3) User message
                 return (
-                    <div key={index} className="mb-2 flex justify-end">
+                    <div key={index} className="mb-2 flex justify-end max-w-full">
                         <div className="px-4 py-2 border-2 border-[#274247] bg-[#274247] text-white">
                             {msg.text}
                         </div>
@@ -169,9 +156,8 @@ export default function ChatMessages({
                 );
             })}
 
-            {/* "Svarer..." bubble if isLoading */}
             {isLoading && (
-                <div className="mb-2 flex justify-start">
+                <div className="mb-2 flex justify-start max-w-full">
                     <Image
                         src={'/ssb_logosymbol_dark.svg'}
                         alt="Chatbot"
@@ -184,7 +170,8 @@ export default function ChatMessages({
                 </div>
             )}
 
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef}/>
         </div>
+
     );
 }
