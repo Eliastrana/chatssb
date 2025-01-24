@@ -12,43 +12,18 @@ interface ChatMessagesProps {
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     handleActivateJson: (url: string) => void;
     handleUserSelectedLink: (url: string) => void;
-    handleShowTable: (tableId: string) => void;
 }
 
 export default function ChatMessages({
                                          messages,
-                                         //jsonUrls,
                                          isLoading,
                                          messagesEndRef,
                                          handleActivateJson,
-                                         //handleUserSelectedLink,
-                                         handleShowTable,
                                      }: ChatMessagesProps) {
     return (
         <div className="flex-1 overflow-y-auto mb-10 z-10 text-xs md:text-base">
             {messages.map((msg, index) => {
-                if (msg.type === 'json') {
-                    return (
-                        <div key={index} className="mb-2 md:flex justify-start max-w-full">
-                            <div className="flex items-center mr-2">
-                                <Image
-                                    src={'/ssb_logosymbol_dark.svg'}
-                                    alt="Chatbot"
-                                    width={50}
-                                    height={50}
-                                    className="min-w-[50px] min-h-[50px]"
-                                />
-                            </div>
-                            <InlineJsonBubble
-                                data={msg.jsonData}
-                                parentUrl={msg.jsonUrl ?? ''}
-                                onActivateJson={handleActivateJson}
-                                onShowTable={handleShowTable}
-                            />
-                        </div>
-                    );
-                }
-
+                
                 if (msg.sender === 'bot') {
                     const lines = msg.text
                         .split('\n')

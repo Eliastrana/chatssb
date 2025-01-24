@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { OpenAI} from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
 import { BufferMemory } from 'langchain/memory';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { RunnableSequence } from '@langchain/core/runnables';
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         `;
 
         // Create a ChatOpenAI model instance
-        const chat = new OpenAI({
+        const chat = new ChatOpenAI({
             openAIApiKey: process.env.OPENAI_API_KEY,
             modelName: 'gpt-4o-mini',
             temperature: 0,
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         // Save the context to memory
         await memory.saveContext({ input: message }, { output: botMessage });
 
-        return NextResponse.json({ message: botMessage });
+        return NextResponse.json(botMessage);
     } catch (error: unknown) {
         // Handle or log any errors
         console.error('Error:', error);
