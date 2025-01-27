@@ -16,8 +16,8 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
+    const messagesEndRef = useRef<HTMLDivElement>(null!);
+    
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -32,15 +32,17 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
 
-        fetch('/api/chat', {
+        await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: input }),
         }).then(async (response) => {
-            if (!response.ok) throw new Error(`Failed to send user message. Status: ${response.status}`);
-
-            const data = await response.json();
-            setMessages((prev) => [...prev, { sender: 'bot', text: data }]);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || response.statusText);
+            }            
+            const botMessage = (await response.json()).content as string;
+            setMessages((prev) => [...prev, { sender: 'bot', text: botMessage }]);
         }).catch((err) => {
             setError(err.message);
         }).finally(() => {
