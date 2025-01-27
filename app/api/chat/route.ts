@@ -1,129 +1,115 @@
+// noinspection TypeScriptValidateTypes
+
 import { NextResponse } from 'next/server';
-import { OpenAI} from '@langchain/openai';
-import { BufferMemory } from 'langchain/memory';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
-import { RunnableSequence } from '@langchain/core/runnables';
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
+import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
 
-// Helper: Fetch file content from OpenAI
-async function fetchFileContentFromOpenAI(fileId: string): Promise<string> {
-    const response = await fetch(`https://api.openai.com/v1/files/${fileId}/content`, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-    });
+const systemPrompt = `
+Brukeren er ute etter statistikk som relaterer til deres forespørsel.
+Du skal navigere i en API-struktur for å finne 1 tabell av 8000 som passer best til brukerens ønske.
 
-    if (!response.ok) {
-        throw new Error(
-            `Failed to fetch file content from OpenAI. Status: ${response.status} ${response.statusText}`
-        );
-    }
+API-en består av flere hovedemner som er hver sin egen liste av lister ned til tabellnivå.
+Du kan identifisere underemner ved å se på 'type' som har følgende alternativer:
 
-    return await response.text();
-}
+- 'FolderInformation' for liste som kan inneholde flere lister, tabeller eller header
+- 'Table' for tabell som inneholder data
+- 'Heading' for header som er en overskrift
 
-const OPENAI_UPLOADED_FILE_ID = process.env.NEXT_PUBLIC_OPENAI_UPLOADED_FILE_ID;
+Du skal bare navigere i lister og tabeller.
+Du skal returnere 'id' attributtet til tabellen som passer best til brukerens forespørsel sammen med 'type' og 'label' attributtene valgt.
 
-// Initialize BufferMemory
-const memory = new BufferMemory({
-    returnMessages: true,
-    inputKey: 'input',
-    outputKey: 'output',
-    memoryKey: 'history',
+Du skal finne neste liste eller tabell, dette er så langt du allerede har navigert og du skal ikke respondere med det samme igjen:
+"Startmappe"
+`;
+
+const model = new ChatOpenAI({
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    modelName: 'gpt-4o-mini',
+    temperature: 0,
 });
 
+const OpenAIFunction = {
+    name: "navigate_to_best_table",
+    description: "Navigate in the SSB API structure to find the best table for the user's request.",
+    parameters: {
+        type: "object",
+        properties: {
+            type: {type: "string", description: "The 'type' of the current item."},
+            id: {type: "string", description: "The 'id' of either a list or a table."},
+            label: {type: "string", description: "The 'label' of the current item."},
+        },
+        required: ["id"],
+    },
+};
+
+type responseFormat = {
+    type: string;
+    id: string;
+    label: string;
+};
+
 export async function POST(request: Request) {
-    try {
-        const { message } = (await request.json()) as { message: string };
 
-        if (!message) {
-            return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
-        }
+    let depth = 0;
+    const maxDepth = 5;
+    let APIResponse = {} as JSON;
+    let LLMResponse: responseFormat = { type: '', id: '', label: '' }; // <--- Initialized here
+    let currentSystemPrompt: string = systemPrompt;
 
-        if (!OPENAI_UPLOADED_FILE_ID) {
-            throw new Error('Environment variable NEXT_PUBLIC_OPENAI_UPLOADED_FILE_ID is not set.');
-        }
+    const { message } = (await request.json()) as { message: string };
+    console.log('Received message:', message);
 
-        // Fetch file content from OpenAI
-        const uploadedFileContent = await fetchFileContentFromOpenAI(OPENAI_UPLOADED_FILE_ID);
+    while (depth < maxDepth) {
+        const navigationId = LLMResponse.id;
 
-        // Build our system prompt
-        const systemPrompt = `
-            Du skal finne den/de mest relevante kortnavnene som kan legges på denne url-en
-            'https://data.ssb.no/api/v0/no/table/'
-            
-            API-strutkeren har hovedemne -> delemne -> Statistikk
-            Hvert hovedemne har en emnekode, hvert delemne har en emnekode og hver Statistikk har et kortnavn.
+        await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch structure from SSB. Status: ${response.status}`);
+                }
+                APIResponse = await response.json();
+            })
+            .catch((err) => {
+                return NextResponse.json({ error: err.message }, { status: 500 });
+            });
 
-            Du skal hente ut den/de mest relevante kortnavnene med strukturen til API-en og svaret ditt må være formatert slik:
-            https://data.ssb.no/api/v0/no/table/<emnekode>/<emnekode>/<kortnavn>
-            
-            Du skal aldri hente ut mer enn 5 url-er.
-            
-            Du skal bare returnere url-er som er relevante til forespørselen.
-            Bruk titlene til å identifisere hvilket kortnavn som passer best.
-                        
-            Bare returner url. Har du flere url-er så skal de være skilt med en ny linje. 
-            Ingen andre tegn skal inkluderes i svaret.
-            
+        const prompt = ChatPromptTemplate.fromMessages([
+            new SystemMessage(currentSystemPrompt),
+            new SystemMessage('API response: ' + JSON.stringify(APIResponse)),
+            new HumanMessage(message),
+        ]);
 
-            Dette er strukturen av hele API-en:
-            -- CONTENT FROM UPLOADED FILE STARTS --
-            ${uploadedFileContent}
-            -- CONTENT FROM UPLOADED FILE ENDS --
-        `;
-
-        // Create a ChatOpenAI model instance
-        const chat = new OpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: 'gpt-4o-mini',
-            temperature: 0,
-            maxTokens: 16000,
+        const runnable = createOpenAIFnRunnable({
+            functions: [OpenAIFunction],
+            llm: model,
+            prompt,
         });
 
-        // Prepare the prompt template
-        const prompt = ChatPromptTemplate.fromMessages([
-            new SystemMessage(systemPrompt),
-            new MessagesPlaceholder('history'),
-            new HumanMessage('{input}'),
-        ]);
 
-        // Load memory variables
-        const memoryVariables = await memory.loadMemoryVariables({});
+        const input = {  };
+        const options = { };
+        LLMResponse = await runnable.invoke(input, options) as responseFormat;
 
-        // Create the chain with memory
-        const chain = RunnableSequence.from([
-            {
-                input: (initialInput) => initialInput.input,
-                memory: () => memoryVariables,
-            },
-            {
-                input: (previousOutput) => previousOutput.input,
-                history: (previousOutput) => previousOutput.memory.history,
-            },
-            prompt,
-            chat,
-        ]);
+        console.log('LLMResponse:', LLMResponse);
 
-        // Invoke the chain with the user's message
-        const response = await chain.invoke({ input: message });
+        currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
 
-        // Extract the bot's message
-        const botMessage = response || 'No response from the bot.';
-        console.log(botMessage)
-
-        // Save the context to memory
-        await memory.saveContext({ input: message }, { output: botMessage });
-
-        return NextResponse.json({ message: botMessage });
-    } catch (error: unknown) {
-        // Handle or log any errors
-        console.error('Error:', error);
-
-        return NextResponse.json(
-            { error: 'An error occurred while processing your request.' },
-            { status: 500 }
-        );
+        if (LLMResponse.type === 'Table') break;
+        depth++;
     }
+
+    if (depth < maxDepth) {
+        return NextResponse.json({ content: LLMResponse.label }, { status: 200 });
+    } else {
+        return NextResponse.json({ error: 'Max depth reached, LLM could not find a table.' }, { status: 500 });
+    }
+
 }

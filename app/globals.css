@@ -2,25 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-
 :root {
   --background: #C3DCDC;
   --foreground: #171717;
 }
 
-.text-glow {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
-}
-
-/*@media (prefers-color-scheme: dark) {*/
-/*  :root {*/
-/*    --background: #0a0a0a;*/
-/*    --foreground: #ededed;*/
-/*  }*/
-/*}*/
-
 body {
+  font-family: "Roboto Light", sans-serif;
   color: var(--foreground);
   background: var(--background);
-  font-family: "Open Sans", sans-serif;
 }
+
+h1, h2, h3, h4, h5, h6, p {
+  font-family: inherit;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+  0 0 20px rgba(255, 255, 255, 0.6),
+  0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+/* Uncomment for dark mode support if needed */
+/*@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}*/
