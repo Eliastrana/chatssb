@@ -64,11 +64,14 @@ export default function Home() {
                     messages={messages}
                     isLoading={isLoading}
                     messagesEndRef={messagesEndRef}
-                    handleUserSelectedLink={(url) => {
-                        setMessages((prev) => [...prev, {sender: 'bot', text: url}]);
-                        // Denne kan utkommenteres hvis ønsket:
-                        // handleActivateJson(url);
-                    }}
+
+                    //Denne sletta Trygve i den andre fila så derfor er det kommentert ut her.
+
+                    // handleUserSelectedLink={(url) => {
+                    //     setMessages((prev) => [...prev, {sender: 'bot', text: url}]);
+                    //     // Denne kan utkommenteres hvis ønsket:
+                    //     // handleActivateJson(url);
+                    // }}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}

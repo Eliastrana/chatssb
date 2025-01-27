@@ -24,15 +24,12 @@ Du skal finne neste liste eller tabell, dette er så langt du allerede har navig
 "Startmappe"
 `;
 
-// Create a ChatOpenAI model instance
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
     modelName: 'gpt-4o-mini',
     temperature: 0,
-    //maxTokens: 16000,
 });
 
-// Return function to be used in the chain
 const OpenAIFunction = {
     name: "navigate_to_best_table",
     description: "Navigate in the SSB API structure to find the best table for the user's request.",
@@ -54,33 +51,36 @@ type responseFormat = {
 };
 
 export async function POST(request: Request) {
-    
+
     let depth = 0;
     const maxDepth = 5;
-    let APIResponse: JSON;
-    let LLMResponse: responseFormat;
+    let APIResponse = {} as JSON;
+    let LLMResponse: responseFormat = { type: '', id: '', label: '' }; // <--- Initialized here
     let currentSystemPrompt: string = systemPrompt;
 
     const { message } = (await request.json()) as { message: string };
     console.log('Received message:', message);
 
     while (depth < maxDepth) {
-        const navigationId = LLMResponse?.id || '';
-        
+        const navigationId = LLMResponse.id;
+
         await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-        }).then(async (response) => {
-            if (!response.ok) throw new Error(`Failed to fetch structure from SSB. Status: ${response.status}`);
-            APIResponse = await response.json();
-            //console.log('API response:', currentResponse);
-        }).catch((err) => {
-            return NextResponse.json({error: err.message}, {status: 500});
-        });
-        
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch structure from SSB. Status: ${response.status}`);
+                }
+                APIResponse = await response.json();
+            })
+            .catch((err) => {
+                return NextResponse.json({ error: err.message }, { status: 500 });
+            });
+
         const prompt = ChatPromptTemplate.fromMessages([
             new SystemMessage(currentSystemPrompt),
             new SystemMessage('API response: ' + JSON.stringify(APIResponse)),
@@ -92,26 +92,24 @@ export async function POST(request: Request) {
             llm: model,
             prompt,
         });
-        
-        //console.log('Prompt:', prompt.toJSON());
 
-        LLMResponse = await runnable.invoke();
-        //console.log('Response:', LLMResponse);
-        
+
+        const input = {  };
+        const options = { };
+        LLMResponse = await runnable.invoke(input, options) as responseFormat;
+
+        console.log('LLMResponse:', LLMResponse);
+
         currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
-        //console.log('Current prompt:', currentSystemPrompt);
-        
+
         if (LLMResponse.type === 'Table') break;
-        
         depth++;
     }
 
     if (depth < maxDepth) {
-        return NextResponse.json(
-            { content: LLMResponse.label }, 
-            { status: 200 });
-    } else return NextResponse.json(
-        { error: 'Max depth reached, LLM could not find a table.' },
-        { status: 500 }
-    );
+        return NextResponse.json({ content: LLMResponse.label }, { status: 200 });
+    } else {
+        return NextResponse.json({ error: 'Max depth reached, LLM could not find a table.' }, { status: 500 });
+    }
+
 }
