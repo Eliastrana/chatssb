@@ -24,10 +24,45 @@ Du skal finne neste liste eller tabell, dette er så langt du allerede har navig
 "Startmappe"
 `;
 
+
+interface TokenUsage {
+    promptTokens?: number;
+    completionTokens?: number;
+}
+
+interface LLMOutput {
+    tokenUsage?: TokenUsage;
+}
+
+interface Output {
+    llmOutput?: LLMOutput;
+}
+
+const tokenUsageLogger = {
+    handleLLMEnd: async (output: Output) => {
+        const inputTokenPriceUSD = 0.15 / 1_000_000;
+        const outputTokenPriceUSD = 0.60 / 1_000_000;
+        const usdToNokRate = 11.25;
+        const tokenUsage = output.llmOutput?.tokenUsage;
+        if (tokenUsage) {
+            const { promptTokens = 0, completionTokens = 0 } = tokenUsage;
+            const inputCostUSD = promptTokens * inputTokenPriceUSD;
+            const outputCostUSD = completionTokens * outputTokenPriceUSD;
+            const totalCostUSD = inputCostUSD + outputCostUSD;
+            const totalCostNOK = totalCostUSD * usdToNokRate;
+            console.log(`${promptTokens + completionTokens} tokens koster: ${totalCostNOK.toFixed(6)} NOK`);
+        } else {
+            console.log('Token usage information is not available.');
+        }
+    },
+};
+
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
     modelName: 'gpt-4o-mini',
     temperature: 0,
+    callbacks: [tokenUsageLogger],
+
 });
 
 const OpenAIFunction = {
@@ -55,11 +90,11 @@ export async function POST(request: Request) {
     let depth = 0;
     const maxDepth = 5;
     let APIResponse = {} as JSON;
-    let LLMResponse: responseFormat = { type: '', id: '', label: '' }; // <--- Initialized here
+    let LLMResponse: responseFormat = { type: '', id: '', label: '' };
     let currentSystemPrompt: string = systemPrompt;
 
     const { message } = (await request.json()) as { message: string };
-    console.log('Received message:', message);
+    console.log('Received message:', message + '\n');
 
     while (depth < maxDepth) {
         const navigationId = LLMResponse.id;
@@ -93,12 +128,13 @@ export async function POST(request: Request) {
             prompt,
         });
 
-
         const input = {  };
         const options = { };
         LLMResponse = await runnable.invoke(input, options) as responseFormat;
 
-        console.log('LLMResponse:', LLMResponse);
+        // console.log('LLMResponse:', LLMResponse);
+
+        console.log(LLMResponse.label +"\n")
 
         currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
 
@@ -111,5 +147,4 @@ export async function POST(request: Request) {
     } else {
         return NextResponse.json({ error: 'Max depth reached, LLM could not find a table.' }, { status: 500 });
     }
-
 }

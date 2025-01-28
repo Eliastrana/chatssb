@@ -6,7 +6,6 @@ import ChatInput from './components/chat_interface/ChatInput';
 
 import { Message } from './types';
 
-
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
@@ -21,8 +20,7 @@ export default function Home() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-    
-    
+
     // Sender brukermelding, bruker: /api/chat/route.ts
     const sendUserMessage = async () => {
         if (!input.trim()) return;
@@ -60,6 +58,7 @@ export default function Home() {
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
+
                 <ChatMessages
                     messages={messages}
                     isLoading={isLoading}
