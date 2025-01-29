@@ -6,7 +6,6 @@ import ChatInput from './components/chat_interface/ChatInput';
 
 import { Message } from './types';
 
-
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
@@ -21,8 +20,7 @@ export default function Home() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-    
-    
+
     // Sender brukermelding, bruker: /api/chat/route.ts
     const sendUserMessage = async () => {
         if (!input.trim()) return;
@@ -53,6 +51,10 @@ export default function Home() {
     // Bare veldig clean komponentbasert layout
     return (
         <div className="relative flex items-center justify-center min-h-screen p-4  mb-10">
+            
+            <div className="fixed top-4 left-4 md:w-1/6 w-1/2">
+                <p className="text-sm opacity-50">Denne nettsiden er under utvikling, SSB står ikke for de oppgitte svarene.</p>
+            </div>
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>
 
             <div
@@ -60,6 +62,7 @@ export default function Home() {
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
+
                 <ChatMessages
                     messages={messages}
                     isLoading={isLoading}

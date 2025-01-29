@@ -30,3 +30,40 @@ h1, h2, h3, h4, h5, h6, p {
     --foreground: #ededed;
   }
 }*/
+
+
+.loading-dots {
+  display: inline-block;
+  position: relative;
+  width: 44px;
+  height: 22px;
+}
+
+.loading-dots::before,
+.loading-dots::after,
+.loading-dots span {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: #274247;
+  border-radius: 50%;
+  animation: loading-dots 1.2s infinite ease-in-out;
+}
+
+.loading-dots::before {
+  animation-delay: -0.24s;
+}
+
+.loading-dots::after {
+  animation-delay: -0.12s;
+}
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}

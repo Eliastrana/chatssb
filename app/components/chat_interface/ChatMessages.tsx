@@ -45,18 +45,19 @@ export default function ChatMessages({
             })}
 
             {isLoading && (
-                <div className="mb-2 flex justify-start max-w-full">
+                <div className="mb-2 flex justify-start max-w-full items-center">
                     <Image
                         src={'/ssb_logosymbol_dark.svg'}
                         alt="Chatbot"
-                        width={40}
-                        height={40}
+                        width={50}
+                        height={50}
                     />
-                    <div className="px-4 py-2 border-2 border-[#274247] bg-gray-200 text-gray-800 italic">
-                        Svarer...
-                    </div>
+                    {/*<div className="px-4 py-2 border-2 border-[#274247] bg-gray-200 text-gray-800 italic flex items-center">*/}
+                        <span className="loading-dots "></span>
+                    {/*</div>*/}
                 </div>
             )}
+
 
             <div ref={messagesEndRef}/>
         </div>
