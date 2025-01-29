@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     let currentSystemPrompt: string = systemPromptNavigation;
 
     const { message } = (await request.json()) as { message: string };
-    console.log('Received message:', message + '\n');
+    console.log('Received message:', message);
 
     while (depth < maxDepth) {
         const navigationId = LLMResponse.id;
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
 
         // console.log('LLMResponse:', LLMResponse);
 
-        console.log(LLMResponse.label +"\n")
+        console.log(LLMResponse.label)
 
         currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
 
@@ -204,6 +204,7 @@ export async function POST(request: Request) {
         })
         
         const tableMetadata: SSBTableMetadata = await response.json();
+        let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/data?lang=no&format=json-stat2';
         
         for (const dimensionKey in tableMetadata.dimension) {
             const dimension = tableMetadata.dimension[dimensionKey];
@@ -232,12 +233,26 @@ export async function POST(request: Request) {
             });
     
             const LLMRequestTableData = await runnable.invoke({}, {})
-    
-            console.log('LLMRequestTableData:', LLMRequestTableData);
+            const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
+            
+            SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
+            
+            console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
         }
         
-        return NextResponse.json({ content: LLMResponse.label }, { status: 200 });
+        console.log('SSBGetUrl:', SSBGetUrl);
+        
+        const responseTableData = await fetch(SSBGetUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+        
+        const tableData = await responseTableData.json();
+        
+        return NextResponse.json({ content: JSON.stringify(tableData.value) }, { status: 200 });
     } else {
-        return NextResponse.json({ error: 'Max depth reached, LLM could not find a table.' }, { status: 500 });
+        return NextResponse.json({ content: 'Å nei! Vi fant ikke en relevant tabell for deg.' }, { status: 200 });
     }
 }
