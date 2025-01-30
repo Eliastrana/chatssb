@@ -5,6 +5,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
+import {object} from "zod";
 
 const systemPromptNavigation = `
 Brukeren er ute etter statistikk som relaterer til deres forespørsel.
@@ -54,7 +55,7 @@ const OpenAIRequestTableDataFunction = {
     name: "filter_table",
     description: "Based on the user request, select the most relevant category based on the" +
         " available categories given. All other information like 'label' and 'unit' is just" +
-        " context. You should only return the most relevant available category.",
+        " context. You should all relevant categories, each separated by a comma with no spaces.",
     parameters: {
         type: "object",
         description: "The category that corresponds best to the user's request.",
@@ -169,11 +170,27 @@ export async function POST(request: Request) {
             });
     
             const LLMRequestTableData = await runnable.invoke({}, {})
-            const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
+
+            // If category contains ´,´ split it into several categories and add each to url category key
+            if (!LLMRequestTableData.category.toString().includes(',')) {
+
+                const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
+
+                SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
+                console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
+
+            } else {
+                const categoryKeys = LLMRequestTableData.category.split(',');
+
+                for (const category of categoryKeys) {
+                    const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === category) || '*';
+                    SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
+                }
+
+                console.log('LLMRequestTableData:', categoryKeys, '=>', LLMRequestTableData.category);
+            }
             
-            SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
             
-            console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
         }
         
         console.log('SSBGetUrl:', SSBGetUrl);
@@ -194,6 +211,6 @@ export async function POST(request: Request) {
         return NextResponse.json(tableData, { status: 200 });
 
     } else {
-        return NextResponse.json({ content: 'Å nei! Vi fant ikke en relevant tabell for deg.' }, { status: 200 });
+        return NextResponse.json({ content: 'Å nei! Vi fant ikke en relevant tabell for deg.' }, { status: 400 });
     }
 }

@@ -61,8 +61,12 @@ export default function Home() {
                 ]);
             }
         } catch (err) {
-            console.error("Error fetching data:", err);
-            setError((err as Error).message);
+            console.error(err);
+            setMessages((prev) => [
+                ...prev,
+                { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
+            ]);
+
         } finally {
             setIsLoading(false);
         }

@@ -209,7 +209,8 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         const color = d3.scaleOrdinal(d3.schemeCategory10);
 
         // Draw each line
-        linesData.forEach(({ combo, series }, idx) => {
+        // linesData.forEach(({ combo, series }, idx) => {
+        linesData.forEach(({ series }, idx) => {
             svg
                 .append("path")
                 .datum(series)
