@@ -219,9 +219,10 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                 .attr("stroke-width", 2)
                 .attr("d", lineGen);
         });
-    }, [linesData, width, height]);
+    }, [linesData, width, height, timeCategoryKeys, timeCategoryLabels]);
 
-    // ---- 6) Render UI: dimension checkboxes + the SVG container ----
+
+// ---- 6) Render UI: dimension checkboxes + the SVG container ----
     return (
         <div className="flex flex-col space-y-4">
             {/* Dimension filters */}

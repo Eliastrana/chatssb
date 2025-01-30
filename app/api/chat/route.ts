@@ -5,7 +5,6 @@ import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
-import {object} from "zod";
 
 const systemPromptNavigation = `
 Brukeren er ute etter statistikk som relaterer til deres forespørsel.
