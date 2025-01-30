@@ -16,12 +16,14 @@ export default function Home() {
     const [error, setError] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null!);
-    
+
+
+
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Sender brukermelding, bruker: /api/chat/route.ts
+
     const sendUserMessage = async () => {
         if (!input.trim()) return;
 
@@ -30,23 +32,46 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
 
-        await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: input }),
-        }).then(async (response) => {
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: input }),
+            });
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || response.statusText);
-            }            
-            const botMessage = (await response.json()).content as string;
-            setMessages((prev) => [...prev, { sender: 'bot', text: botMessage }]);
-        }).catch((err) => {
-            setError(err.message);
-        }).finally(() => {
+            }
+
+            const tableData = await response.json();
+            console.log("Raw API Response (tableData):", tableData);
+
+            // Denne sjekker om det er en tabell eller en enkeltverdi
+
+            if (Array.isArray(tableData.value) && tableData.value.length === 1) {
+                setMessages((prev) => [
+                    ...prev,
+                    { sender: 'bot', text: `Svaret er: ${tableData.value[0]}` }
+                ]);
+            } else {
+                setMessages((prev) => [
+                    ...prev,
+                    { sender: 'bot', text: "Her er grafen basert på dine data:", pxData: tableData }
+                ]);
+            }
+        } catch (err) {
+            console.error(err);
+            setMessages((prev) => [
+                ...prev,
+                { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
+            ]);
+
+        } finally {
             setIsLoading(false);
-        });
+        }
     };
+
 
     // Bare veldig clean komponentbasert layout
     return (
@@ -62,6 +87,8 @@ export default function Home() {
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
+
+
 
                 <ChatMessages
                     messages={messages}
