@@ -186,8 +186,13 @@ export async function POST(request: Request) {
         });
         
         const tableData = await responseTableData.json();
-        
-        return NextResponse.json({ content: JSON.stringify(tableData.value) }, { status: 200 });
+
+        // return NextResponse.json({ content: JSON.stringify(tableData.value) }, { status: 200 });
+        // return NextResponse.json({ content:(tableData.value) }, { status: 200 });
+
+        console.log('Table data:', tableData);
+        return NextResponse.json(tableData, { status: 200 });
+
     } else {
         return NextResponse.json({ content: 'Å nei! Vi fant ikke en relevant tabell for deg.' }, { status: 200 });
     }

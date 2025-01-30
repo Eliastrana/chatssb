@@ -23,15 +23,6 @@ h1, h2, h3, h4, h5, h6, p {
   0 0 30px rgba(255, 255, 255, 0.4);
 }
 
-/* Uncomment for dark mode support if needed */
-/*@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}*/
-
-
 .loading-dots {
   display: inline-block;
   position: relative;
@@ -44,8 +35,8 @@ h1, h2, h3, h4, h5, h6, p {
 .loading-dots span {
   content: '';
   display: inline-block;
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   background-color: #274247;
   border-radius: 50%;
   animation: loading-dots 1.2s infinite ease-in-out;
