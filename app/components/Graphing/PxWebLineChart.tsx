@@ -224,20 +224,33 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
     return (
         <div className="flex flex-col space-y-4">
             {/* Dimension filters */}
+
             <div className="flex flex-wrap gap-4">
                 {nonTimeDimensions.map((dim) => (
-                    <div key={dim.name} className="border p-2 rounded">
-                        <h3 className="font-bold text-sm mb-1">{dim.label}</h3>
+                    <div key={dim.name} className="border-2 border-[#274247] p-2  bg-[#F0F8F9] max-h-48 overflow-auto">
+                        <h3 className="font-bold text-base mb-1">
+                            {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
+                        </h3>
                         <div className="flex flex-col space-y-1">
                             {Object.entries(dim.category.label).map(([catKey, catLabel]) => {
                                 const isChecked = selectedCategories[dim.name].has(catKey);
                                 return (
-                                    <label key={catKey} className="inline-flex items-center space-x-2">
+                                    <label key={catKey} className="inline-flex items-center gap-1">
                                         <input
                                             type="checkbox"
                                             checked={isChecked}
                                             onChange={() => handleToggleCategory(dim.name, catKey)}
+                                            className="peer hidden"
                                         />
+                                        <div
+                                            className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center peer-checked:bg-[#274247] peer-checked:border-[#274247] transition-all relative"
+                                        >
+                                            {/* Checkmark */}
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                                                 viewBox="0 -960 960 960" width="24px" fill="#F0F8F9">
+                                                <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+                                            </svg>
+                                        </div>
                                         <span className="text-xs">{catLabel}</span>
                                     </label>
                                 );
@@ -247,8 +260,9 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                 ))}
             </div>
 
+
             {/* Chart */}
-            <svg ref={svgRef} className="border rounded bg-white w-full" />
+            <svg ref={svgRef} className=" w-full"/>
         </div>
     );
 };

@@ -28,7 +28,7 @@ export default function ChatMessages({ messages, isLoading, messagesEndRef }: Ch
                             <p>{msg.text}</p>
 
                             {msg.pxData && (
-                                <div className="mt-2 bg-white border border-gray-300 p-2 rounded">
+                                <div className="mt-2 p-2">
                                     <PxWebLineChart data={msg.pxData} width={600} height={400} />
                                 </div>
                             )}
