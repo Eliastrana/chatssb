@@ -24,6 +24,11 @@ Du skal finne neste liste eller tabell, dette er så langt du allerede har navig
 "Startmappe"
 `;
 
+export const config = {
+    maxDuration: 60, // Set to desired timeout in seconds
+};
+
+
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
     modelName: 'gpt-4o-mini',
