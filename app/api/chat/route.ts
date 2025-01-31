@@ -24,9 +24,8 @@ Du skal finne neste liste eller tabell, dette er så langt du allerede har navig
 "Startmappe"
 `;
 
-export const config = {
-    maxDuration: 60, // Set to desired timeout in seconds
-};
+
+export const maxDuration = 60; // This function can run for a maximum of 5 seconds
 
 
 const model = new ChatOpenAI({
