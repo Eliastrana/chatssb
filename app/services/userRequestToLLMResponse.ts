@@ -5,6 +5,7 @@ import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
 import {PxWebData} from "@/app/types";
+import {navigationRunnable} from "@/app/utils/navigation_runnable/navigationRunnable";
 
 const systemPromptNavigation = `
 Brukeren er ute etter statistikk som relaterer til deres forespørsel.
@@ -30,26 +31,6 @@ const model = new ChatOpenAI({
     modelName: 'gpt-4o-mini',
     temperature: 0,
 });
-
-const OpenAINavigationFunction = {
-    name: "navigate_to_best_table",
-    description: "Navigate in the SSB API structure to find the best table for the user's request.",
-    parameters: {
-        type: "object",
-        properties: {
-            type: {type: "string", description: "The 'type' of the current item."},
-            id: {type: "string", description: "The 'id' of either a list or a table."},
-            label: {type: "string", description: "The 'label' of the current item."},
-        },
-        required: ["id", "type", "label"],
-    },
-};
-
-type OpenAINavigationFunctionType = {
-    type: string;
-    id: string;
-    label: string;
-};
 
 const OpenAIRequestTableDataFunction = {
     name: "filter_table",
@@ -85,7 +66,7 @@ type SSBTableMetadata = {
 export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
     let depth = 0;
     const maxDepth = 5;
-    let LLMResponse: OpenAINavigationFunctionType = {type: '', id: '', label: ''};
+    let LLMResponse  = { type: '', id: '', label: '' };
     let currentSystemPrompt: string = systemPromptNavigation;
 
     console.log('Received message:', message);
@@ -104,22 +85,13 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
 
         const SSBResponse: JSON = await response.json();
-
-        const prompt = ChatPromptTemplate.fromMessages([
-            new SystemMessage(currentSystemPrompt),
-            new SystemMessage('API response: ' + JSON.stringify(SSBResponse)),
+        const messages = [
+            new SystemMessage("API response: " + JSON.stringify(SSBResponse)),
             new HumanMessage(message),
-        ]);
-
-        const runnable = createOpenAIFnRunnable({
-            functions: [OpenAINavigationFunction],
-            llm: model,
-            prompt,
-        });
-
-        LLMResponse = await runnable.invoke({}, {}) as OpenAINavigationFunctionType;
+        ];
         
-        console.log(LLMResponse.label)
+        LLMResponse = await navigationRunnable(model, messages).invoke({}, {});
+        console.log(LLMResponse);
 
         currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
 
