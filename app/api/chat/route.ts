@@ -1,30 +1,27 @@
-"use server";
+// noinspection TypeScriptValidateTypes
 
+import { NextResponse } from 'next/server';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { SystemMessage, HumanMessage } from '@langchain/core/messages';
 import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
-import {PxWebData} from "@/app/types";
 
 const systemPromptNavigation = `
 Brukeren er ute etter statistikk som relaterer til deres forespørsel.
 Du skal navigere i en API-struktur for å finne 1 tabell av 8000 som passer best til brukerens ønske.
-
 API-en består av flere hovedemner som er hver sin egen liste av lister ned til tabellnivå.
 Du kan identifisere underemner ved å se på 'type' som har følgende alternativer:
-
 - 'FolderInformation' for liste som kan inneholde flere lister, tabeller eller header
 - 'Table' for tabell som inneholder data
 - 'Heading' for header som er en overskrift
-
 Du skal bare navigere i lister og tabeller.
 Du skal returnere 'id' attributtet til tabellen som passer best til brukerens forespørsel sammen med 'type' og 'label' attributtene valgt.
-
 Du skal finne neste liste eller tabell, dette er så langt du allerede har navigert og du skal ikke respondere med det samme igjen:
 "Startmappe"
 `;
 
 
+export const maxDuration = 60;
 
 
 const model = new ChatOpenAI({
@@ -84,49 +81,30 @@ type SSBTableMetadata = {
     }>;
 }
 
-interface FetchOptions extends RequestInit {
-    timeout?: number;
-}
-
-
-
-async function fetchWithTimeout(resource: string, options: FetchOptions = {}): Promise<Response> {
-    const { timeout = 60000, ...rest } = options; // Default timeout set to 60 seconds
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    const response = await fetch(resource, {
-        ...rest,
-        signal: controller.signal,
-    });
-    clearTimeout(id);
-    return response;
-}
-
-
-export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
+export async function POST(request: Request) {
 
     let depth = 0;
     const maxDepth = 5;
-    let LLMResponse: OpenAINavigationFunctionType = {type: '', id: '', label: ''};
+    let LLMResponse: OpenAINavigationFunctionType = { type: '', id: '', label: '' };
     let currentSystemPrompt: string = systemPromptNavigation;
 
+    const { message } = (await request.json()) as { message: string };
     console.log('Received message:', message);
 
     while (depth < maxDepth) {
         const navigationId = LLMResponse.id;
 
-        const response = await fetchWithTimeout('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
+        const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            timeout: 60000, // 60 seconds timeout
-        });
+        })
 
-        if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
+        if (!response.ok) return NextResponse.json({ error: response.statusText }, { status: response.status });
 
-        const SSBResponse = await response.json();
+        const SSBResponse: JSON = await response.json();
 
         const prompt = ChatPromptTemplate.fromMessages([
             new SystemMessage(currentSystemPrompt),
@@ -141,7 +119,9 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         });
 
         LLMResponse = await runnable.invoke({}, {}) as OpenAINavigationFunctionType;
-        
+
+        // console.log('LLMResponse:', LLMResponse);
+
         console.log(LLMResponse.label)
 
         currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
@@ -150,84 +130,87 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         depth++;
     }
 
-    if (depth === maxDepth) {
-        throw new Error('Failed to find a table in the SSB API');
-    }
+    if (depth < maxDepth) {
+        const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/metadata?lang=no&outputFormat=json-stat2', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        })
 
-    const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/metadata?lang=no&outputFormat=json-stat2', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-    })
+        const tableMetadata: SSBTableMetadata = await response.json();
+        let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/data?lang=no&format=json-stat2';
 
-    if (!response.ok) throw new Error('Failed to fetch SSB API table metadata');
+        for (const dimensionKey in tableMetadata.dimension) {
+            const dimension = tableMetadata.dimension[dimensionKey];
 
-    const tableMetadata: SSBTableMetadata = await response.json();
-    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/data?lang=no&format=json-stat2';
+            const categoryLabels = Object.values(dimension.category.label);
 
-    for (const dimensionKey in tableMetadata.dimension) {
-        const dimension = tableMetadata.dimension[dimensionKey];
+            const dimensionPrompt = JSON.stringify({
+                label: dimension.label,
+                category: categoryLabels,
+                unit: dimension.category.unit,
+                elimination: dimension.extension.elimination,
+            });
 
-        const categoryLabels = Object.values(dimension.category.label);
+            console.log('Dimension:', dimensionPrompt);
 
-        const dimensionPrompt = JSON.stringify({
-            label: dimension.label,
-            category: categoryLabels,
-            unit: dimension.category.unit,
-            elimination: dimension.extension.elimination,
-        });
+            const prompt = ChatPromptTemplate.fromMessages([
+                new SystemMessage(dimensionPrompt),
+                new HumanMessage(message),
+            ]);
 
-        console.log('Dimension:', dimensionPrompt);
+            const runnable = createOpenAIFnRunnable({
+                functions: [OpenAIRequestTableDataFunction],
+                llm: model,
+                prompt,
+                enforceSingleFunctionUsage: true,
+            });
 
-        const prompt = ChatPromptTemplate.fromMessages([
-            new SystemMessage(dimensionPrompt),
-            new HumanMessage(message),
-        ]);
+            const LLMRequestTableData = await runnable.invoke({}, {})
 
-        const runnable = createOpenAIFnRunnable({
-            functions: [OpenAIRequestTableDataFunction],
-            llm: model,
-            prompt,
-            enforceSingleFunctionUsage: true,
-        });
+            // If category contains ´,´ split it into several categories and add each to url category key
+            if (!LLMRequestTableData.category.toString().includes(',')) {
 
-        const LLMRequestTableData = await runnable.invoke({}, {})
+                const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
 
-        if (!LLMRequestTableData.category.toString().includes(',')) {
-
-            const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
-
-            SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
-            console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
-
-        } else {
-            const categoryKeys = LLMRequestTableData.category.split(',');
-
-            for (const category of categoryKeys) {
-                const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === category) || '*';
                 SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
+                console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
+
+            } else {
+                const categoryKeys = LLMRequestTableData.category.split(',');
+
+                for (const category of categoryKeys) {
+                    const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === category) || '*';
+                    SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
+                }
+
+                console.log('LLMRequestTableData:', categoryKeys, '=>', LLMRequestTableData.category);
             }
-            console.log('LLMRequestTableData:', categoryKeys, '=>', LLMRequestTableData.category);
+
+
         }
+
+        console.log('SSBGetUrl:', SSBGetUrl);
+
+        const responseTableData = await fetch(SSBGetUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        });
+
+        const tableData = await responseTableData.json();
+
+        // return NextResponse.json({ content: JSON.stringify(tableData.value) }, { status: 200 });
+        // return NextResponse.json({ content:(tableData.value) }, { status: 200 });
+
+        console.log('Table data:', tableData);
+        return NextResponse.json(tableData, { status: 200 });
+
+    } else {
+        return NextResponse.json({ content: 'Å nei! Vi fant ikke en relevant tabell for deg.' }, { status: 400 });
     }
 
-    console.log('SSBGetUrl:', SSBGetUrl);
-
-    const responseTableData = await fetch(SSBGetUrl, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-        }
-    });
-
-    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data');
-
-    const tableData = await responseTableData.json();
-    console.log('Table data:', tableData);
-    
-    return tableData;
 }
-
-
