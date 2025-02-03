@@ -3,17 +3,17 @@ import * as d3 from "d3";
 import {PxWebData} from "@/app/types";
 
 
-interface LineChartProps {
+interface BarChartProps {
     data: PxWebData;
     width?: number;
     height?: number;
 }
 
-export const PxWebLineChart: React.FC<LineChartProps> = ({
-                                                             data,
-                                                             width = 900,
-                                                             height = 500,
-                                                         }) => {
+export const PxWebBarChart: React.FC<BarChartProps> = ({
+                                                           data,
+                                                           width = 900,
+                                                           height = 500,
+                                                       }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
     // ---- 1) Identify which dimension is time, which are others ----
@@ -23,6 +23,7 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
     if (data.role?.time && data.role.time.length > 0) {
         timeDimName = data.role.time[0];
     } else {
+        // Fallback: try to guess it's named "tid"
         timeDimName = dimensionEntries.find(([key]) => key.toLowerCase() === "tid")
             ?.[0];
     }
@@ -90,18 +91,29 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         return data.value[index1D];
     };
 
-    // ---- 4) Build the list of lines to plot (cross-product) ----
+    // ---- 4) Build the list of "series" (combos) to plot (cross-product) ----
     type Combo = { [dimName: string]: string };
     const combos: Combo[] = cartesianProduct(
         nonTimeDimensions.map((dim) => [...selectedCategories[dim.name]]),
         nonTimeDimensions.map((dim) => dim.name)
     );
 
-    const linesData = combos.map((combo) => {
+    /**
+     * Each combo corresponds to one group of bars across all time points.
+     * For each time category, we get the y-value.
+     *
+     * linesData (here "seriesData") will be an array of:
+     * {
+     *   combo: { <dimName>: <catKey>, ... },
+     *   series: Array<{ x: string, y: number }>
+     * }
+     */
+    const seriesData = combos.map((combo) => {
         const series = timeCategoryKeys.map((timeKey) => {
             const fullCoords = { ...combo, [timeDimName]: timeKey };
             const yVal = getValue(fullCoords);
             return {
+                // x is the time label, e.g. "2020"
                 x: timeCategoryLabels[timeKey] || timeKey,
                 y: yVal,
             };
@@ -117,6 +129,7 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         const svgEl = d3.select(svgRef.current);
         svgEl.selectAll("*").remove();
 
+        // Dimensions
         const margin = { top: 30, right: 30, bottom: 50, left: 60 };
         const innerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
@@ -126,17 +139,25 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const allPoints = linesData.flatMap((line) => line.series);
+        // Flatten out all points to get y extent
+        const allPoints = seriesData.flatMap((sd) => sd.series);
 
-        // x-scale (treat time as category or parse if needed)
+        // X scale for the time dimension (discrete)
         const xDomain = timeCategoryKeys.map((key) => timeCategoryLabels[key] || key);
         const xScale = d3
-            .scalePoint()
+            .scaleBand<string>()
             .domain(xDomain)
             .range([0, innerWidth])
-            .padding(0.5);
+            .padding(0.2);
 
-        // y-scale
+        // Sub-scale to separate each "combo" inside each time slot
+        const xSubgroup = d3
+            .scaleBand<number>()
+            .domain(d3.range(seriesData.length)) // one index per combo
+            .range([0, xScale.bandwidth()])
+            .padding(0.05);
+
+        // Y scale
         const [minY, maxY] = d3.extent(allPoints, (d) => d.y);
         const yScale = d3
             .scaleLinear()
@@ -144,7 +165,7 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
             .range([innerHeight, 0])
             .nice();
 
-        // Draw axes
+        // Axes
         const xAxis = d3.axisBottom<string>(xScale).tickSizeOuter(0);
         svg
             .append("g")
@@ -158,8 +179,7 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         const yAxis = d3.axisLeft<number>(yScale);
         svg.append("g").call(yAxis);
 
-        // Create a tooltip div that we'll show/hide on hover
-        // (Alternatively, you could place this div outside the chart and select it by ID or class.)
+        // Tooltip
         const tooltip = d3
             .select("body")
             .append("div")
@@ -172,72 +192,69 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
             .style("font-size", "12px")
             .style("display", "none");
 
-        // Line generator
-        const lineGen = d3
-            .line<{ x: string; y: number }>()
-            .x((d) => xScale(d.x) ?? 0)
-            .y((d) => yScale(d.y));
+        // Color scale for combos
+        const color = d3
+            .scaleOrdinal(d3.schemeCategory10)
+            .domain(d3.range(seriesData.length).map(String));
 
-        // Color scale
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
+        // Create a group for each time tick along the X axis
+        const timeGroups = svg
+            .selectAll<SVGGElement, string>(".time-group")
+            .data(xDomain)
+            .enter()
+            .append("g")
+            .attr("class", "time-group")
+            .attr("transform", (d) => `translate(${xScale(d)},0)`);
 
-        // Draw lines and animate them
-        linesData.forEach(({ series }, idx) => {
-            const path = svg
-                .append("path")
-                .datum(series)
-                .attr("fill", "none")
-                .attr("stroke", color(String(idx)))
-                .attr("stroke-width", 2)
-                .attr("d", lineGen);
-
-            // Measure path length to create stroke-dash animation
-            const totalLength = (path.node() as SVGPathElement).getTotalLength();
-
-            // Initial dash settings to hide the path
-            path
-                .attr("stroke-dasharray", totalLength)
-                .attr("stroke-dashoffset", totalLength)
-                .transition()
-                .duration(1500) // ms
-                .ease(d3.easeCubicInOut)
-                .attr("stroke-dashoffset", 0);
-        });
-
-        // Draw circles on each data point, attach hover events
-        linesData.forEach(({ series }, idx) => {
-            svg.selectAll(`.circle-${idx}`)
-                .data(series)
-                .enter()
-                .append("circle")
-                .attr("fill", color(String(idx)))
-                .attr("cx", (d) => xScale(d.x) ?? 0)
-                .attr("cy", (d) => yScale(d.y))
-                .attr("r", 3)
-                // mouse events
-                .on("mouseover", function (event, d) {
-                    tooltip.style("display", "block");
-                    tooltip.html(`
-                        <strong>${d.x}</strong><br/>
-                        Verdi: ${d.y}
-                    `);
-                })
-                .on("mousemove", function (event) {
-                    // Position the tooltip near the cursor
-                    tooltip
-                        .style("left", event.pageX + 10 + "px")
-                        .style("top", event.pageY + 10 + "px");
-                })
-                .on("mouseleave", function () {
-                    tooltip.style("display", "none");
+        // ---- 1) Append the rects with initial attributes ----
+        const bars = timeGroups
+            .selectAll<SVGRectElement, string>("rect")
+            .data((timeLabel) => {
+                return seriesData.map((sd, i) => {
+                    const point = sd.series.find((pt) => pt.x === timeLabel);
+                    return {
+                        comboIndex: i,
+                        timeLabel,
+                        value: point?.y ?? 0,
+                    };
                 });
-        });
+            })
+            .enter()
+            .append("rect")
+            .attr("x", (d) => xSubgroup(d.comboIndex)!)
+            .attr("width", xSubgroup.bandwidth())
+            .attr("fill", (d) => color(String(d.comboIndex))!)
+            // Start with zero-height bars at the bottom:
+            .attr("y", innerHeight)
+            .attr("height", 0)
+            // Tooltips/events (attach them to the rects selection, not the transition)
+            .on("mouseover", function (event, d) {
+                tooltip.style("display", "block");
+                tooltip.html(
+                    `<strong>${d.timeLabel}</strong><br/>Verdi: ${d.value}`
+                );
+            })
+            .on("mousemove", function (event) {
+                tooltip
+                    .style("left", event.pageX + 10 + "px")
+                    .style("top", event.pageY + 10 + "px");
+            })
+            .on("mouseleave", function () {
+                tooltip.style("display", "none");
+            });
 
-        // Cleanup: remove tooltip div on unmount
+        // ---- 2) Transition to final attributes (bar rising up) ----
+        bars
+            .transition()
+            .duration(400)
+            .attr("y", (d) => yScale(d.value))
+            .attr("height", (d) => innerHeight - yScale(d.value));
+
+        // Cleanup tooltip on unmount
         return () => {
             tooltip.remove();
         };
-    }, [linesData, width, height, timeCategoryKeys, timeCategoryLabels]);
+    }, [seriesData, width, height, timeCategoryKeys, timeCategoryLabels]);
 
     // ---- 6) Render UI: dimension checkboxes + the SVG container ----
     return (
@@ -253,42 +270,38 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                             {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
                         </h3>
                         <div className="flex flex-col space-y-1">
-                            {Object.entries(dim.category.label).map(
-                                ([catKey, catLabel]) => {
-                                    const isChecked = selectedCategories[dim.name].has(catKey);
-                                    return (
-                                        <label
-                                            key={catKey}
-                                            className="inline-flex items-center gap-1"
+                            {Object.entries(dim.category.label).map(([catKey, catLabel]) => {
+                                const isChecked = selectedCategories[dim.name].has(catKey);
+                                return (
+                                    <label
+                                        key={catKey}
+                                        className="inline-flex items-center gap-1"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => handleToggleCategory(dim.name, catKey)}
+                                            className="peer hidden"
+                                        />
+                                        <div
+                                            className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
+                                 peer-checked:bg-[#274247] peer-checked:border-[#274247]
+                                 transition-all relative"
                                         >
-                                            <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() =>
-                                                    handleToggleCategory(dim.name, catKey)
-                                                }
-                                                className="peer hidden"
-                                            />
-                                            <div
-                                                className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
-                                                peer-checked:bg-[#274247] peer-checked:border-[#274247]
-                                                transition-all relative"
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                height="24px"
+                                                viewBox="0 -960 960 960"
+                                                width="24px"
+                                                fill="#F0F8F9"
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    height="24px"
-                                                    viewBox="0 -960 960 960"
-                                                    width="24px"
-                                                    fill="#F0F8F9"
-                                                >
-                                                    <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-                                                </svg>
-                                            </div>
-                                            <span className="text-xs">{catLabel}</span>
-                                        </label>
-                                    );
-                                }
-                            )}
+                                                <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-xs">{catLabel}</span>
+                                    </label>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
