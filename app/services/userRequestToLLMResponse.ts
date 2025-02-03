@@ -84,6 +84,25 @@ type SSBTableMetadata = {
     }>;
 }
 
+interface FetchOptions extends RequestInit {
+    timeout?: number;
+}
+
+
+
+async function fetchWithTimeout(resource: string, options: FetchOptions = {}): Promise<Response> {
+    const { timeout = 60000, ...rest } = options; // Default timeout set to 60 seconds
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    const response = await fetch(resource, {
+        ...rest,
+        signal: controller.signal,
+    });
+    clearTimeout(id);
+    return response;
+}
+
+
 export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
 
     let depth = 0;
@@ -96,17 +115,18 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     while (depth < maxDepth) {
         const navigationId = LLMResponse.id;
 
-        const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
+        const response = await fetchWithTimeout('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-        })
+            timeout: 60000, // 60 seconds timeout
+        });
 
         if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
 
-        const SSBResponse: JSON = await response.json();
+        const SSBResponse = await response.json();
 
         const prompt = ChatPromptTemplate.fromMessages([
             new SystemMessage(currentSystemPrompt),
@@ -192,7 +212,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
             console.log('LLMRequestTableData:', categoryKeys, '=>', LLMRequestTableData.category);
         }
     }
-    
+
     console.log('SSBGetUrl:', SSBGetUrl);
 
     const responseTableData = await fetch(SSBGetUrl, {
