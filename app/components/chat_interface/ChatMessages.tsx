@@ -2,7 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Message } from '@/app/types';
-import { PxWebLineChart } from '@/app/components/Graphing/PxWebLineChart';
+import ChartDisplay from "@/app/components/Graphing/ChartDisplay";
 
 interface ChatMessagesProps {
     messages: Message[];
@@ -12,12 +12,12 @@ interface ChatMessagesProps {
 
 export default function ChatMessages({ messages, isLoading, messagesEndRef }: ChatMessagesProps) {
     return (
-        <div className="flex-1 overflow-y-auto mb-10 z-10 text-xs md:text-base text-white">
+        <div className="flex-1 overflow-y-auto mb-10 text-xs md:text-base text-white">
             {messages.map((msg, index) => {
                 const isBot = msg.sender === 'bot';
 
                 return (
-                    <div key={index} className={`mb-2 flex ${isBot ? 'justify-start' : 'justify-end'} max-w-full`}>
+                    <div key={index} className={`mb-2 z-20 flex ${isBot ? 'justify-start' : 'justify-end'} max-w-full`}>
                         {isBot && (
                             <div className="flex items-center mr-2">
                                 <Image src="/ssb_logosymbol_dark.svg" alt="Chatbot" width={50} height={50} className="min-w-[50px] min-h-[50px]" />
@@ -28,10 +28,9 @@ export default function ChatMessages({ messages, isLoading, messagesEndRef }: Ch
                             <p>{msg.text}</p>
 
                             {msg.pxData && (
-                                <div className="mt-2 p-2">
-                                    <PxWebLineChart data={msg.pxData} width={600} height={400} />
-                                </div>
+                                <ChartDisplay pxData={msg.pxData} width={600} height={400} />
                             )}
+
                         </div>
                     </div>
                 );
