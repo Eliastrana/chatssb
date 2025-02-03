@@ -5,6 +5,7 @@ import ChatMessages from './components/chat_interface/ChatMessages';
 import ChatInput from './components/chat_interface/ChatInput';
 
 import { Message } from './types';
+import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -24,10 +25,10 @@ export default function Home() {
     }, [messages]);
 
 
-    const sendUserMessage = async () => {
-        if (!input.trim()) return;
+    const sendUserMessage = async (userMessage: string) => {
+        if (!userMessage.trim()) return;
 
-        setMessages((prev) => [...prev, { sender: 'user', text: input }]);
+        setMessages((prev) => [...prev, { sender: 'user', text: userMessage }]);
         setInput('');
         setIsLoading(true);
         setError(null);
@@ -36,7 +37,7 @@ export default function Home() {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: input }),
+                body: JSON.stringify({ message: userMessage }),
             });
 
             if (!response.ok) {
@@ -46,8 +47,6 @@ export default function Home() {
 
             const tableData = await response.json();
             console.log("Raw API Response (tableData):", tableData);
-
-            // Denne sjekker om det er en tabell eller en enkeltverdi
 
             if (Array.isArray(tableData.value) && tableData.value.length === 1) {
                 setMessages((prev) => [
@@ -66,7 +65,6 @@ export default function Home() {
                 ...prev,
                 { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
             ]);
-
         } finally {
             setIsLoading(false);
         }
@@ -94,25 +92,23 @@ export default function Home() {
                     messages={messages}
                     isLoading={isLoading}
                     messagesEndRef={messagesEndRef}
-
-                    //Denne sletta Trygve i den andre fila så derfor er det kommentert ut her.
-
-                    // handleUserSelectedLink={(url) => {
-                    //     setMessages((prev) => [...prev, {sender: 'bot', text: url}]);
-                    //     // Denne kan utkommenteres hvis ønsket:
-                    //     // handleActivateJson(url);
-                    // }}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
+
+                {messages.filter(msg => msg.sender === "user").length === 0 && (
+                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
+                )}
+
             </div>
+
 
 
             <ChatInput
                 input={input}
                 setInput={setInput}
                 isLoading={isLoading}
-                handleSend={sendUserMessage}
+                handleSend={() => sendUserMessage(input)}
             />
         </div>
     );
