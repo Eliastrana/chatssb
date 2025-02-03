@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/services/userRequestToLLMResponse.ts": {
+      "maxDuration": 60
+    }
+  }
+}

@@ -25,6 +25,8 @@ Du skal finne neste liste eller tabell, dette er så langt du allerede har navig
 `;
 
 
+
+
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
     modelName: 'gpt-4o-mini',
@@ -83,6 +85,7 @@ type SSBTableMetadata = {
 }
 
 export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
+
     let depth = 0;
     const maxDepth = 5;
     let LLMResponse: OpenAINavigationFunctionType = {type: '', id: '', label: ''};
@@ -206,3 +209,5 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     
     return tableData;
 }
+
+
