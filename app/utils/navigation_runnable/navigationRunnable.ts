@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
-import { BaseChatModel } from '@langchain/core/dist/language_models/chat_models';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import {systemPrompt} from "@/app/utils/navigation_runnable/systemPrompt";
 import {Runnable} from "@langchain/core/runnables";
 

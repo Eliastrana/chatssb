@@ -11,7 +11,4 @@ Du kan identifisere underemner ved å se på 'type' som har følgende alternativ
 
 Du skal bare navigere i lister og tabeller.
 Du skal returnere 'id' attributtet til tabellen som passer best til brukerens forespørsel sammen med 'type' og 'label' attributtene valgt.
-
-Du skal finne neste liste eller tabell, dette er så langt du allerede har navigert og du skal ikke respondere med det samme igjen:
-"Startmappe"
 `;
