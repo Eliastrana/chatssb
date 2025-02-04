@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import {PxWebData} from "@/app/types";
-
+import { PxWebData } from "@/app/types";
+import SingleRangeSlider from "@/app/components/Graphing/SingleRangeSlider";
 
 interface PieChartProps {
     data: PxWebData;
@@ -21,12 +21,11 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
 
     let timeDimName: string | undefined = undefined;
     if (data.role?.time && data.role.time.length > 0) {
-        // If 'role.time' is given, use that
         timeDimName = data.role.time[0];
     } else {
-        // Fallback: try to guess it's named "tid"
-        timeDimName = dimensionEntries.find(([key]) => key.toLowerCase() === "tid")
-            ?.[0];
+        timeDimName = dimensionEntries.find(
+            ([key]) => key.toLowerCase() === "tid"
+        )?.[0];
     }
 
     if (!timeDimName) {
@@ -38,18 +37,17 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
     const timeCategoryKeys = Object.keys(timeDimension.category.index);
     const timeCategoryLabels = timeDimension.category.label;
 
-    // Identify non-time dimensions for filtering
+    // ---- 2) Identify non-time dimensions for filtering ----
     const nonTimeDimensions = dimensionEntries
         .filter(([dimName]) => dimName !== timeDimName)
         .map(([dimName, dim]) => ({ name: dimName, ...dim }));
 
-    // ---- 2) State for which categories are selected for each non-time dimension ----
+    // ---- 3) State for selected categories (all selected by default) ----
     const [selectedCategories, setSelectedCategories] = useState<
         Record<string, Set<string>>
     >(() => {
         const initial: Record<string, Set<string>> = {};
         nonTimeDimensions.forEach((dim) => {
-            // Select all categories by default
             initial[dim.name] = new Set(Object.keys(dim.category.index));
         });
         return initial;
@@ -69,15 +67,12 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
         });
     };
 
-    // ---- 3) A function to retrieve `value` from the 1D data.value array ----
+    // ---- 4) Function to retrieve `value` from data.value array ----
     const dimensionNamesInOrder = Object.keys(data.dimension);
     const dimensionSizesInOrder = data.size;
-
     const getValue = (coords: Record<string, string>) => {
         let index1D = 0;
         let stride = 1;
-
-        // The last dimension in dimensionNamesInOrder changes fastest
         for (let d = dimensionNamesInOrder.length - 1; d >= 0; d--) {
             const dimName = dimensionNamesInOrder[d];
             const catKey = coords[dimName];
@@ -92,53 +87,47 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
         return data.value[index1D];
     };
 
-    // ---- 4) Compute a single time point to display. We'll use the last one. ----
-    // (You could make this selectable by the user if desired.)
-    const selectedTimeKey = timeCategoryKeys[timeCategoryKeys.length - 1];
+    // ---- 5) Use a single time point for the pie chart.
+    // Create state for the selected time index (default to the last time point)
+    const [selectedTimeIndex, setSelectedTimeIndex] = useState(
+        timeCategoryKeys.length - 1
+    );
+    const selectedTimeKey = timeCategoryKeys[selectedTimeIndex];
     const selectedTimeLabel = timeCategoryLabels[selectedTimeKey];
 
-    // ---- 5) Build the list of slices (one for each cross-product of selected categories) ----
-    // We do not treat each time as separate slices. Instead, we pick just the single time from above.
+    // ---- 6) Build slices data for the pie chart ----
     type Combo = { [dimName: string]: string };
     const combos: Combo[] = cartesianProduct(
         nonTimeDimensions.map((dim) => [...selectedCategories[dim.name]]),
         nonTimeDimensions.map((dim) => dim.name)
     );
 
-    /**
-     * For each combo, get the numeric value for the chosen time.
-     */
     const slicesData = combos.map((combo) => {
         const coords = { ...combo, [timeDimName]: selectedTimeKey };
         const value = getValue(coords);
-        return {
-            combo, // e.g. { "region": "someKey", "gender": "anotherKey", ... }
-            value,
-        };
+        return { combo, value };
     });
 
-    // ---- 6) Render D3 chart + transitions + tooltip in useEffect ----
+    // ---- 7) Render D3 pie chart ----
     useEffect(() => {
         if (!svgRef.current) return;
-
-        // Clear previous chart
         const svgEl = d3.select(svgRef.current);
         svgEl.selectAll("*").remove();
 
-        // Dimensions
         const margin = { top: 30, right: 30, bottom: 50, left: 60 };
-        const radius = Math.min(width - margin.left - margin.right, height - margin.top - margin.bottom) / 2;
+        const radius = Math.min(
+            width - margin.left - margin.right,
+            height - margin.top - margin.bottom
+        ) / 2;
 
         const svg = svgEl
             .attr("viewBox", `0 0 ${width} ${height}`)
             .append("g")
             .attr(
                 "transform",
-                `translate(${(width - margin.left - margin.right) / 2 + margin.left},
-                    ${(height - margin.top - margin.bottom) / 2 + margin.top})`
+                `translate(${(width - margin.left - margin.right) / 2 + margin.left},${(height - margin.top - margin.bottom) / 2 + margin.top})`
             );
 
-        // Tooltip
         const tooltip = d3
             .select("body")
             .append("div")
@@ -150,27 +139,20 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
             .style("font-size", "12px")
             .style("display", "none");
 
-        // Pie generator
         const pieGenerator = d3
-            .pie<{
-                combo: Record<string, string>;
-                value: number }>()
+            .pie<{ combo: Record<string, string>; value: number }>()
             .sort(null)
             .value((d) => d.value);
 
-        // Arc generator
         const arcGenerator = d3
-            .arc<d3.PieArcDatum<{ value: number; combo: Record<string, string> }>>()
+            .arc<d3.PieArcDatum<{ combo: Record<string, string>; value: number }>>()
             .innerRadius(0)
             .outerRadius(radius);
 
-        // Color scale (one color per combo index)
         const color = d3.scaleOrdinal<string>().range(d3.schemeCategory10);
 
-        // Convert data to pie arcs
         const arcs = pieGenerator(slicesData);
 
-        // Create groups for each arc
         const arcGroups = svg
             .selectAll(".arc")
             .data(arcs)
@@ -178,7 +160,6 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
             .append("g")
             .attr("class", "arc");
 
-        // Draw path
         arcGroups
             .append("path")
             .attr("d", arcGenerator)
@@ -186,18 +167,15 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
             .transition()
             .duration(1000)
             .attrTween("d", function (d) {
-                // Animate from 0 to the final angle
-                const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+                const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
                 return function (t) {
-                    return arcGenerator(i(t))!;
+                    return arcGenerator(interpolate(t))!;
                 };
             });
 
-        // Add tooltip events
         arcGroups
             .on("mouseover", function (event, d) {
                 tooltip.style("display", "block");
-                // Build a label from the dimension combos
                 const comboLabels = Object.entries(d.data.combo)
                     .map(([dimName, catKey]) => {
                         const label =
@@ -219,7 +197,6 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
                 tooltip.style("display", "none");
             });
 
-        // (Optional) add a central label for the time dimension we selected
         svg
             .append("text")
             .attr("text-anchor", "middle")
@@ -227,16 +204,15 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
             .style("font-size", "14px")
             .text(selectedTimeLabel);
 
-        // Cleanup tooltip on unmount
         return () => {
             tooltip.remove();
         };
     }, [slicesData, width, height, data.dimension, selectedTimeLabel]);
 
-    // ---- 7) Render UI: dimension checkboxes + the SVG container ----
+    // ---- 8) Render UI ----
     return (
         <div className="flex flex-col space-y-4">
-            {/* Dimension filters */}
+            {/* Dimension Filters */}
             <div className="flex flex-wrap gap-4">
                 {nonTimeDimensions.map((dim) => (
                     <div
@@ -250,10 +226,7 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
                             {Object.entries(dim.category.label).map(([catKey, catLabel]) => {
                                 const isChecked = selectedCategories[dim.name].has(catKey);
                                 return (
-                                    <label
-                                        key={catKey}
-                                        className="inline-flex items-center gap-1"
-                                    >
+                                    <label key={catKey} className="inline-flex items-center gap-1">
                                         <input
                                             type="checkbox"
                                             checked={isChecked}
@@ -262,8 +235,7 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
                                         />
                                         <div
                                             className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
-                                 peer-checked:bg-[#274247] peer-checked:border-[#274247]
-                                 transition-all relative"
+                        peer-checked:bg-[#274247] peer-checked:border-[#274247] transition-all relative"
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -286,6 +258,16 @@ export const PxWebPieChart: React.FC<PieChartProps> = ({
 
             {/* Chart */}
             <svg ref={svgRef} className="w-full" />
+
+            {/* Single Range Slider for selecting time point */}
+            <SingleRangeSlider
+                min={0}
+                max={timeCategoryKeys.length - 1}
+                value={selectedTimeIndex}
+                onChange={(newValue) => setSelectedTimeIndex(newValue)}
+                timeCategoryLabels={timeCategoryLabels}
+                timeCategoryKeys={timeCategoryKeys}
+            />
         </div>
     );
 };
@@ -298,9 +280,7 @@ function cartesianProduct(
     dimensionNames: string[]
 ): Array<{ [dimName: string]: string }> {
     if (arraysOfKeys.length === 0) return [];
-
     let result: Array<Record<string, string>> = [{}];
-
     arraysOfKeys.forEach((keys, dimIndex) => {
         const tmp: Array<Record<string, string>> = [];
         for (const comboSoFar of result) {

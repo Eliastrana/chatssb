@@ -13,7 +13,7 @@ export default function ExamplePrompts({ onSelectPrompt }: ExamplePromptsProps) 
     ];
 
     return (
-        <div className="flex flex-col items-center mt-4">
+        <div className="flex flex-col items-center mt-4 max-w-3xl">
             <h2 className="text-md md:text-xl font-semibold text-gray-800">Vi kan hjelpe deg med:</h2>
             <div className="grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-4 mt-4">
                 {prompts.map((prompt, index) => (
