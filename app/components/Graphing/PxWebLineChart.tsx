@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import {PxWebData} from "@/app/types";
-
+import { PxWebData } from "@/app/types";
+import DualRangeSlider from "@/app/components/Graphing/DualRangeSlider";
 
 interface LineChartProps {
     data: PxWebData;
@@ -23,10 +23,10 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
     if (data.role?.time && data.role.time.length > 0) {
         timeDimName = data.role.time[0];
     } else {
-        timeDimName = dimensionEntries.find(([key]) => key.toLowerCase() === "tid")
-            ?.[0];
+        timeDimName = dimensionEntries.find(
+            ([key]) => key.toLowerCase() === "tid"
+        )?.[0];
     }
-
     if (!timeDimName) {
         throw new Error("Could not find time dimension in the PX-Web JSON.");
     }
@@ -47,7 +47,6 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
     >(() => {
         const initial: Record<string, Set<string>> = {};
         nonTimeDimensions.forEach((dim) => {
-            // All categories selected by default
             initial[dim.name] = new Set(Object.keys(dim.category.index));
         });
         return initial;
@@ -74,8 +73,6 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
     const getValue = (coords: Record<string, string>) => {
         let index1D = 0;
         let stride = 1;
-
-        // The last dimension changes fastest
         for (let d = dimensionNamesInOrder.length - 1; d >= 0; d--) {
             const dimName = dimensionNamesInOrder[d];
             const catKey = coords[dimName];
@@ -109,7 +106,18 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         return { combo, series };
     });
 
-    // ---- 5) Render D3 chart + transitions + tooltip in useEffect ----
+    // ---- 5) State for visible time range (controlled by the DualRangeSlider) ----
+    const [startIndex, setStartIndex] = useState(0);
+    const [endIndex, setEndIndex] = useState(timeCategoryKeys.length - 1);
+
+    // Compute visible time keys and filter linesData accordingly
+    const visibleTimeCategoryKeys = timeCategoryKeys.slice(startIndex, endIndex + 1);
+    const visibleLinesData = linesData.map((line) => {
+        const slicedSeries = line.series.slice(startIndex, endIndex + 1);
+        return { ...line, series: slicedSeries };
+    });
+
+    // ---- 6) Render D3 chart with visible data ----
     useEffect(() => {
         if (!svgRef.current) return;
 
@@ -126,10 +134,13 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        const allPoints = linesData.flatMap((line) => line.series);
+        // Flatten visible data to compute y extent
+        const allPoints = visibleLinesData.flatMap((line) => line.series);
 
-        // x-scale (treat time as category or parse if needed)
-        const xDomain = timeCategoryKeys.map((key) => timeCategoryLabels[key] || key);
+        // x-scale: use only the visible time range
+        const xDomain = visibleTimeCategoryKeys.map(
+            (key) => timeCategoryLabels[key] || key
+        );
         const xScale = d3
             .scalePoint()
             .domain(xDomain)
@@ -158,8 +169,7 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
         const yAxis = d3.axisLeft<number>(yScale);
         svg.append("g").call(yAxis);
 
-        // Create a tooltip div that we'll show/hide on hover
-        // (Alternatively, you could place this div outside the chart and select it by ID or class.)
+        // Create a tooltip for hover events
         const tooltip = d3
             .select("body")
             .append("div")
@@ -178,11 +188,11 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
             .x((d) => xScale(d.x) ?? 0)
             .y((d) => yScale(d.y));
 
-        // Color scale
+        // Color scale for different lines
         const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        // Draw lines and animate them
-        linesData.forEach(({ series }, idx) => {
+        // Draw each line and animate
+        visibleLinesData.forEach(({ series }, idx) => {
             const path = svg
                 .append("path")
                 .datum(series)
@@ -191,22 +201,20 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                 .attr("stroke-width", 2)
                 .attr("d", lineGen);
 
-            // Measure path length to create stroke-dash animation
             const totalLength = (path.node() as SVGPathElement).getTotalLength();
-
-            // Initial dash settings to hide the path
             path
                 .attr("stroke-dasharray", totalLength)
                 .attr("stroke-dashoffset", totalLength)
                 .transition()
-                .duration(1500) // ms
+                .duration(1500)
                 .ease(d3.easeCubicInOut)
                 .attr("stroke-dashoffset", 0);
         });
 
-        // Draw circles on each data point, attach hover events
-        linesData.forEach(({ series }, idx) => {
-            svg.selectAll(`.circle-${idx}`)
+        // Draw circles on data points and attach hover events
+        visibleLinesData.forEach(({ series }, idx) => {
+            svg
+                .selectAll(`.circle-${idx}`)
                 .data(series)
                 .enter()
                 .append("circle")
@@ -214,16 +222,11 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                 .attr("cx", (d) => xScale(d.x) ?? 0)
                 .attr("cy", (d) => yScale(d.y))
                 .attr("r", 3)
-                // mouse events
                 .on("mouseover", function (event, d) {
                     tooltip.style("display", "block");
-                    tooltip.html(`
-                        <strong>${d.x}</strong><br/>
-                        Verdi: ${d.y}
-                    `);
+                    tooltip.html(`<strong>${d.x}</strong><br/>Verdi: ${d.y}`);
                 })
                 .on("mousemove", function (event) {
-                    // Position the tooltip near the cursor
                     tooltip
                         .style("left", event.pageX + 10 + "px")
                         .style("top", event.pageY + 10 + "px");
@@ -233,13 +236,20 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                 });
         });
 
-        // Cleanup: remove tooltip div on unmount
         return () => {
             tooltip.remove();
         };
-    }, [linesData, width, height, timeCategoryKeys, timeCategoryLabels]);
+    }, [
+        visibleLinesData,
+        width,
+        height,
+        timeCategoryLabels,
+        visibleTimeCategoryKeys,
+        startIndex,
+        endIndex,
+    ]);
 
-    // ---- 6) Render UI: dimension checkboxes + the SVG container ----
+    // ---- 7) Render UI: dimension filters, the chart SVG, and the DualRangeSlider ----
     return (
         <div className="flex flex-col space-y-4">
             {/* Dimension filters */}
@@ -253,42 +263,34 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
                             {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
                         </h3>
                         <div className="flex flex-col space-y-1">
-                            {Object.entries(dim.category.label).map(
-                                ([catKey, catLabel]) => {
-                                    const isChecked = selectedCategories[dim.name].has(catKey);
-                                    return (
-                                        <label
-                                            key={catKey}
-                                            className="inline-flex items-center gap-1"
+                            {Object.entries(dim.category.label).map(([catKey, catLabel]) => {
+                                const isChecked = selectedCategories[dim.name].has(catKey);
+                                return (
+                                    <label key={catKey} className="inline-flex items-center gap-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => handleToggleCategory(dim.name, catKey)}
+                                            className="peer hidden"
+                                        />
+                                        <div
+                                            className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
+                        peer-checked:bg-[#274247] peer-checked:border-[#274247] transition-all relative"
                                         >
-                                            <input
-                                                type="checkbox"
-                                                checked={isChecked}
-                                                onChange={() =>
-                                                    handleToggleCategory(dim.name, catKey)
-                                                }
-                                                className="peer hidden"
-                                            />
-                                            <div
-                                                className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
-                                                peer-checked:bg-[#274247] peer-checked:border-[#274247]
-                                                transition-all relative"
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                height="24px"
+                                                viewBox="0 -960 960 960"
+                                                width="24px"
+                                                fill="#F0F8F9"
                                             >
-                                                <svg
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    height="24px"
-                                                    viewBox="0 -960 960 960"
-                                                    width="24px"
-                                                    fill="#F0F8F9"
-                                                >
-                                                    <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-                                                </svg>
-                                            </div>
-                                            <span className="text-xs">{catLabel}</span>
-                                        </label>
-                                    );
-                                }
-                            )}
+                                                <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                                            </svg>
+                                        </div>
+                                        <span className="text-xs">{catLabel}</span>
+                                    </label>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
@@ -296,6 +298,20 @@ export const PxWebLineChart: React.FC<LineChartProps> = ({
 
             {/* Chart */}
             <svg ref={svgRef} className="w-full" />
+
+            {/* Dual Range Slider */}
+            <DualRangeSlider
+                min={0}
+                max={timeCategoryKeys.length - 1}
+                startValue={startIndex}
+                endValue={endIndex}
+                onChange={(newStart, newEnd) => {
+                    setStartIndex(newStart);
+                    setEndIndex(newEnd);
+                }}
+                timeCategoryLabels={timeCategoryLabels}
+                timeCategoryKeys={timeCategoryKeys}
+            />
         </div>
     );
 };
@@ -308,9 +324,7 @@ function cartesianProduct(
     dimensionNames: string[]
 ): Array<{ [dimName: string]: string }> {
     if (arraysOfKeys.length === 0) return [];
-
     let result: Array<Record<string, string>> = [{}];
-
     arraysOfKeys.forEach((keys, dimIndex) => {
         const tmp: Array<Record<string, string>> = [];
         for (const comboSoFar of result) {

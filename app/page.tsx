@@ -76,7 +76,8 @@ export default function Home() {
         <div className="relative flex items-center justify-center min-h-screen p-4  mb-10">
 
             <div className="fixed top-4 left-4 md:w-1/6 w-1/2">
-                <p className="text-sm opacity-50">Denne nettsiden er under utvikling, SSB står ikke for de oppgitte svarene.</p>
+                <p className="text-sm opacity-50">Denne nettsiden er under utvikling, SSB står ikke for de oppgitte
+                    svarene.</p>
             </div>
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>
 
@@ -87,7 +88,6 @@ export default function Home() {
             >
 
 
-
                 <ChatMessages
                     messages={messages}
                     isLoading={isLoading}
@@ -96,12 +96,12 @@ export default function Home() {
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
 
-                {messages.filter(msg => msg.sender === "user").length === 0 && (
-                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
-                )}
+                    {messages.filter(msg => msg.sender === "user").length === 0 && (
+                        <ExamplePrompts onSelectPrompt={sendUserMessage}/>
+                    )}
+
 
             </div>
-
 
 
             <ChatInput
@@ -112,4 +112,4 @@ export default function Home() {
             />
         </div>
     );
-}
+            }
