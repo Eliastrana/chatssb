@@ -109,7 +109,7 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
     const [startIndex, setStartIndex] = useState(0);
     const [endIndex, setEndIndex] = useState(timeCategoryKeys.length - 1);
 
-    const visibleTimeCategoryKeys = timeCategoryKeys.slice(startIndex, endIndex + 1);
+    // const visibleTimeCategoryKeys = timeCategoryKeys.slice(startIndex, endIndex + 1);
     const visibleSeriesData = seriesData.map((sd) => {
         const slicedSeries = sd.series.slice(startIndex, endIndex + 1);
         return { ...sd, series: slicedSeries };
