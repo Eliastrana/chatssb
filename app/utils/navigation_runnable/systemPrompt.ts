@@ -1,4 +1,4 @@
-export const systemPrompt = `
+export const navigationSystemPrompt = `
 Brukeren er ute etter statistikk som relaterer til deres forespørsel.
 Du skal navigere i en API-struktur for å finne 1 tabell av 8000 som passer best til brukerens ønske.
 
