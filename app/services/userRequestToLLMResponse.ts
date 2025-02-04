@@ -3,8 +3,8 @@
 import {ChatOpenAI} from '@langchain/openai';
 import {HumanMessage, SystemMessage} from '@langchain/core/messages';
 import {PxWebData, SSBTableMetadata} from "@/app/types";
-import {navigationRunnable} from "@/app/utils/navigation_runnable/navigationRunnable";
-import {metadataRunnable} from "@/app/utils/metadata_runnable/metadataRunnable";
+import {navigationRunnable} from "@/app/utils/LLM_navigation/navigationRunnable";
+import {metadataRunnable} from "@/app/utils/LLM_metadata_selection/metadataRunnable";
 
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
@@ -68,6 +68,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     
     
     // For each key-value pair in LLMMetadataResponse, add to SSBGetUrl
+    // TODO create optional workflow to let LLM answer one by one
     for (const key in LLMMetadataResponse) {
 
         if (LLMMetadataResponse[key].itemSelections) {
@@ -102,7 +103,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         }
     });
 
-    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data');
+    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + LLMNavigationResponse.label + ' with URL ' + SSBGetUrl);
 
     const tableData = await responseTableData.json();
     
