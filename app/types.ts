@@ -38,3 +38,11 @@ export interface SSBTableMetadata {
         extension: { elimination: boolean; };
     }>;
 }
+
+export interface SSBNavigationResponse {
+    folderContents: {
+        type: string;
+        id: string;
+        label: string;
+    }[];
+}

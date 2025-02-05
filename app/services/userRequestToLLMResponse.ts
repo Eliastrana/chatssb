@@ -2,7 +2,7 @@
 
 import {ChatOpenAI} from '@langchain/openai';
 import {HumanMessage, SystemMessage} from '@langchain/core/messages';
-import {PxWebData, SSBTableMetadata} from "@/app/types";
+import {PxWebData, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {navigationRunnable} from "@/app/utils/LLM_navigation/navigationRunnable";
 import {
     metadataRunnableMultithreadedPrompts,
@@ -36,14 +36,13 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
 
         if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
 
-        const SSBResponse: JSON = await response.json();
+        const SSBResponse: SSBNavigationResponse = await response.json();
         
         const messages = [
-            new SystemMessage("API response: " + JSON.stringify(SSBResponse)),
-            new HumanMessage(message),
+            new HumanMessage(message)
         ];
         
-        LLMNavigationResponse = await navigationRunnable(model, messages).invoke({}, {});
+        LLMNavigationResponse = await navigationRunnable(model, messages, SSBResponse).invoke({}, {});
         console.log(LLMNavigationResponse);
         
         if (LLMNavigationResponse.type === 'Table') break;
