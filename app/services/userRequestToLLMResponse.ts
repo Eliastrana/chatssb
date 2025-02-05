@@ -4,7 +4,11 @@ import {ChatOpenAI} from '@langchain/openai';
 import {HumanMessage, SystemMessage} from '@langchain/core/messages';
 import {PxWebData, SSBTableMetadata} from "@/app/types";
 import {navigationRunnable} from "@/app/utils/LLM_navigation/navigationRunnable";
-import {metadataRunnable} from "@/app/utils/LLM_metadata_selection/metadataRunnable";
+import {
+    metadataRunnableMultithreadedPrompts,
+    metadataRunnableSinglePrompt, multithreadedPromptSchemaToPxApiQuery,
+    singlePromptSchemaToPxApiQuery
+} from "@/app/utils/LLM_metadata_selection/metadataRunnable";
 
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
@@ -63,38 +67,18 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     const tableMetadata: SSBTableMetadata = await response.json();
     let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMNavigationResponse.id + '/data?lang=no&format=json-stat2';
     
-    const LLMMetadataResponse = await metadataRunnable(model, [new HumanMessage(message)], tableMetadata).invoke({}, {});
-    console.log(LLMMetadataResponse);
+    // Single prompt for metadata selection
+    //const LLMMetadataResponse = await metadataRunnableSinglePrompt(model, [new
+    // HumanMessage(message)], tableMetadata).invoke({}, {});
+    //console.log(LLMMetadataResponse);
+    //SSBGetUrl = singlePromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
     
+    // Multithreaded prompts for metadata selection
+    const LLMMetadataResponse = await metadataRunnableMultithreadedPrompts(model, [new HumanMessage(message)], tableMetadata).invoke({}, {});
+    console.log(JSON.stringify(LLMMetadataResponse, null, 2));
+    SSBGetUrl = multithreadedPromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
     
-    // For each key-value pair in LLMMetadataResponse, add to SSBGetUrl
-    // TODO create optional workflow to let LLM answer one by one
-    for (const key in LLMMetadataResponse) {
-
-        if (LLMMetadataResponse[key].itemSelections) {
-            let selection = '';
-            for (const item of LLMMetadataResponse[key].itemSelections) {
-                selection += item + ',';
-            }
-            selection = selection.slice(0, -1);
-            console.log(key, 'Item Selection:', selection);
-            SSBGetUrl += '&valueCodes[' + key + ']=' + selection;
-        }
-
-        if (LLMMetadataResponse[key].selectionExpressions) {
-            for (const expression of LLMMetadataResponse[key].selectionExpressions) {
-                console.log(key, 'Selection Expression:', expression);
-                SSBGetUrl += '&valueCodes[' + key + ']=[' + expression + ']';
-            }
-        }
-
-        if (!LLMMetadataResponse[key].itemSelections && !LLMMetadataResponse[key].selectionExpressions) {
-            console.log(key, 'No Selections or Expressions');
-            SSBGetUrl += '&valueCodes[' + key + ']=*';
-        }
-    }
-    
-    console.log('SSBGetUrl:', SSBGetUrl);
+    console.log('SSBGetUrl:', SSBGetUrl)
 
     const responseTableData = await fetch(SSBGetUrl, {
         method: 'GET',
@@ -104,7 +88,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     });
 
     if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + LLMNavigationResponse.label + ' with URL ' + SSBGetUrl);
-
+    
     const tableData = await responseTableData.json();
     
     //console.log(tableData);    
