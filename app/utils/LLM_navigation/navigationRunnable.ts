@@ -5,45 +5,54 @@ import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {SSBNavigationResponse} from "@/app/types";
 
-// Improved schema with updated descriptions:
-const navigationSchema = z
-    .object({
-        type: z
-            .string()
-            .describe("The entry type (e.g., 'FolderInformation' or 'Table')."),
-        id: z
-            .string()
-            .describe("The unique identifier of the folder or table entry."),
-        label: z
-            .string()
-            .describe("The display label for this navigation entry."),
-    })
-    .describe(
-        "A navigation entry representing a folder or table that best matches the user's request."
-    );
 
-// Updated runnable that extracts folderContents entries and injects them into the prompt:
 export function navigationRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    folderStructure: SSBNavigationResponse
+    folderStructures: SSBNavigationResponse[],
+    maxBreadth: number = 1
 ): Runnable {
-    // Assume folderStructure.folderContents is an array of objects with type, id, and label properties
-    const entries = folderStructure.folderContents.map((entry) => ({
-        type: entry.type,
-        id: entry.id,
-        label: entry.label,
-    }));
-
-    const navigationEntriesText = entries
-        .map(
-            (e) =>
-                `Type: ${e.type}, ID: ${e.id}, Label: ${e.label}`
-        )
-        .join("\n");
-
-    const systemMessageText = `Folder Contents:\n${navigationEntriesText}`;
+    const navigationSchema = z
+        .object({
+            folderSelection: z.array(z
+                .object({
+                    type: z
+                        .string()
+                        .describe("The entry type (e.g., 'FolderInformation' or 'Table')."),
+                    id: z
+                        .string()
+                        .describe("The unique identifier of the folder or table entry."),
+                    label: z
+                        .string()
+                        .describe("The display label for this navigation entry."),
+                })) // .max(maxBreadth) is not utilized as the LLM may return more entries
+                // anyways and breaking the schema validation is not desired. Instead, just
+                // select the first `maxBreadth` entries.
+            .describe(
+                "An array of maximum " + maxBreadth + " entries representing the selected" +
+                " folders or tables that match the user's request. The entries are ordered from" +
+                " most to least relevant."
+            )
+        });
     
+    let systemMessageText = "Folder contents:\n";
+    for (const folderStructure of folderStructures) {
+        const entries = folderStructure.folderContents.map((entry) => ({
+            type: entry.type,
+            id: entry.id,
+            label: entry.label,
+        }));
+
+        const navigationEntriesText = entries
+            .map(
+                (e) =>
+                    `Type: ${e.type}, ID: ${e.id}, Label: ${e.label}`
+            )
+            .join("\n");
+
+        systemMessageText += `\n${navigationEntriesText}`;
+    }
+        
     console.log(systemMessageText, "\n");
 
     const prompt = ChatPromptTemplate.fromMessages([

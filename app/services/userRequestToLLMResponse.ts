@@ -1,13 +1,12 @@
 "use server";
 
 import {ChatOpenAI} from '@langchain/openai';
-import {HumanMessage, SystemMessage} from '@langchain/core/messages';
+import {HumanMessage} from '@langchain/core/messages';
 import {PxWebData, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {navigationRunnable} from "@/app/utils/LLM_navigation/navigationRunnable";
 import {
     metadataRunnableMultithreadedPrompts,
-    metadataRunnableSinglePrompt, multithreadedPromptSchemaToPxApiQuery,
-    singlePromptSchemaToPxApiQuery
+    multithreadedPromptSchemaToPxApiQuery
 } from "@/app/utils/LLM_metadata_selection/metadataRunnable";
 
 const model = new ChatOpenAI({
@@ -19,33 +18,58 @@ const model = new ChatOpenAI({
 export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
     let depth = 0;
     const maxDepth = 5;
-    let LLMNavigationResponse  = { type: '', id: '', label: '' };
-
+    
+    let currentLLMNavigation = {
+        folderSelection: [
+            {
+                type: 'FolderInformation',
+                id: '',
+                label: 'Root'
+            }
+        ]
+    }
+    
+    let nextLLMNavigation = {
+        folderSelection: []
+    }
+    
     console.log('Received message:', message);
-
+    
     while (depth < maxDepth) {
-        const navigationId = LLMNavigationResponse.id;
-
-        const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-        })
-
-        if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
-
-        const SSBResponse: SSBNavigationResponse = await response.json();
+        const SSBResponses: SSBNavigationResponse[] = [];
         
-        const messages = [
-            new HumanMessage(message)
-        ];
+        for (const responseItem of currentLLMNavigation.folderSelection) {
+            if (responseItem.type === 'Table') break;
+            
+            console.log('Fetching navigation data for ID:', responseItem.id);
+            
+            const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + responseItem.id, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch SSB API navigation data from ID ' + navigationId);
+            
+            SSBResponses.push(await response.json());
+        }
         
-        LLMNavigationResponse = await navigationRunnable(model, messages, SSBResponse).invoke({}, {});
-        console.log(LLMNavigationResponse);
+        currentLLMNavigation = await navigationRunnable(
+            model, 
+            [new HumanMessage(message)], 
+            SSBResponses, 
+            4
+        ).invoke({}, {});
         
-        if (LLMNavigationResponse.type === 'Table') break;
+        console.log(currentLLMNavigation);
+        
+        // TODO handle LLM returning folders AND tables by offloading the table selection and
+        //  checking when all folders have been traversed.
+        
+        if (currentLLMNavigation.folderSelection[0].type === 'Table') break;
+        
         depth++;
     }
 
@@ -53,7 +77,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         throw new Error('Failed to find a table in the SSB API');
     }
 
-    const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMNavigationResponse.id + '/metadata?lang=no&outputFormat=json-stat2', {
+    const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + currentLLMNavigation.folderSelection[0].id + '/metadata?lang=no&outputFormat=json-stat2', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -64,7 +88,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
     if (!response.ok) throw new Error('Failed to fetch SSB API table metadata');
 
     const tableMetadata: SSBTableMetadata = await response.json();
-    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMNavigationResponse.id + '/data?lang=no&format=json-stat2';
+    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + currentLLMNavigation.folderSelection[0].id + '/data?lang=no&format=json-stat2';
     
     // Single prompt for metadata selection
     //const LLMMetadataResponse = await metadataRunnableSinglePrompt(model, [new
@@ -86,7 +110,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         }
     });
 
-    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + LLMNavigationResponse.label + ' with URL ' + SSBGetUrl);
+    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + currentLLMNavigation.folderSelection[0].label + ' with URL ' + SSBGetUrl);
     
     const tableData = await responseTableData.json();
     
