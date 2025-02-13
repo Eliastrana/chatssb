@@ -115,6 +115,7 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
         return { ...sd, series: slicedSeries };
     });
 
+
     // ---- 6) Render the D3 chart in a useEffect ----
     useEffect(() => {
         if (!svgRef.current) return;
@@ -222,6 +223,11 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
     }, [visibleSeriesData, width, height, startIndex, endIndex]);
 
     // ---- 7) Render UI: dimension filters, the DualRangeSlider, and the chart SVG ----
+
+    const [numberPart, ...textParts] = data.label.split(":");
+    const textPart = textParts.join(":").trim();
+
+
     return (
         <div className="flex flex-col space-y-4">
             {/* Dimension filters */}
@@ -256,7 +262,7 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
                                                 width="24px"
                                                 fill="#F0F8F9"
                                             >
-                                                <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
+                                                <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
                                             </svg>
                                         </div>
                                         <span className="text-xs">{catLabel}</span>
@@ -268,8 +274,14 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
                 ))}
             </div>
 
+
+            <div>
+                <h3 className="text-gray-400 text-xl">{numberPart.trim()}</h3>
+                <h1 className="md:text-2xl">{textPart}</h1>
+            </div>
+
             {/* Chart */}
-            <svg ref={svgRef} className="w-full" />
+            <svg ref={svgRef} className="w-full"/>
 
             <DualRangeSlider
                 min={0}
