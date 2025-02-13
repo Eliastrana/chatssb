@@ -276,7 +276,10 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
 
 
             <div>
-                <h3 className="text-gray-400 text-xl">{numberPart.trim()}</h3>
+
+                <a href={`https://www.ssb.no/statbank/table/${numberPart.trim()}`} target="_blank" rel="noreferrer" className="text-gray-400 text-xl hover:underline">
+                    {numberPart.trim()}
+                </a>
                 <h1 className="md:text-2xl">{textPart}</h1>
             </div>
 
