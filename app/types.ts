@@ -9,6 +9,7 @@ export interface Message {
 }
 
 export interface PxWebData {
+    label: string;
     dimension: {
         [dimName: string]: {
             label: string;
