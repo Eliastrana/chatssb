@@ -6,6 +6,7 @@ import ChatInput from './components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 import { Message, PxWebData } from './types';
+import HoverInfoModal from "@/app/components/InfoModal";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -19,6 +20,10 @@ export default function Home() {
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
+
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 0);
     }, []);
 
     const handleOpenFullscreen = useCallback((pxData: PxWebData) => {
@@ -64,7 +69,7 @@ export default function Home() {
                     ...prev,
                     {
                         sender: 'bot',
-                        text: "Her er grafen basert på dine data:",
+                        text: "Her er dataen basert på din forespørsel:",
                         pxData: tableData,
                     },
                 ]);
@@ -90,11 +95,9 @@ export default function Home() {
                 />
             )}
 
-            <div className="fixed bottom-4 left-4 md:w-1/6 w-1/2">
-                <p className="text-sm opacity-50">
-                    Denne nettsiden er under utvikling, SSB står ikke for de oppgitte svarene.
-                </p>
-            </div>
+            <HoverInfoModal />
+
+
 
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
 

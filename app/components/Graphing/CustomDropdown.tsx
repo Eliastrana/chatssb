@@ -41,7 +41,7 @@ export function CustomDropdown<T>({
 
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="px-2 py-1 border-2 border-[#274247] bg-[#F0F8F9] flex items-center"
+                className="px-2 py-1 border-2 border-[#274247] bg-white flex items-center"
             >
                 {selectedOption ? selectedOption.label : "Velg diagramtype"}
 

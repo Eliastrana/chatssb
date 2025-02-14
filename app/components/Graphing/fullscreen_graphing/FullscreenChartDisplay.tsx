@@ -44,7 +44,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
             {chartMap[chartType]}
 
-            <div className="fixed top-10 right-32 text-xl">
+            <div className="hidden fixed top-10 right-32 text-xl">
                 <CustomDropdown
                     options={chartOptions}
                     selectedValue={chartType}

@@ -21,7 +21,7 @@ function MessageItem({ msg, isBot, onExpand }: {
     return (
         <div
             className={`relative px-4 py-2 border-2 border-[#274247] break-words max-w-full md:max-w-xl ${
-                isBot ? 'bg-[#F0F8F9] text-gray-800' : 'bg-[#274247] text-white'
+                isBot ? 'bg-white text-gray-800' : 'bg-[#274247] text-white'
             }`}
         >
             {isBot && msg.pxData && (

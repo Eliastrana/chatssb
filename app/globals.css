@@ -3,17 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: #C3DCDC;
+  --background: #F0F8F9;
   --foreground: #171717;
 }
 
 body {
-  font-family: "Roboto Light", sans-serif;
+  font-family: "Roboto", sans-serif;
   color: var(--foreground);
   background: var(--background);
 }
 
-h1, h2, h3, h4, h5, h6, p {
+h1 {
+  font-family: Roboto Contensed, sans-serif;
+    font-weight: 700;
+
+}
+h2, h3, h4, h5, h6, p {
   font-family: inherit;
 }
 

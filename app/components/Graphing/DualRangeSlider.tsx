@@ -77,7 +77,7 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
     const endPercent = ((endValue - min) / (max - min)) * 100;
 
     return (
-        <div className="flex flex-col bg-[#F0F8F9]">
+        <div className="flex flex-col">
             <div className="relative w-full h-8" ref={sliderRef}>
                 <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded"></div>
                 <div

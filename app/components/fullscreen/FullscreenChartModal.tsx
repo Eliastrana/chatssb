@@ -9,36 +9,50 @@ interface FullscreenChartModalProps {
 }
 
 function FullscreenChartModalBase({ pxData, onClose }: FullscreenChartModalProps) {
-    const [dimensions, setDimensions] = useState({
-        width: typeof window !== 'undefined' ? window.innerWidth : 0,
-        height: typeof window !== 'undefined' ? window.innerHeight : 0,
-    });
+    const [visible, setVisible] = useState(false);
+    const [closing, setClosing] = useState(false);
+
 
     useEffect(() => {
-        const handleResize = () => {
-            setDimensions({ width: window.innerWidth, height: window.innerHeight });
-        };
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
+        const frame = requestAnimationFrame(() => setVisible(true));
+        return () => cancelAnimationFrame(frame);
     }, []);
 
+    const handleClose = () => {
+        setClosing(true);
+        setVisible(false);
+
+        setTimeout(() => onClose(), 500);
+    };
+
     return (
-        <div className="fixed inset-0 bg-[#F0F8F9] overflow-hidden scrollbar-hide">
+        <div
+            className={`
+        fixed inset-0
+        transition-all duration-500 
+        flex items-center justify-center
+        ${
+                visible && !closing
+                    ? 'opacity-100 scale-100'
+                    : 'opacity-0 scale-90'
+            }
+      `}
+            style={{ pointerEvents: "auto" }}
+        >
             <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="absolute top-4 right-4 z-50 text-3xl font-bold"
             >
-                <span className="material-symbols-outlined">
-                    collapse_content
-                </span>
+        <span className="material-symbols-outlined">
+          collapse_content
+        </span>
             </button>
 
             <div className="w-full h-full relative">
-            <FullscreenChartDisplay
+                <FullscreenChartDisplay
                     pxData={pxData}
-                    width={dimensions.width}
-                    height={dimensions.height}
+                    width={window.innerWidth}
+                    height={window.innerHeight}
                 />
             </div>
         </div>
@@ -48,7 +62,6 @@ function FullscreenChartModalBase({ pxData, onClose }: FullscreenChartModalProps
 export const FullscreenChartModal = memo(FullscreenChartModalBase, (prev, next) => {
     if (prev.pxData !== next.pxData) return false;
     return prev.onClose === next.onClose;
-
 });
 
 export default FullscreenChartModal;
