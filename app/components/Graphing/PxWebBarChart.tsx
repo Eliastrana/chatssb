@@ -166,7 +166,7 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
             .style("position", "absolute")
             .style("pointer-events", "none")
             .style("padding", "6px 8px")
-            .style("background", "#F0F8F9")
+            .style("background", "#FFFFFF")
             .style("border", "2px solid #274247")
             .style("border-radius", "none")
             .style("font-size", "12px")
@@ -235,7 +235,7 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
                 {nonTimeDimensions.map((dim) => (
                     <div
                         key={dim.name}
-                        className="border-2 border-[#274247] p-2 bg-[#F0F8F9] max-h-48 overflow-auto"
+                        className="border-2 border-[#274247] p-2 bg-white max-h-48 overflow-auto"
                     >
                         <h3 className="font-bold text-base mb-1">
                             {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
@@ -276,10 +276,18 @@ export const PxWebBarChart: React.FC<BarChartProps> = ({
 
 
             <div>
+                <div className="flex items-center gap-1">
+                    <a
+                        href={`https://www.ssb.no/statbank/table/${numberPart.trim()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-gray-400 text-xl hover:underline"
+                    >
+                        {numberPart.trim()}
+                    </a>
 
-                <a href={`https://www.ssb.no/statbank/table/${numberPart.trim()}`} target="_blank" rel="noreferrer" className="text-gray-400 text-xl hover:underline">
-                    {numberPart.trim()}
-                </a>
+                    <span className="material-symbols-outlined text-gray-400">open_in_new</span>
+                </div>
                 <h1 className="md:text-2xl">{textPart}</h1>
             </div>
 

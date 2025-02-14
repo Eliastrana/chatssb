@@ -38,7 +38,7 @@ export default function ChatInput({
             <div className="w-full md:w-1/2 flex items-center">
                 <input
                     type="text"
-                    className="flex-grow border-2 border-[#274247] bg-[#F0F8F9] text-gray-800 px-4 py-2 focus:outline-none"
+                    className="flex-grow border-2 border-[#274247] bg-white text-gray-800 px-4 py-2 focus:outline-none"
                     placeholder="Hva leter du etter?"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}

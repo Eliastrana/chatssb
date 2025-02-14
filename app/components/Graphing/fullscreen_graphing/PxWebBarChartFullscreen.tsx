@@ -236,9 +236,9 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                 {nonTimeDimensions.map((dim) => (
                     <div
                         key={dim.name}
-                        className="border-2 border-[#274247] p-2 bg-[#F0F8F9] max-h-48 overflow-auto"
+                        className="rounded-lg shadow-lg border-[#274247] p-2 bg-white max-h-48 overflow-auto  w-full bg-clip-padding "
                     >
-                        <h3 className="font-bold text-base mb-1">
+                        <h3 className="font-bold text-lg mb-1">
                             {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
                         </h3>
                         <div className="flex flex-col space-y-1">
@@ -260,7 +260,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                                             />
                                             <div
                                                 className="w-4 h-4 border-2 border-[#274247] rounded-full flex items-center justify-center
-                          peer-checked:bg-[#274247] peer-checked:border-[#274247] transition-all relative"
+                                                        peer-checked:bg-[#274247] peer-checked:border-[#274247] transition-all relative"
                                             >
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
@@ -283,16 +283,20 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             </div>
 
 
-            <div className="w-[60%] flex flex-col space-y-4 ml-12">
+            <div className="w-[60%] flex flex-col space-y-4 ml-12 bg-white p-4 border-[#274247] rounded-2xl shadow-lg">
                 <div>
-                    <a
-                        href={`https://www.ssb.no/statbank/table/${numberPart.trim()}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-gray-400 text-xl hover:underline"
-                    >
-                        {numberPart.trim()}
-                    </a>
+                    <div className="flex items-center gap-1">
+                        <a
+                            href={`https://www.ssb.no/statbank/table/${numberPart.trim()}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-gray-400 text-xl hover:underline"
+                        >
+                            {numberPart.trim()}
+                        </a>
+
+                        <span className="material-symbols-outlined text-gray-400">open_in_new</span>
+                    </div>
                     <h1 className="md:text-2xl">{textPart}</h1>
                 </div>
 
