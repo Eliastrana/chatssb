@@ -37,7 +37,7 @@ export function CustomDropdown<T>({
     const selectedOption = options.find((opt) => opt.value === selectedValue);
 
     return (
-        <div className="relative inline-block text-left z-20" ref={dropdownRef}>
+        <div className="relative inline-block text-left z-10" ref={dropdownRef}>
 
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
