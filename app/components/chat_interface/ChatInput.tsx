@@ -38,7 +38,7 @@ export default function ChatInput({
             <div className="w-full md:w-1/2 flex items-center">
                 <input
                     type="text"
-                    className="flex-grow border-2 border-[#274247] bg-white text-gray-800 px-4 py-2 focus:outline-none"
+                    className="flex-grow border border-[#C3DCDC] bg-white text-gray-800 rounded-lg shadow-md rounded-r-none px-4 py-2 focus:outline-none"
                     placeholder="Hva leter du etter?"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -46,7 +46,7 @@ export default function ChatInput({
                     disabled={isLoading}
                 />
                 <button
-                    className={`bg-[#274247] text-white px-4 py-2 border-2 border-[#274247] border-l-0 focus:outline-none ${
+                    className={`bg-[#274247] text-white px-4 py-2 border border-[#274247] rounded-lg shadow-md rounded-l-none border-l-0 focus:outline-none ${
                         isLoading ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                     onClick={handleLocalSend}

@@ -2,7 +2,7 @@
 import React from 'react';
 import Image from 'next/image';
 import {Message, PxWebData} from '@/app/types';
-import ChartDisplay from "@/app/components/Graphing/ChartDisplay";
+import {ChartDisplay} from "@/app/components/Graphing/ChartDisplay";
 
 interface ChatMessagesProps {
     messages: Message[];
@@ -20,7 +20,7 @@ function MessageItem({ msg, isBot, onExpand }: {
 }) {
     return (
         <div
-            className={`relative px-4 py-2 border-2 border-[#274247] break-words max-w-full md:max-w-xl ${
+            className={`relative px-4 py-2 border border-[#C3DCDC] rounded-lg shadow-md break-words max-w-full md:max-w-xl ${
                 isBot ? 'bg-white text-gray-800' : 'bg-[#274247] text-white'
             }`}
         >
@@ -48,7 +48,7 @@ function ChatMessagesBase({
                               isLoading,
                               messagesEndRef,
                               onOpenFullscreen,
-                                isFullscreen
+                              isFullscreen
                           }: ChatMessagesProps) {
 
     // Dette gjør at den ikke renderer vanlig melding når den er i fullscreen
@@ -68,7 +68,7 @@ function ChatMessagesBase({
                         className={`mb-2 z-20 flex ${isBot ? 'justify-start' : 'justify-end'} max-w-full`}
                     >
                         {isBot && (
-                            <div className="flex items-center mr-2">
+                            <div className="flex items-center mr-2 border-none">
                                 <Image
                                     src="/ssb_logosymbol_dark.svg"
                                     alt="Chatbot"

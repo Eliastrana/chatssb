@@ -6,7 +6,6 @@ export interface SingleRangeSliderProps {
     max: number;
     value: number;
     onChange: (value: number) => void;
-    // These props are used for displaying labels.
     timeCategoryLabels: { [key: string]: string };
     timeCategoryKeys: string[];
 }
@@ -58,29 +57,29 @@ const SingleRangeSlider: React.FC<SingleRangeSliderProps> = ({
             window.removeEventListener("pointermove", handlePointerMove);
             window.removeEventListener("pointerup", handlePointerUp);
         };
-    }, [dragging, value]);
+    }, [dragging, handlePointerMove, value]);
 
     const valuePercent = ((value - min) / (max - min)) * 100;
 
     return (
-        <div className="flex flex-col bg-[#F0F8F9] p-2">
+        <div className="flex flex-col p-2">
             <div
                 className="relative w-full h-8"
                 ref={sliderRef}
                 onPointerDown={handlePointerDown}
             >
-                {/* Background Track */}
                 <div className="absolute top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-300 rounded"></div>
-                {/* Handle */}
+
                 <div
                     className="absolute top-1/2 w-4 h-4 bg-[#274247] border border-[#274247] rounded-full cursor-pointer"
                     style={{ left: `${valuePercent}%`, transform: "translate(-50%, -50%)" }}
                 ></div>
+
             </div>
             <div className="flex justify-center text-xs font-medium mt-2">
-        <span>
-          {timeCategoryLabels[timeCategoryKeys[value]]}
-        </span>
+                <span>
+                    {timeCategoryLabels[timeCategoryKeys[value]]}
+                </span>
             </div>
         </div>
     );
