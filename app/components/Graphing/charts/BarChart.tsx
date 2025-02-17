@@ -34,7 +34,6 @@ export const BarChart: React.FC<BarChartProps> = ({
             .style("font-size", "12px")
             .style("display", "none");
 
-        // X domain: from the first series's x-values
         const xDomain = data.length > 0 ? data[0].series.map((d) => d.x) : [];
         const xScale = d3
             .scaleBand()
@@ -42,14 +41,12 @@ export const BarChart: React.FC<BarChartProps> = ({
             .range([0, innerWidth])
             .padding(0.2);
 
-        // sub-group scale for each "series" at a given x
         const xSubgroup = d3
             .scaleBand()
             .domain(d3.range(data.length).map(String))
             .range([0, xScale.bandwidth()])
             .padding(0.05);
 
-        // y domain
         const allPoints = data.flatMap((d) => d.series);
         const [minY, maxY] = d3.extent(allPoints, (d) => d.y);
         const yScale = d3
@@ -63,7 +60,6 @@ export const BarChart: React.FC<BarChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        // X axis
         const xAxis = d3.axisBottom<string>(xScale).tickSizeOuter(0);
         svg
             .append("g")
@@ -73,10 +69,8 @@ export const BarChart: React.FC<BarChartProps> = ({
             .attr("transform", "rotate(-45)")
             .style("text-anchor", "end");
 
-        // Y axis
         svg.append("g").call(d3.axisLeft(yScale));
 
-        // For each time in xDomain, create a group
         const timeGroups = svg
             .selectAll(".time-group")
             .data(xDomain)
@@ -85,7 +79,6 @@ export const BarChart: React.FC<BarChartProps> = ({
             .attr("class", "time-group")
             .attr("transform", (d) => `translate(${xScale(d)}, 0)`);
 
-        // For each group, map the data[] to find the series for that x
         timeGroups
             .selectAll<SVGRectElement, { value: number; xVal: string; colorKey: string }>("rect")
             .data((xVal) =>
@@ -93,8 +86,6 @@ export const BarChart: React.FC<BarChartProps> = ({
                     const point = seriesData.series.find((p) => p.x === xVal);
                     const val = point?.y ?? 0;
 
-                    // colorKey: read the dimension's category from the combo
-                    // e.g. combo["statistikkvariabel"] if colorDim === "statistikkvariabel"
                     const colorKey = colorDim
                         ? seriesData.combo[colorDim] || `missing-${idx}`
                         : `idx-${idx}`;
@@ -116,7 +107,6 @@ export const BarChart: React.FC<BarChartProps> = ({
             .attr("fill", (d) =>
                 customColorScale ? customColorScale(d.colorKey) : "#999"
             )
-            // Tooltip
             .on("mouseover", function (event, d) {
                 tooltip.style("display", "block");
                 tooltip.html(`<strong>${d.xVal}</strong><br>Verdi: ${d.value}`);
@@ -129,7 +119,6 @@ export const BarChart: React.FC<BarChartProps> = ({
             .on("mouseleave", function () {
                 tooltip.style("display", "none");
             })
-            // Animate
             .transition()
             .duration(600)
             .attr("y", (d) => yScale(d.value))

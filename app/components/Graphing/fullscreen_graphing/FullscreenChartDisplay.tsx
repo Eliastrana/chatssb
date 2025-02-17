@@ -4,6 +4,9 @@ import { PxWebBarChartFullscreen } from "@/app/components/Graphing/fullscreen_gr
 
 import { PxWebData } from "@/app/types";
 import { CustomDropdown } from "@/app/components/Graphing/util/CustomDropdown";
+import {PxWebLineChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebLineChartFullscreen";
+import {PxWebPieChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebPieChartFullscreen";
+import {PxWebBubbleChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebBubbleChartFullscreen";
 
 type ChartType = "bar" | "line" | "pie" | "bubble";
 
@@ -22,10 +25,9 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
     const chartMap = {
         bar: <PxWebBarChartFullscreen data={pxData} width={width} height={height} />,
-        line: <div>Line chart</div>,
-        pie: <div>Pie chart</div>,
-        bubble: <div>Bubble chart</div>,
-
+        line: <PxWebLineChartFullscreen data={pxData} width={width} height={height} />,
+        pie: <PxWebPieChartFullscreen data={pxData} width={width} height={height} />,
+        bubble: <PxWebBubbleChartFullscreen data={pxData} width={width} height={height} />,
     };
 
     const chartOptions = [

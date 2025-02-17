@@ -2,7 +2,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { PxWebData } from "@/app/types";
-import DualRangeSlider from "@/app/components/Graphing/util/DualRangeSlider"; // Adjust path as needed
+import DualRangeSlider from "@/app/components/Graphing/util/DualRangeSlider";
+import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct"; // Adjust path as needed
 
 interface LineChartProps {
     data: PxWebData;
@@ -37,15 +38,13 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                                                                    }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
-    // Define a shared custom color array.
     const customColors = [
-        "#274247", // primary color for first series
+        "#274247",
         "#7E5EE8",
         "#00824d",
         ...d3.schemeCategory10.slice(1),
     ];
 
-    // 1) Identify which dimension is time
     const dimensionEntries = Object.entries(data.dimension);
     let timeDimName: string | undefined;
     if (data.role?.time && data.role.time.length > 0) {
@@ -63,12 +62,10 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
     const timeCategoryKeys = Object.keys(timeDimension.category.index);
     const timeCategoryLabels = timeDimension.category.label;
 
-    // Identify non-time dimensions for filtering
     const nonTimeDimensions = dimensionEntries
         .filter(([dimName]) => dimName !== timeDimName)
         .map(([dimName, dim]) => ({ name: dimName, ...dim }));
 
-    // 2) State for which categories are selected for each non-time dimension
     const [selectedCategories, setSelectedCategories] = useState<
         Record<string, Set<string>>
     >(() => {
@@ -93,7 +90,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         });
     };
 
-    // 3) Build a function to retrieve `value` from the data.value array
     const dimensionNamesInOrder = Object.keys(data.dimension);
     const dimensionSizesInOrder = data.size;
     const getValue = (coords: Record<string, string>) => {
@@ -113,7 +109,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         return data.value[index1D];
     };
 
-    // 4) Build the list of "series" (combos) to plot (cross-product)
     const combos: Combo[] = cartesianProduct(
         nonTimeDimensions.map((dim) => [...selectedCategories[dim.name]]),
         nonTimeDimensions.map((dim) => dim.name)
@@ -131,7 +126,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         return { combo, series };
     });
 
-    // 5) Add state for the visible time range
     const [startIndex, setStartIndex] = useState(0);
     const [endIndex, setEndIndex] = useState(timeCategoryKeys.length - 1);
 
@@ -140,10 +134,8 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         return { ...sd, series: slicedSeries };
     });
 
-    // NEW: State for Prediction (Regression) Data
     const [predictionData, setPredictionData] = useState<PredictionSeries[]>([]);
 
-    // NEW: Helper function to compute linear regression
     function linearRegression(
         points: { x: number; y: number }[]
     ): { slope: number; intercept: number } {
@@ -154,13 +146,11 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         const sumX2 = points.reduce((sum, p) => sum + p.x * p.x, 0);
 
         const denom = n * sumX2 - sumX * sumX;
-        // Avoid division by zero in slope
         const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
         const intercept = (sumY - slope * sumX) / n;
         return { slope, intercept };
     }
 
-    // NEW: Function to compute regression metrics
     function computeRegressionMetrics(
         points: { x: number; y: number }[],
         slope: number,
@@ -179,16 +169,12 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         return { slope, intercept, rSquared, rmse };
     }
 
-    // NEW: Perform regression and set prediction data
     const handlePredict = () => {
         const predictionSteps = 5; // number of future steps to predict
         const newPredictionData: PredictionSeries[] = visibleSeriesData.map((sd) => {
-            // Treat x as the index for the historical data
             const historicalPoints = sd.series.map((d, i) => ({ x: i, y: d.y }));
             const { slope, intercept } = linearRegression(historicalPoints);
             const metrics = computeRegressionMetrics(historicalPoints, slope, intercept);
-
-            // The total length = historical length + predicted steps
             const totalPoints = historicalPoints.length + predictionSteps;
             const regressionLine = Array.from({ length: totalPoints }, (_, i) => ({
                 x: i,
@@ -200,12 +186,10 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         setPredictionData(newPredictionData);
     };
 
-    // Create a shared color scale using the custom colors.
     const colorScale = d3
         .scaleOrdinal(customColors)
         .domain(d3.range(visibleSeriesData.length).map(String));
 
-    // 6) Render the D3 chart in a useEffect
     useEffect(() => {
         if (!svgRef.current) return;
         const svgEl = d3.select(svgRef.current);
@@ -215,13 +199,11 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         const originalInnerWidth = width - margin.left - margin.right;
         const innerHeight = height - margin.top - margin.bottom;
 
-        // Historical x labels
         const historicalLabels =
             visibleSeriesData.length > 0
                 ? visibleSeriesData[0].series.map((d) => d.x)
                 : [];
 
-        // Check if we need an extended domain for predictions
         let extendedDomain = historicalLabels;
         let extraWidth = 0;
         let extendedInnerWidth = originalInnerWidth;
@@ -239,7 +221,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         const totalSvgWidth = margin.left + margin.right + extendedInnerWidth;
         svgEl.attr("viewBox", `0 0 ${totalSvgWidth} ${height}`);
 
-        // Define tooltip
         const tooltip = d3
             .select("body")
             .append("div")
@@ -256,14 +237,12 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // xScale (using band for even spacing)
         const xScale = d3
             .scaleBand<string>()
             .domain(extendedDomain)
             .range([0, extendedInnerWidth])
             .padding(0.2);
 
-        // yScale for all visible historical data
         const allHistoricalPoints = visibleSeriesData.flatMap((sd) => sd.series);
         const [minY, maxY] = d3.extent(allHistoricalPoints, (d) => d.y);
         const yScale = d3
@@ -272,7 +251,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
             .range([innerHeight, 0])
             .nice();
 
-        // Draw x-axis
         const xAxis = d3.axisBottom<string>(xScale).tickSizeOuter(0);
         svg
             .append("g")
@@ -283,13 +261,10 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
             .attr("transform", "rotate(-45)")
             .style("text-anchor", "end");
 
-        // Draw y-axis
         const yAxis = d3.axisLeft<number>(yScale);
         svg.append("g").call(yAxis);
 
-        // ---- Draw historical lines & circles ----
         visibleSeriesData.forEach((sd, seriesIndex) => {
-            // Create the line generator for the historical data
             const lineGen = d3
                 .line<{ x: string; y: number }>()
                 .x((d) => {
@@ -299,7 +274,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                 })
                 .y((d) => yScale(d.y));
 
-            // Add the path for the historical data
             svg
                 .append("path")
                 .datum(sd.series)
@@ -308,7 +282,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                 .attr("stroke-width", 2)
                 .attr("d", lineGen);
 
-            // Add circles for each data point to enable tooltips
             svg
                 .selectAll(`.circle-series-${seriesIndex}`)
                 .data(sd.series)
@@ -336,7 +309,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                 });
         });
 
-        // ---- Draw prediction lines if available ----
         if (predictionData.length > 0) {
             predictionData.forEach((pd, seriesIndex) => {
                 const seriesLine = d3
@@ -354,7 +326,7 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                     .attr("fill", "none")
                     .attr("stroke", colorScale(String(seriesIndex))!)
                     .attr("stroke-width", 2)
-                    .attr("stroke-dasharray", "4 2") // optional: dashed line for predicted
+                    .attr("stroke-dasharray", "4 2")
                     .attr("d", seriesLine);
             });
         }
@@ -362,18 +334,15 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
         return () => {
             tooltip.remove();
         };
-    }, [visibleSeriesData, width, height, startIndex, endIndex, predictionData]);
+    }, [visibleSeriesData, width, height, startIndex, endIndex, predictionData, colorScale]);
 
-    // Split the main title and table number
     const [numberPart, ...textParts] = data.label.split(":");
     const textPart = textParts.join(":").trim();
 
     return (
         <div className="flex flex-row">
-            {/* Left container with filters and the new Predict button */}
             <div className="w-1/6 flex flex-col space-y-4">
                 {nonTimeDimensions.map((dim) => {
-                    // Create a mapping for category -> color
                     const catKeys = Object.keys(dim.category.label);
                     const catColorMapping = catKeys.reduce((acc, key, index) => {
                         acc[key] = customColors[index % customColors.length];
@@ -442,7 +411,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                 </button>
             </div>
 
-            {/* Main chart container */}
             <div className="w-[60%] flex flex-col space-y-4 ml-12 bg-white p-4 border border-[#C3DCDC] rounded-2xl shadow-lg">
                 <div>
                     <div className="flex items-center gap-1">
@@ -465,7 +433,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                     <svg ref={svgRef} />
                 </div>
 
-                {/* Dual range slider */}
                 <DualRangeSlider
                     min={0}
                     max={timeCategoryKeys.length - 1}
@@ -497,7 +464,6 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
                                             style={{ color: seriesColor }}
                                         >
                                             {(() => {
-                                                // Attempt to pick something descriptive from the combo
                                                 const entries = Object.entries(pd.combo);
                                                 const [dimName, catKey] = entries[entries.length - 1];
                                                 return data.dimension[dimName].category.label[catKey];
@@ -526,24 +492,4 @@ export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
     );
 };
 
-// Helper function for cartesian product
-function cartesianProduct(
-    arraysOfKeys: string[][],
-    dimensionNames: string[]
-): Array<{ [dimName: string]: string }> {
-    if (arraysOfKeys.length === 0) return [];
-    let result: Array<Record<string, string>> = [{}];
-    arraysOfKeys.forEach((keys, dimIndex) => {
-        const tmp: Array<Record<string, string>> = [];
-        for (const comboSoFar of result) {
-            for (const k of keys) {
-                tmp.push({
-                    ...comboSoFar,
-                    [dimensionNames[dimIndex]]: k,
-                });
-            }
-        }
-        result = tmp;
-    });
-    return result;
-}
+

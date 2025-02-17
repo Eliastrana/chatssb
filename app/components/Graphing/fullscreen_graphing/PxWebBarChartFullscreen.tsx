@@ -2,7 +2,8 @@
 import React, {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
 import {PxWebData} from "@/app/types";
-import DualRangeSlider from "@/app/components/Graphing/util/DualRangeSlider"; // Adjust the path as needed
+import DualRangeSlider from "@/app/components/Graphing/util/DualRangeSlider";
+import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct"; // Adjust the path as needed
 
 interface BarChartProps {
     data: PxWebData;
@@ -37,15 +38,13 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                                                                  }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
-    // Define a shared custom color array.
     const customColors = [
-        "#274247", // primary color for first series
+        "#274247",
         "#7E5EE8",
         "#00824d",
         ...d3.schemeCategory10.slice(1),
     ];
 
-    // ---- 1) Identify which dimension is time, which are others ----
     const dimensionEntries = Object.entries(data.dimension);
     let timeDimName: string | undefined = undefined;
     if (data.role?.time && data.role.time.length > 0) {
@@ -63,12 +62,10 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
     const timeCategoryKeys = Object.keys(timeDimension.category.index);
     const timeCategoryLabels = timeDimension.category.label;
 
-    // Identify non-time dimensions for filtering
     const nonTimeDimensions = dimensionEntries
         .filter(([dimName]) => dimName !== timeDimName)
         .map(([dimName, dim]) => ({ name: dimName, ...dim }));
 
-    // ---- 2) State for which categories are selected for each non-time dimension ----
     const [selectedCategories, setSelectedCategories] = useState<
         Record<string, Set<string>>
     >(() => {
@@ -93,7 +90,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         });
     };
 
-    // ---- 3) Build a function to retrieve `value` from the data.value array ----
     const dimensionNamesInOrder = Object.keys(data.dimension);
     const dimensionSizesInOrder = data.size;
     const getValue = (coords: Record<string, string>) => {
@@ -113,7 +109,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         return data.value[index1D];
     };
 
-    // ---- 4) Build the list of "series" (combos) to plot (cross-product) ----
     const combos: Combo[] = cartesianProduct(
         nonTimeDimensions.map((dim) => [...selectedCategories[dim.name]]),
         nonTimeDimensions.map((dim) => dim.name)
@@ -131,7 +126,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         return { combo, series };
     });
 
-    // ---- 5) Add state for the visible time range ----
     const [startIndex, setStartIndex] = useState(0);
     const [endIndex, setEndIndex] = useState(timeCategoryKeys.length - 1);
 
@@ -140,10 +134,8 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         return { ...sd, series: slicedSeries };
     });
 
-    // ---- NEW: State for Prediction (Regression) Data ----
     const [predictionData, setPredictionData] = useState<PredictionSeries[]>([]);
 
-    // ---- NEW: Helper function to compute linear regression ----
     function linearRegression(
         points: { x: number; y: number }[]
     ): { slope: number; intercept: number } {
@@ -153,12 +145,11 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
         const sumX2 = points.reduce((sum, p) => sum + p.x * p.x, 0);
         const slope =
-            (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1); // avoid division by zero
+            (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1);
         const intercept = (sumY - slope * sumX) / n;
         return { slope, intercept };
     }
 
-    // ---- NEW: Function to compute regression metrics ----
     function computeRegressionMetrics(
         points: { x: number; y: number }[],
         slope: number,
@@ -174,7 +165,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         return { slope, intercept, rSquared, rmse };
     }
 
-    // ---- NEW: Function to perform regression and set prediction data ----
     const handlePredict = () => {
         const predictionSteps = 5; // number of future steps to predict
         const newPredictionData: PredictionSeries[] = visibleSeriesData.map((sd) => {
@@ -192,26 +182,21 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         setPredictionData(newPredictionData);
     };
 
-    // Create a shared color scale using the custom colors.
     const colorScale = d3
         .scaleOrdinal(customColors)
         .domain(d3.range(visibleSeriesData.length).map(String));
 
-    // ---- 6) Render the D3 chart in a useEffect ----
     useEffect(() => {
         if (!svgRef.current) return;
         const svgEl = d3.select(svgRef.current);
         svgEl.selectAll("*").remove();
 
         const margin = { top: 30, right: 30, bottom: 50, left: 60 };
-        // original inner width based on the given width prop
         const originalInnerWidth = width - margin.left - margin.right;
-        // Get historical x labels from visible series (assumes at least one series exists)
         const historicalLabels =
             visibleSeriesData.length > 0
                 ? visibleSeriesData[0].series.map((d) => d.x)
                 : [];
-        // Set up extended domain and width if prediction data exists
         let extendedDomain = historicalLabels;
         let extraWidth = 0;
         let extendedInnerWidth = originalInnerWidth;
@@ -223,7 +208,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                 (_, i) => `F${i + 1}`
             );
             extendedDomain = historicalLabels.concat(futureLabels);
-            // Compute extra width proportional to the number of future steps
             extraWidth =
                 predictionCount * (originalInnerWidth / historicalLabels.length);
             extendedInnerWidth = originalInnerWidth + extraWidth;
@@ -231,7 +215,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         const totalSvgWidth = margin.left + margin.right + extendedInnerWidth;
         svgEl.attr("viewBox", `0 0 ${totalSvgWidth} ${height}`);
 
-        // Define tooltip
         const tooltip = d3
             .select("body")
             .append("div")
@@ -248,21 +231,18 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        // Create x-scale based on the extended domain (historical + future)
         const xScale = d3
             .scaleBand<string>()
             .domain(extendedDomain)
             .range([0, extendedInnerWidth])
             .padding(0.2);
 
-        // xSubgroup for grouping the series within each time point
         const xSubgroup = d3
             .scaleBand<number>()
             .domain(d3.range(visibleSeriesData.length))
             .range([0, xScale.bandwidth()])
             .padding(0.05);
 
-        // y-scale: based on all historical data points (for proper scaling)
         const allHistoricalPoints = visibleSeriesData.flatMap((sd) => sd.series);
         const [minY, maxY] = d3.extent(allHistoricalPoints, (d) => d.y);
         const yScale = d3
@@ -271,7 +251,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             .range([height - margin.top - margin.bottom, 0])
             .nice();
 
-        // Draw x-axis (using the extended domain if prediction exists)
         const xAxis = d3.axisBottom<string>(xScale).tickSizeOuter(0);
         svg
             .append("g")
@@ -282,11 +261,9 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             .attr("transform", "rotate(-45)")
             .style("text-anchor", "end");
 
-        // Draw y-axis
         const yAxis = d3.axisLeft<number>(yScale);
         svg.append("g").call(yAxis);
 
-        // Draw bars for historical data only
         const timeGroups = svg
             .selectAll<SVGGElement, string>(".time-group")
             .data(historicalLabels)
@@ -334,13 +311,11 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             .attr("y", (d) => yScale(d.value))
             .attr("height", (d) => height - margin.top - margin.bottom - yScale(d.value));
 
-        // If prediction (regression) data is available, draw a prediction line for each series.
         if (predictionData.length > 0) {
             predictionData.forEach((pd, seriesIndex) => {
                 const seriesLine = d3
                     .line<RegressionPoint>()
                     .x((d) => {
-                        // For each regression point, get the corresponding label from the extended domain.
                         const label = extendedDomain[d.x];
                         return (
                             (xScale(label) ?? 0) +
@@ -370,10 +345,8 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
 
     return (
         <div className="flex flex-row">
-            {/* Left container with filters and the new Predict button */}
             <div className="w-1/6 flex flex-col space-y-4">
                 {nonTimeDimensions.map((dim) => {
-                    // Create a mapping for the categories of this dimension:
                     const catKeys = Object.keys(dim.category.label);
                     const catColorMapping = catKeys.reduce((acc, key, index) => {
                         acc[key] = customColors[index % customColors.length];
@@ -442,7 +415,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                 </button>
             </div>
 
-            {/* Main chart container */}
             <div className="w-[60%] flex flex-col space-y-4 ml-12 bg-white p-4 border border-[#C3DCDC] rounded-2xl shadow-lg">
                 <div>
                     <div className="flex items-center gap-1">
@@ -465,7 +437,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                     <svg ref={svgRef} />
                 </div>
 
-                {/* Dual range slider */}
                 <DualRangeSlider
                     min={0}
                     max={timeCategoryKeys.length - 1}
@@ -479,7 +450,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                     timeCategoryKeys={timeCategoryKeys}
                 />
 
-                {/* Regression summary panel with matching colors */}
                 {predictionData.length > 0 && (
                     <div className="mt-2 p-2 rounded">
                         <h2 className="text-md font-bold mb-2">Regresjonsresultater:</h2>
@@ -523,23 +493,3 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
     );
 };
 
-function cartesianProduct(
-    arraysOfKeys: string[][],
-    dimensionNames: string[]
-): Array<{ [dimName: string]: string }> {
-    if (arraysOfKeys.length === 0) return [];
-    let result: Array<Record<string, string>> = [{}];
-    arraysOfKeys.forEach((keys, dimIndex) => {
-        const tmp: Array<Record<string, string>> = [];
-        for (const comboSoFar of result) {
-            for (const k of keys) {
-                tmp.push({
-                    ...comboSoFar,
-                    [dimensionNames[dimIndex]]: k,
-                });
-            }
-        }
-        result = tmp;
-    });
-    return result;
-}
