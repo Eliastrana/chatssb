@@ -3,10 +3,10 @@ import React, { useState } from "react";
 import { PxWebBarChartFullscreen } from "@/app/components/Graphing/fullscreen_graphing/PxWebBarChartFullscreen";
 
 import { PxWebData } from "@/app/types";
-import { CustomDropdown } from "@/app/components/Graphing/CustomDropdown";
-import {PxWebLineChart} from "@/app/components/Graphing/PxWebLineChart";
-import {PxWebBubbleChart} from "@/app/components/Graphing/PxWebBubbleChart";
-import {PxWebPieChart} from "@/app/components/Graphing/PxWebPieChart";
+import { CustomDropdown } from "@/app/components/Graphing/util/CustomDropdown";
+import {PxWebLineChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebLineChartFullscreen";
+import {PxWebPieChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebPieChartFullscreen";
+import {PxWebBubbleChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebBubbleChartFullscreen";
 
 type ChartType = "bar" | "line" | "pie" | "bubble";
 
@@ -25,10 +25,9 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
     const chartMap = {
         bar: <PxWebBarChartFullscreen data={pxData} width={width} height={height} />,
-        line: <PxWebLineChart data={pxData} width={width} height={height} />,
-        pie: <PxWebPieChart data={pxData} width={width} height={height} />,
-        bubble: <PxWebBubbleChart data={pxData} width={width} height={height} />,
-
+        line: <PxWebLineChartFullscreen data={pxData} width={width} height={height} />,
+        pie: <PxWebPieChartFullscreen data={pxData} width={width} height={height} />,
+        bubble: <PxWebBubbleChartFullscreen data={pxData} width={width} height={height} />,
     };
 
     const chartOptions = [
@@ -41,10 +40,9 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return (
         <div className=" p-10 relative">
 
-
             {chartMap[chartType]}
 
-            <div className="hidden fixed top-10 right-32 text-xl">
+            <div className="fixed top-10 right-32 text-xl">
                 <CustomDropdown
                     options={chartOptions}
                     selectedValue={chartType}

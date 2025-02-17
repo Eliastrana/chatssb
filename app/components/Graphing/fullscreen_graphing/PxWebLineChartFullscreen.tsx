@@ -1,11 +1,11 @@
-// PxWebBarChartFullscreen.tsx
-import React, {useEffect, useRef, useState} from "react";
+// PxWebLineChartFullscreen.tsx
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import {PxWebData} from "@/app/types";
+import { PxWebData } from "@/app/types";
 import DualRangeSlider from "@/app/components/Graphing/util/DualRangeSlider";
-import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct"; // Adjust the path as needed
+import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct"; // Adjust path as needed
 
-interface BarChartProps {
+interface LineChartProps {
     data: PxWebData;
     width?: number;
     height?: number;
@@ -31,11 +31,11 @@ interface PredictionSeries {
     metrics: RegressionMetrics;
 }
 
-export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
-                                                                     data,
-                                                                     width = 900,
-                                                                     height = 500,
-                                                                 }) => {
+export const PxWebLineChartFullscreen: React.FC<LineChartProps> = ({
+                                                                       data,
+                                                                       width = 900,
+                                                                       height = 500,
+                                                                   }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
     const customColors = [
@@ -46,7 +46,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
     ];
 
     const dimensionEntries = Object.entries(data.dimension);
-    let timeDimName: string | undefined = undefined;
+    let timeDimName: string | undefined;
     if (data.role?.time && data.role.time.length > 0) {
         timeDimName = data.role.time[0];
     } else {
@@ -144,8 +144,9 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         const sumY = points.reduce((sum, p) => sum + p.y, 0);
         const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
         const sumX2 = points.reduce((sum, p) => sum + p.x * p.x, 0);
-        const slope =
-            (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX || 1);
+
+        const denom = n * sumX2 - sumX * sumX;
+        const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom;
         const intercept = (sumY - slope * sumX) / n;
         return { slope, intercept };
     }
@@ -159,7 +160,10 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         const residuals = points.map((p, i) => p.y - predicted[i]);
         const ssRes = residuals.reduce((sum, r) => sum + r * r, 0);
         const meanY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
-        const ssTot = points.reduce((sum, p) => sum + Math.pow(p.y - meanY, 2), 0);
+        const ssTot = points.reduce(
+            (sum, p) => sum + Math.pow(p.y - meanY, 2),
+            0
+        );
         const rSquared = ssTot === 0 ? 1 : 1 - ssRes / ssTot;
         const rmse = Math.sqrt(ssRes / points.length);
         return { slope, intercept, rSquared, rmse };
@@ -168,7 +172,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
     const handlePredict = () => {
         const predictionSteps = 5; // number of future steps to predict
         const newPredictionData: PredictionSeries[] = visibleSeriesData.map((sd) => {
-            // Treat x as the index (0, 1, 2, …) for historical data
             const historicalPoints = sd.series.map((d, i) => ({ x: i, y: d.y }));
             const { slope, intercept } = linearRegression(historicalPoints);
             const metrics = computeRegressionMetrics(historicalPoints, slope, intercept);
@@ -177,6 +180,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                 x: i,
                 y: slope * i + intercept,
             }));
+
             return { combo: sd.combo, regressionLine, metrics };
         });
         setPredictionData(newPredictionData);
@@ -193,25 +197,27 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
 
         const margin = { top: 30, right: 30, bottom: 50, left: 60 };
         const originalInnerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
         const historicalLabels =
             visibleSeriesData.length > 0
                 ? visibleSeriesData[0].series.map((d) => d.x)
                 : [];
+
         let extendedDomain = historicalLabels;
         let extraWidth = 0;
         let extendedInnerWidth = originalInnerWidth;
+
         if (predictionData.length > 0 && historicalLabels.length > 0) {
             const predictionCount =
                 predictionData[0].regressionLine.length - historicalLabels.length;
-            const futureLabels = Array.from(
-                { length: predictionCount },
-                (_, i) => `F${i + 1}`
-            );
+            const futureLabels = Array.from({ length: predictionCount }, (_, i) => `F${i + 1}`);
             extendedDomain = historicalLabels.concat(futureLabels);
             extraWidth =
                 predictionCount * (originalInnerWidth / historicalLabels.length);
             extendedInnerWidth = originalInnerWidth + extraWidth;
         }
+
         const totalSvgWidth = margin.left + margin.right + extendedInnerWidth;
         svgEl.attr("viewBox", `0 0 ${totalSvgWidth} ${height}`);
 
@@ -237,24 +243,18 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
             .range([0, extendedInnerWidth])
             .padding(0.2);
 
-        const xSubgroup = d3
-            .scaleBand<number>()
-            .domain(d3.range(visibleSeriesData.length))
-            .range([0, xScale.bandwidth()])
-            .padding(0.05);
-
         const allHistoricalPoints = visibleSeriesData.flatMap((sd) => sd.series);
         const [minY, maxY] = d3.extent(allHistoricalPoints, (d) => d.y);
         const yScale = d3
             .scaleLinear()
             .domain([Math.min(0, minY ?? 0), maxY ?? 10])
-            .range([height - margin.top - margin.bottom, 0])
+            .range([innerHeight, 0])
             .nice();
 
         const xAxis = d3.axisBottom<string>(xScale).tickSizeOuter(0);
         svg
             .append("g")
-            .attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
+            .attr("transform", `translate(0, ${innerHeight})`)
             .call(xAxis)
             .selectAll("text")
             .attr("font-size", "20px")
@@ -264,52 +264,50 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         const yAxis = d3.axisLeft<number>(yScale);
         svg.append("g").call(yAxis);
 
-        const timeGroups = svg
-            .selectAll<SVGGElement, string>(".time-group")
-            .data(historicalLabels)
-            .enter()
-            .append("g")
-            .attr("class", "time-group")
-            .attr("transform", (d) => `translate(${xScale(d)},0)`);
+        visibleSeriesData.forEach((sd, seriesIndex) => {
+            const lineGen = d3
+                .line<{ x: string; y: number }>()
+                .x((d) => {
+                    // Place the point in the center of the band
+                    const bandPos = xScale(d.x);
+                    return bandPos ? bandPos + xScale.bandwidth() / 2 : 0;
+                })
+                .y((d) => yScale(d.y));
 
-        const bars = timeGroups
-            .selectAll<SVGRectElement, never>("rect")
-            .data((timeLabel, i) => {
-                return visibleSeriesData.map((sd, seriesIndex) => {
-                    const point = sd.series[i];
-                    return {
-                        comboIndex: seriesIndex,
-                        timeLabel,
-                        value: point?.y ?? 0,
-                    };
+            svg
+                .append("path")
+                .datum(sd.series)
+                .attr("fill", "none")
+                .attr("stroke", colorScale(String(seriesIndex))!)
+                .attr("stroke-width", 2)
+                .attr("d", lineGen);
+
+            svg
+                .selectAll(`.circle-series-${seriesIndex}`)
+                .data(sd.series)
+                .enter()
+                .append("circle")
+                .attr("r", 4)
+                .attr("cx", (d) => {
+                    const bandPos = xScale(d.x);
+                    return bandPos ? bandPos + xScale.bandwidth() / 2 : 0;
+                })
+                .attr("cy", (d) => yScale(d.y))
+                .attr("fill", colorScale(String(seriesIndex))!)
+                .on("mouseover", function (event, d) {
+                    tooltip
+                        .style("display", "block")
+                        .html(`<strong>${d.x}</strong><br/>Verdi: ${d.y}`);
+                })
+                .on("mousemove", function (event) {
+                    tooltip
+                        .style("left", event.pageX + 10 + "px")
+                        .style("top", event.pageY + 10 + "px");
+                })
+                .on("mouseleave", function () {
+                    tooltip.style("display", "none");
                 });
-            })
-            .enter()
-            .append("rect")
-            .attr("x", (d) => xSubgroup(d.comboIndex)!)
-            .attr("width", xSubgroup.bandwidth())
-            .attr("fill", (d) => colorScale(String(d.comboIndex))!)
-            .attr("y", height - margin.top - margin.bottom)
-            .attr("height", 0)
-            .on("mouseover", function (event, d) {
-                tooltip
-                    .style("display", "block")
-                    .html(`<strong>${d.timeLabel}</strong><br/>Verdi: ${d.value}`);
-            })
-            .on("mousemove", function (event) {
-                tooltip
-                    .style("left", event.pageX + 10 + "px")
-                    .style("top", event.pageY + 10 + "px");
-            })
-            .on("mouseleave", function () {
-                tooltip.style("display", "none");
-            });
-
-        bars
-            .transition()
-            .duration(400)
-            .attr("y", (d) => yScale(d.value))
-            .attr("height", (d) => height - margin.top - margin.bottom - yScale(d.value));
+        });
 
         if (predictionData.length > 0) {
             predictionData.forEach((pd, seriesIndex) => {
@@ -317,11 +315,8 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                     .line<RegressionPoint>()
                     .x((d) => {
                         const label = extendedDomain[d.x];
-                        return (
-                            (xScale(label) ?? 0) +
-                            (xSubgroup(seriesIndex) ?? 0) +
-                            xSubgroup.bandwidth() / 2
-                        );
+                        const bandPos = xScale(label);
+                        return bandPos ? bandPos + xScale.bandwidth() / 2 : 0;
                     })
                     .y((d) => yScale(d.y));
 
@@ -331,6 +326,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                     .attr("fill", "none")
                     .attr("stroke", colorScale(String(seriesIndex))!)
                     .attr("stroke-width", 2)
+                    .attr("stroke-dasharray", "4 2")
                     .attr("d", seriesLine);
             });
         }
@@ -338,7 +334,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         return () => {
             tooltip.remove();
         };
-    }, [visibleSeriesData, width, height, startIndex, endIndex, predictionData]);
+    }, [visibleSeriesData, width, height, startIndex, endIndex, predictionData, colorScale]);
 
     const [numberPart, ...textParts] = data.label.split(":");
     const textPart = textParts.join(":").trim();
@@ -366,7 +362,10 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                                     const isChecked = selectedCategories[dim.name].has(catKey);
                                     const color = catColorMapping[catKey];
                                     return (
-                                        <label key={catKey} className="inline-flex items-center gap-1">
+                                        <label
+                                            key={catKey}
+                                            className="inline-flex items-center gap-1"
+                                        >
                                             <input
                                                 type="checkbox"
                                                 checked={isChecked}
@@ -392,9 +391,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                                                     </svg>
                                                 )}
                                             </div>
-                                            <span className="text-xs">
-                                            {catLabel}
-                                            </span>
+                                            <span className="text-xs">{catLabel}</span>
                                         </label>
                                     );
                                 })}
@@ -402,7 +399,6 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                         </div>
                     );
                 })}
-
 
                 <h1 className="text-lg font-bold">Verktøy:</h1>
 
@@ -450,6 +446,7 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                     timeCategoryKeys={timeCategoryKeys}
                 />
 
+                {/* Regression summary panel */}
                 {predictionData.length > 0 && (
                     <div className="mt-2 p-2 rounded">
                         <h2 className="text-md font-bold mb-2">Regresjonsresultater:</h2>
@@ -460,16 +457,18 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
                                     <div
                                         key={i}
                                         className="flex flex-col p-2 border rounded"
-                                        style={{borderLeft: `4px solid ${seriesColor}`}}
+                                        style={{ borderLeft: `4px solid ${seriesColor}` }}
                                     >
-                                        <h3 className="font-semibold" style={{color: seriesColor}}>
+                                        <h3
+                                            className="font-semibold"
+                                            style={{ color: seriesColor }}
+                                        >
                                             {(() => {
                                                 const entries = Object.entries(pd.combo);
                                                 const [dimName, catKey] = entries[entries.length - 1];
                                                 return data.dimension[dimName].category.label[catKey];
                                             })()}
                                         </h3>
-
                                         <p>
                                             <span className="font-bold">Likning:</span>{" "}
                                             {`y = ${pd.metrics.slope.toFixed(2)}x + ${pd.metrics.intercept.toFixed(2)}`}
@@ -492,4 +491,5 @@ export const PxWebBarChartFullscreen: React.FC<BarChartProps> = ({
         </div>
     );
 };
+
 

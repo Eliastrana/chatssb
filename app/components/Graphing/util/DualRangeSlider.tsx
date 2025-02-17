@@ -7,7 +7,6 @@ export interface DualRangeSliderProps {
     startValue: number;
     endValue: number;
     onChange: (start: number, end: number) => void;
-    // These props are used for displaying labels.
     timeCategoryLabels: { [key: string]: string };
     timeCategoryKeys: string[];
 }
@@ -24,7 +23,6 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
     const sliderRef = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState<"start" | "end" | null>(null);
 
-    // Convert a clientX (pixels) to a slider value between min and max.
     const getValueFromPosition = (clientX: number) => {
         if (!sliderRef.current) return min;
         const rect = sliderRef.current.getBoundingClientRect();

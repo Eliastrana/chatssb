@@ -19,7 +19,7 @@ export default function ExamplePrompts({ onSelectPrompt }: ExamplePromptsProps) 
                 {prompts.map((prompt, index) => (
                     <button
                         key={index}
-                        className="bg-[#274247] text-white px-2 md:px-4 py-1 md:py-2 shadow-lg text-xs md:text-lg hover:bg-[#1b3134] transition-colors"
+                        className="bg-[#274247] rounded-lg text-white px-2 md:px-4 py-1 md:py-2 shadow-lg text-xs md:text-lg hover:bg-[#1b3134] transition-colors"
                         onClick={() => onSelectPrompt(prompt)}
                     >
                         {prompt}
