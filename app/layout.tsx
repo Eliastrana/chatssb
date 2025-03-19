@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import IOSToggleButton from "@/app/components/dev/IOSToggleButton";
 
 export const metadata: Metadata = {
   title: "ChatSSB",
@@ -46,6 +47,11 @@ export default function RootLayout({
 
       </head>
       <body>
+
+      <div className="fixed right-2 top-2 z-50">
+          <IOSToggleButton/>
+      </div>
+
       {children}
       </body>
       </html>

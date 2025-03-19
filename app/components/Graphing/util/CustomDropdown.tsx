@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 
-type DropdownOption<T> = {
+export type DropdownOption<T> = {
     label: string;
     value: T;
 };
 
-interface CustomDropdownProps<T> {
+export interface CustomDropdownProps<T> {
     options: ReadonlyArray<DropdownOption<T>>;
     selectedValue: T;
     onSelect: (newValue: T) => void;
@@ -45,11 +45,11 @@ export function CustomDropdown<T>({
                 {selectedOption ? selectedOption.label : "Velg diagramtype"}
                 <span
                     className={`
-            material-symbols-outlined ml-2 transition-transform align-middle
-            ${isOpen ? "rotate-180" : "rotate-0"}`}
+                        material-symbols-outlined ml-2 transition-transform align-middle
+                        ${isOpen ? "rotate-180" : "rotate-0"}`}
                 >
-          keyboard_arrow_down
-        </span>
+                    keyboard_arrow_down
+                </span>
             </button>
             {isOpen && (
                 <div className="absolute left-0 mt-1 w-48 rounded-lg shadow-md bg-white border-2 border-[#274247]">

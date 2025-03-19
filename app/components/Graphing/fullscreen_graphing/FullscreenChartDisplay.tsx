@@ -7,8 +7,9 @@ import { CustomDropdown } from "@/app/components/Graphing/util/CustomDropdown";
 import {PxWebLineChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebLineChartFullscreen";
 import {PxWebPieChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebPieChartFullscreen";
 import {PxWebBubbleChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebBubbleChartFullscreen";
+import PxWebTableFullscreen from "@/app/components/Graphing/fullscreen_graphing/PxTableFullscreen";
 
-type ChartType = "bar" | "line" | "pie" | "bubble";
+type ChartType = "bar" | "line" | "pie" | "bubble" | "table";
 
 interface ChartDisplayProps {
     pxData: PxWebData;
@@ -28,6 +29,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
         line: <PxWebLineChartFullscreen data={pxData} width={width} height={height} />,
         pie: <PxWebPieChartFullscreen data={pxData} width={width} height={height} />,
         bubble: <PxWebBubbleChartFullscreen data={pxData} width={width} height={height} />,
+        table: <PxWebTableFullscreen data={pxData} />,
     };
 
     const chartOptions = [
@@ -35,6 +37,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
         { label: "Linjediagram", value: "line" as ChartType },
         { label: "Sektordiagram", value: "pie" as ChartType },
         { label: "Boblediagram", value: "bubble" as ChartType },
+        { label: "Tabell", value: "table" as ChartType },
     ];
 
     return (

@@ -1,10 +1,10 @@
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
-    jsonUrl?: string;       // New field
+    jsonUrl?: string;
     type?: 'json';
     jsonData?: unknown;
-    pxData?: PxWebData;    // <-- optional chart data
+    pxData?: PxWebData;
 
 }
 
