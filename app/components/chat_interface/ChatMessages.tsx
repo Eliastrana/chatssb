@@ -18,10 +18,16 @@ function MessageItem({ msg, isBot, onExpand }: {
     isBot: boolean;
     onExpand: () => void;
 }) {
+
+    const [prefix, numberPart] = msg.text.split(': ');
+
+    const containsNumber = !isNaN(parseInt(numberPart));
+
     return (
         <div
             className={`relative px-4 py-2 border border-[#C3DCDC] rounded-lg shadow-md break-words max-w-full md:max-w-xl ${
-                isBot ? 'bg-white text-gray-800' : 'bg-[#274247] text-white'
+                isBot ? 'text-gray-800 bg-white' : 'bg-[#274247] text-white'
+            } ${containsNumber && isBot ? '!bg-[#ECFEED] rounded-none border-none' : ''
             }`}
         >
             {isBot && msg.pxData && (
@@ -35,7 +41,18 @@ function MessageItem({ msg, isBot, onExpand }: {
                 </button>
 
             )}
-            <p>{msg.text}</p>
+
+            {containsNumber && (
+                <p className="">
+                    <span className="font-sans block mb-2">{prefix + ': '}</span>
+                    <span className="text-7xl block font-bold text-[#274247]">{numberPart}</span>
+                </p>
+            )}
+
+            {!containsNumber && (
+                <p>{msg.text}</p>
+            )}
+
             {msg.pxData && (
                 <ChartDisplay pxData={msg.pxData} width={600} height={400}/>
             )}
@@ -59,7 +76,7 @@ function ChatMessagesBase({
     }
 
     return (
-        <div className="flex-1 overflow-y-auto mb-10 text-xs md:text-base text-white">
+        <div className="flex-1 overflow-y-auto mb-10 md:text-base text-white">
             {messages.map((msg, index) => {
                 const isBot = (msg.sender === 'bot');
                 return (
