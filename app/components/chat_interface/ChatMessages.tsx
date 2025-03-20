@@ -19,15 +19,11 @@ function MessageItem({ msg, isBot, onExpand }: {
     onExpand: () => void;
 }) {
 
-    const [prefix, numberPart] = msg.text.split(': ');
-
-    const containsNumber = !isNaN(parseInt(numberPart));
-
     return (
         <div
             className={`relative px-4 py-2 border border-[#C3DCDC] rounded-lg shadow-md break-words max-w-full md:max-w-xl ${
                 isBot ? 'text-gray-800 bg-white' : 'bg-[#274247] text-white'
-            } ${containsNumber && isBot ? '!bg-[#ECFEED] rounded-none border-none' : ''
+            } ${msg.value && isBot ? '!bg-[#ECFEED] rounded-none border-none' : ''
             }`}
         >
             {isBot && msg.pxData && (
@@ -39,17 +35,38 @@ function MessageItem({ msg, isBot, onExpand }: {
                         open_in_full
                     </span>
                 </button>
-
             )}
 
-            {containsNumber && (
-                <p className="">
-                    <span className="font-sans block mb-2">{prefix + ': '}</span>
-                    <span className="text-7xl block font-bold text-[#274247]">{numberPart}</span>
-                </p>
+            {msg.value !== undefined && (
+                <div className=" text-[#274247]">
+
+                    <div className="mb-2">
+                        <div className="flex items-center gap-1">
+                            <a
+                                href={`https://www.ssb.no/statbank/table/${msg.tableid?.trim()}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-gray-400 text-xl hover:underline"
+                            >
+                                {msg.tableid}
+                            </a>
+                            <span className="material-symbols-outlined text-gray-400">
+                                open_in_new
+                            </span>
+                        </div>
+                    </div>
+                    <span className="text-xl font-semibold block ">{msg.text}</span>
+
+                    <div className="flex items-baseline text-[#274247]">
+                        <span className="text-7xl block font-bold ">{msg.value}</span>
+                        <span className="text-lg font-bold block mt-2 ml-2">
+                            {msg.unit === "antall" ? "" : msg.unit}
+                        </span>
+                    </div>
+                </div>
             )}
 
-            {!containsNumber && (
+            {!msg.value && (
                 <p>{msg.text}</p>
             )}
 
