@@ -38,24 +38,35 @@ function MessageItem({ msg, isBot, onExpand }: {
             )}
 
             {msg.value !== undefined && (
-                <div className=" text-[#274247]">
+                <div className="p-6 text-[#274247]">
 
                     <div className="mb-2">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 text-2xl">
                             <a
                                 href={`https://www.ssb.no/statbank/table/${msg.tableid?.trim()}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-gray-400 text-xl hover:underline"
+                                className="text-gray-400 hover:underline"
                             >
                                 {msg.tableid}
                             </a>
+
                             <span className="material-symbols-outlined text-gray-400">
                                 open_in_new
                             </span>
                         </div>
+
+
+                        <h3 className="text-md ">{msg.label?.split(':')[1]}</h3>
+
+                        <h3 className="text-2xl font-bold mt-2">
+                            {msg.underLabel
+                                ? msg.underLabel.charAt(0).toUpperCase() + msg.underLabel.slice(1) + ':'
+                                : ''}
+                        </h3>
+
                     </div>
-                    <span className="text-xl font-semibold block ">{msg.text}</span>
+                    {/*<span className="text-xl font-semibold block ">{msg.text}</span>*/}
 
                     <div className="flex items-baseline text-[#274247]">
                         <span className="text-7xl block font-bold ">{msg.value}</span>
@@ -66,12 +77,21 @@ function MessageItem({ msg, isBot, onExpand }: {
                 </div>
             )}
 
-            {!msg.value && (
+            {!msg.value && !msg.description && (
                 <p>{msg.text}</p>
             )}
 
             {msg.pxData && (
                 <ChartDisplay pxData={msg.pxData} width={600} height={400}/>
+            )}
+
+            {msg.description && (
+                <div className={"mt-2"}>
+                <h1 className="text-xl font-semibold mt-2">{msg.text}</h1>
+                    <div className="mt-2">
+                    <p style={{whiteSpace: 'pre-line'}}>{msg.description}</p>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -1,7 +1,11 @@
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
+    label?: string;
+    underLabel?: string;
     value?: number;
+    title?: string;
+    description?: string;
     tableid?: string;
     unit?: string;
     jsonUrl?: string;
