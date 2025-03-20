@@ -44,11 +44,11 @@ export default function Home() {
                 { sender: 'bot', text: botMessage, ...(isSingleValue ? undefined : { pxData: tableData }) }
             ]);
             
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
             setMessages((prev) => [
                 ...prev,
-                { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
+                { sender: 'bot', text: `Vi klarte ikke å hente dataene dine. Prøv igjen. Error: ${err.message}` }
             ]);
         } finally {
             setIsLoading(false);

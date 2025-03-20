@@ -5,16 +5,26 @@ import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {SSBNavigationResponse} from "@/app/types";
 
-
-export function navigationRunnable(
+/**
+ * Creates a runnable that lets the LLM navigate one step deeper into the folder structure or
+ * 
+ * @param selectedModel The selected LLM instance to use.
+ * @param messages Both the user and system messages to include in the prompt.
+ * @param folderEntries The avialble folders or tables to navigate.
+ * @param maxBreadth The maximum number of folders or tables the LLM can select.
+ */
+export function parallellNavigationRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    folderStructures: SSBNavigationResponse[],
+    folderEntries: SSBNavigationResponse[],
     maxBreadth: number = 1
 ): Runnable {
+    
+    console.log(`\n=== Selecting most relevant folders or tables; max breadth: ${maxBreadth} ===\n`);
+    
     const navigationSchema = z
         .object({
-            folderSelection: z.array(z
+            folderEntries: z.array(z
                 .object({
                     type: z
                         .string()
@@ -36,8 +46,8 @@ export function navigationRunnable(
         });
     
     let systemMessageText = "Folder contents:\n";
-    for (const folderStructure of folderStructures) {
-        const entries = folderStructure.folderContents.map((entry) => ({
+    for (const folderEntry of folderEntries) {
+        const entries = folderEntry.folderContents.map((entry) => ({
             type: entry.type,
             id: entry.id,
             label: entry.label,
@@ -52,8 +62,8 @@ export function navigationRunnable(
 
         systemMessageText += `\n${navigationEntriesText}`;
     }
-        
-    console.log(systemMessageText, "\n");
+    
+    console.log(`${systemMessageText}\n`)
 
     const prompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(systemMessageText)
@@ -63,4 +73,3 @@ export function navigationRunnable(
 
     return prompt.pipe(selectedModel.withStructuredOutput(navigationSchema));
 }
-

@@ -37,6 +37,11 @@ export interface SSBTableMetadata {
         };
         extension: { elimination: boolean; };
     }>;
+    extension: {
+        px: {
+            tableid: string;
+        }
+    };
 }
 
 export interface SSBNavigationResponse {
