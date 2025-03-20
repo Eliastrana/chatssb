@@ -1,6 +1,9 @@
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
+    value?: number;
+    tableid?: string;
+    unit?: string;
     jsonUrl?: string;
     type?: 'json';
     jsonData?: unknown;
@@ -10,12 +13,20 @@ export interface Message {
 
 export interface PxWebData {
     label: string;
+    extension: {
+        px: {
+            tableid: string;
+        }
+        timeUnit: string;
+    }
     dimension: {
         [dimName: string]: {
             label: string;
             category: {
                 index: Record<string, number>;
                 label: Record<string, string>;
+                unit: Record<string, { base: string; decimals: number }>;
+
             };
         };
     };

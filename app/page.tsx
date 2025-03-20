@@ -50,10 +50,32 @@ export default function Home() {
 
             console.log("Raw API Response (tableData):", tableData);
 
+            // Litt skitten chat kode som klarer å hente ut prosent
+            const metricKey = tableData.role?.metric?.[0];
+            let baseUnit = '';
+
+            if (metricKey) {
+                const metricDimension = tableData.dimension[metricKey];
+                if (metricDimension) {
+                    const units = metricDimension.category.unit;
+                    const firstUnitKey = Object.keys(units)[0];
+                    baseUnit = units[firstUnitKey].base;
+                    console.log("Base Unit:", baseUnit);
+                } else {
+                    console.error("Metric dimension not found");
+                }
+            } else {
+                console.error("Metric key not defined");
+            }
+
             if (Array.isArray(tableData.value) && tableData.value.length === 1) {
                 setMessages(prev => [
                     ...prev,
-                    { sender: 'bot', text: `Svaret er: ${tableData.value[0]}` },
+                    { sender: 'bot',
+                        text: `Svaret er: `,
+                        tableid: tableData.extension.px.tableid,
+                        value: tableData.value[0],
+                        unit: baseUnit},
                 ]);
             } else {
                 setMessages(prev => [
@@ -87,8 +109,6 @@ export default function Home() {
             )}
 
             <HoverInfoModal />
-
-
 
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
 
