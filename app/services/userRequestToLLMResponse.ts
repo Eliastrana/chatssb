@@ -1,31 +1,13 @@
 "use server";
 
-import { ChatOpenAI } from '@langchain/openai';
-import { ChatPromptTemplate } from '@langchain/core/prompts';
-import { SystemMessage, HumanMessage } from '@langchain/core/messages';
-import { createOpenAIFnRunnable } from 'langchain/chains/openai_functions';
-import {PxWebData} from "@/app/types";
-
-const systemPromptNavigation = `
-Brukeren er ute etter statistikk som relaterer til deres forespørsel.
-Du skal navigere i en API-struktur for å finne 1 tabell av 8000 som passer best til brukerens ønske.
-
-API-en består av flere hovedemner som er hver sin egen liste av lister ned til tabellnivå.
-Du kan identifisere underemner ved å se på 'type' som har følgende alternativer:
-
-- 'FolderInformation' for liste som kan inneholde flere lister, tabeller eller header
-- 'Table' for tabell som inneholder data
-- 'Heading' for header som er en overskrift
-
-Du skal bare navigere i lister og tabeller.
-Du skal returnere 'id' attributtet til tabellen som passer best til brukerens forespørsel sammen med 'type' og 'label' attributtene valgt.
-
-Du skal finne neste liste eller tabell, dette er så langt du allerede har navigert og du skal ikke respondere med det samme igjen:
-"Startmappe"
-`;
-
-
-
+import {ChatOpenAI} from '@langchain/openai';
+import {HumanMessage} from '@langchain/core/messages';
+import {PxWebData, SSBTableMetadata} from "@/app/types";
+import {
+    metadataRunnableMultithreadedPrompts,
+    multithreadedPromptSchemaToPxApiQuery
+} from "@/app/utils/LLM_metadata_selection/metadataRunnable";
+import {parallellUserMessageToMetadata} from "@/app/utils/LLM_navigation/parallellUserMessageToMetadata";
 
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
@@ -33,187 +15,32 @@ const model = new ChatOpenAI({
     temperature: 0,
 });
 
-const OpenAINavigationFunction = {
-    name: "navigate_to_best_table",
-    description: "Navigate in the SSB API structure to find the best table for the user's request.",
-    parameters: {
-        type: "object",
-        properties: {
-            type: {type: "string", description: "The 'type' of the current item."},
-            id: {type: "string", description: "The 'id' of either a list or a table."},
-            label: {type: "string", description: "The 'label' of the current item."},
-        },
-        required: ["id", "type", "label"],
-    },
-};
-
-type OpenAINavigationFunctionType = {
-    type: string;
-    id: string;
-    label: string;
-};
-
-const OpenAIRequestTableDataFunction = {
-    name: "filter_table",
-    description: "Based on the user request, select the most relevant category based on the" +
-        " available categories given. All other information like 'label' and 'unit' is just" +
-        " context. You should all relevant categories, each separated by a comma with no spaces.",
-    parameters: {
-        type: "object",
-        description: "The category that corresponds best to the user's request.",
-        properties: {
-            category: {
-                type: "string",
-                description: "The category that corresponds best to the user's request."
-            }
-        },
-        required: ["category"],
-    },
-};
-
-type SSBTableMetadata = {
-    label: string;
-    note: string[];
-    dimension: Record<string, {
-        label: string;
-        category: {
-            label: Record<string, string>;
-            unit?: Record<string, { base: string; decimals: number; }>;
-        };
-        extension: { elimination: boolean; };
-    }>;
-}
-
-interface FetchOptions extends RequestInit {
-    timeout?: number;
-}
-
-
-
-async function fetchWithTimeout(resource: string, options: FetchOptions = {}): Promise<Response> {
-    const { timeout = 60000, ...rest } = options; // Default timeout set to 60 seconds
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    const response = await fetch(resource, {
-        ...rest,
-        signal: controller.signal,
-    });
-    clearTimeout(id);
-    return response;
-}
-
-
-export async function userRequestToLLMResponse(message: string): Promise<PxWebData> {
-
-    let depth = 0;
-    const maxDepth = 5;
-    let LLMResponse: OpenAINavigationFunctionType = {type: '', id: '', label: ''};
-    let currentSystemPrompt: string = systemPromptNavigation;
-
-    console.log('Received message:', message);
-
-    while (depth < maxDepth) {
-        const navigationId = LLMResponse.id;
-
-        const response = await fetchWithTimeout('https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + navigationId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            timeout: 60000, // 60 seconds timeout
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch SSB API navigation data');
-
-        const SSBResponse = await response.json();
-
-        const prompt = ChatPromptTemplate.fromMessages([
-            new SystemMessage(currentSystemPrompt),
-            new SystemMessage('API response: ' + JSON.stringify(SSBResponse)),
-            new HumanMessage(message),
-        ]);
-
-        const runnable = createOpenAIFnRunnable({
-            functions: [OpenAINavigationFunction],
-            llm: model,
-            prompt,
-        });
-
-        LLMResponse = await runnable.invoke({}, {}) as OpenAINavigationFunctionType;
-        
-        console.log(LLMResponse.label)
-
-        currentSystemPrompt += JSON.stringify(LLMResponse.label) + '\n';
-
-        if (LLMResponse.type === 'Table') break;
-        depth++;
-    }
-
-    if (depth === maxDepth) {
-        throw new Error('Failed to find a table in the SSB API');
-    }
-
-    const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/metadata?lang=no&outputFormat=json-stat2', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-    })
-
-    if (!response.ok) throw new Error('Failed to fetch SSB API table metadata');
-
-    const tableMetadata: SSBTableMetadata = await response.json();
-    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + LLMResponse.id + '/data?lang=no&format=json-stat2';
-
-    for (const dimensionKey in tableMetadata.dimension) {
-        const dimension = tableMetadata.dimension[dimensionKey];
-
-        const categoryLabels = Object.values(dimension.category.label);
-
-        const dimensionPrompt = JSON.stringify({
-            label: dimension.label,
-            category: categoryLabels,
-            unit: dimension.category.unit,
-            elimination: dimension.extension.elimination,
-        });
-
-        console.log('Dimension:', dimensionPrompt);
-
-        const prompt = ChatPromptTemplate.fromMessages([
-            new SystemMessage(dimensionPrompt),
-            new HumanMessage(message),
-        ]);
-
-        const runnable = createOpenAIFnRunnable({
-            functions: [OpenAIRequestTableDataFunction],
-            llm: model,
-            prompt,
-            enforceSingleFunctionUsage: true,
-        });
-
-        const LLMRequestTableData = await runnable.invoke({}, {})
-
-        if (!LLMRequestTableData.category.toString().includes(',')) {
-
-            const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === LLMRequestTableData.category) || '*';
-
-            SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
-            console.log('LLMRequestTableData:', categoryKey, '=>', LLMRequestTableData.category);
-
-        } else {
-            const categoryKeys = LLMRequestTableData.category.split(',');
-
-            for (const category of categoryKeys) {
-                const categoryKey = Object.keys(dimension.category.label).find(key => dimension.category.label[key] === category) || '*';
-                SSBGetUrl += `&valueCodes[${dimensionKey}]=${categoryKey}`;
-            }
-            console.log('LLMRequestTableData:', categoryKeys, '=>', LLMRequestTableData.category);
-        }
-    }
-
-    console.log('SSBGetUrl:', SSBGetUrl);
+export async function userRequestToLLMResponse(userMessage: string): Promise<PxWebData> {
+    
+    console.log(`\n= User message received: ${userMessage} =\n`); 
+    
+    const tableMetadata: SSBTableMetadata = await parallellUserMessageToMetadata(
+        model,
+        userMessage,
+        2,
+    )
+    
+    const tableId = tableMetadata.extension.px.tableid;
+    
+    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + tableId + '/data?lang=no&format=json-stat2';
+    
+    // Single prompt for metadata selection
+    //const LLMMetadataResponse = await metadataRunnableSinglePrompt(model, [new
+    // HumanMessage(message)], tableMetadata).invoke({}, {});
+    //console.log(LLMMetadataResponse);
+    //SSBGetUrl = singlePromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
+    
+    // Multithreaded prompts for metadata selection
+    const LLMMetadataResponse = await metadataRunnableMultithreadedPrompts(model, [new HumanMessage(userMessage)], tableMetadata).invoke({}, {});
+    console.log(JSON.stringify(LLMMetadataResponse, null, 2));
+    SSBGetUrl = multithreadedPromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
+    
+    console.log('SSBGetUrl:', SSBGetUrl)
 
     const responseTableData = await fetch(SSBGetUrl, {
         method: 'GET',
@@ -222,12 +49,7 @@ export async function userRequestToLLMResponse(message: string): Promise<PxWebDa
         }
     });
 
-    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data');
-
-    const tableData = await responseTableData.json();
-    console.log('Table data:', tableData);
+    if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + tableId + ' with URL ' + SSBGetUrl);
     
-    return tableData;
+    return await responseTableData.json();
 }
-
-

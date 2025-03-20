@@ -1,5 +1,5 @@
 "use client";
-import {useState, useEffect, useRef, useCallback} from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import TitleSection from './components/chat_interface/TitleSection';
 import ChatMessages from './components/chat_interface/ChatMessages';
 import ChatInput from './components/chat_interface/ChatInput';
@@ -7,23 +7,24 @@ import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartMod
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 import { Message, PxWebData } from './types';
 import HoverInfoModal from "@/app/components/InfoModal";
+import { userRequestToLLMResponse } from "@/app/services/userRequestToLLMResponse";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Søk i vei!' },
+        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?' },
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fullscreenPxData, setFullscreenPxData] = useState<PxWebData | null>(null);
+    const [hasErrorOccurred, setHasErrorOccurred] = useState(false);
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
-
-            setTimeout(() => {
-                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-            }, 0);
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 0);
     }, []);
 
     const handleOpenFullscreen = useCallback((pxData: PxWebData) => {
@@ -38,31 +39,66 @@ export default function Home() {
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
         setFullscreenPxData(null);
-
         setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
         setInput('');
         setIsLoading(true);
         setError(null);
 
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage }),
-            });
+            const tableData = await userRequestToLLMResponse(userMessage) as PxWebData;
+            console.log("Raw API Response (tableData):", tableData);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || response.statusText);
+            const metricKey = tableData.role?.metric?.[0];
+            let baseUnit = '';
+            let categoryLabels: Record<string, string> = {};
+
+            if (metricKey) {
+                const metricDimension = tableData.dimension[metricKey];
+                if (metricDimension) {
+                    const units = metricDimension.category.unit;
+                    const firstUnitKey = Object.keys(units)[0];
+                    baseUnit = units[firstUnitKey].base;
+                    console.log("Base Unit:", baseUnit);
+
+                    categoryLabels = metricDimension.category.label;
+                    const firstCategoryKey = Object.keys(categoryLabels)[0];
+                    const firstCategoryLabel = categoryLabels[firstCategoryKey];
+                    console.log("First Category Label:", firstCategoryLabel);
+                } else {
+                    console.error("Metric dimension not found");
+                }
+            } else {
+                console.error("Metric key not defined");
             }
 
-            const tableData: PxWebData = await response.json();
-            console.log("Raw API Response (tableData):", tableData);
+            const timeKey = tableData.role?.time?.[0];
+            const allDimensionKeys = Object.keys(tableData.dimension);
+            const groupDimensionKeys = allDimensionKeys.filter(
+                key => key !== metricKey && key !== timeKey
+            );
+
+            const groupKey = groupDimensionKeys[0] || '';
+            let groupLabel = '';
+            if (groupKey) {
+                const groupDimension = tableData.dimension[groupKey];
+                groupLabel = groupDimension.label;
+                console.log("Group Dimension Label:", groupLabel);
+            } else {
+                console.error("No group dimension found");
+            }
 
             if (Array.isArray(tableData.value) && tableData.value.length === 1) {
                 setMessages(prev => [
                     ...prev,
-                    { sender: 'bot', text: `Svaret er: ${tableData.value[0]}` },
+                    {
+                        sender: 'bot',
+                        text: `Svaret er: `,
+                        underLabel: groupLabel,
+                        label: tableData.label,
+                        tableid: tableData.extension.px.tableid,
+                        value: tableData.value[0],
+                        unit: baseUnit
+                    },
                 ]);
             } else {
                 setMessages(prev => [
@@ -76,11 +112,22 @@ export default function Home() {
             }
         } catch (err) {
             console.error(err);
-            setError("Vi klarte dessverre ikke å finne det du var ute etter!");
             setMessages(prev => [
                 ...prev,
                 { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
             ]);
+
+            if (!hasErrorOccurred) {
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        sender: 'bot',
+                        text: "Tips til å finne det du leter etter:",
+                        description: "1. Spissere spørsmål gir spissere svar \n2. Inkluder årstall, enten det er et eller flere \n3. Sett parametre i spørsmålet "
+                    }
+                ]);
+                setHasErrorOccurred(true);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -96,8 +143,6 @@ export default function Home() {
             )}
 
             <HoverInfoModal />
-
-
 
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
 
