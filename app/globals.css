@@ -3,19 +3,63 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #F0F8F9;
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
+  font-family: "Roboto", sans-serif;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+  font-family: Roboto Contensed, sans-serif;
+    font-weight: 700;
+
+}
+h2, h3, h4, h5, h6, p {
+  font-family: inherit;
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+  0 0 20px rgba(255, 255, 255, 0.6),
+  0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.loading-dots {
+  display: inline-block;
+  position: relative;
+  width: 44px;
+  height: 22px;
+}
+
+.loading-dots::before,
+.loading-dots::after,
+.loading-dots span {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: #274247;
+  border-radius: 50%;
+  animation: loading-dots 1.2s infinite ease-in-out;
+}
+
+.loading-dots::before {
+  animation-delay: -0.24s;
+}
+
+.loading-dots::after {
+  animation-delay: -0.12s;
+}
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }

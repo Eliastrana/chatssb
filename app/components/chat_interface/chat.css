@@ -1,0 +1,18 @@
+.loader {
+    border-top-color: #274247;
+    animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.json-display pre {
+    background-color: #f5f5f5;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    max-height: 400px;
+    overflow: auto;
+}
