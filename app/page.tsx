@@ -7,6 +7,7 @@ import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartMod
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 import { Message, PxWebData } from './types';
 import HoverInfoModal from "@/app/components/InfoModal";
+import { userRequestToLLMResponse } from "@/app/services/userRequestToLLMResponse";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -45,18 +46,8 @@ export default function Home() {
         setError(null);
 
         try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMessage }),
-            });
+            const tableData = await userRequestToLLMResponse(input) as PxWebData;
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || response.statusText);
-            }
-
-            const tableData: PxWebData = await response.json();
             console.log("Raw API Response (tableData):", tableData);
 
             if (Array.isArray(tableData.value) && tableData.value.length === 1) {

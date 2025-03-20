@@ -26,3 +26,29 @@ export interface PxWebData {
         metric?: string[];
     };
 }
+
+export interface SSBTableMetadata {
+    label: string;
+    note: string[];
+    dimension: Record<string, {
+        label: string;
+        category: {
+            label: Record<string, string>;
+            unit?: Record<string, { base: string; decimals: number; }>;
+        };
+        extension: { elimination: boolean; };
+    }>;
+    extension: {
+        px: {
+            tableid: string;
+        }
+    };
+}
+
+export interface SSBNavigationResponse {
+    folderContents: {
+        type: string;
+        id: string;
+        label: string;
+    }[];
+}
