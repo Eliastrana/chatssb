@@ -48,7 +48,7 @@ export default function RootLayout({
       </head>
       <body>
 
-      <div className="fixed right-2 top-2 z-50">
+      <div className="fixed right-2 top-2 z-50 hidden md:block">
           <IOSToggleButton/>
       </div>
 
