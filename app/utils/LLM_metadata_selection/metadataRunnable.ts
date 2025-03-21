@@ -66,7 +66,8 @@ export function metadataRunnableMultithreadedPrompts(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
-    sendLog: (log: ServerLog) => void
+    sendLog: (log: ServerLog) => void,
+    promptFormat: string = 'json'
 ): RunnableMap {
     const promptMap = Object.fromEntries(
         Object.entries(metadataJson.dimension).map(([key, value]) => {
@@ -90,19 +91,33 @@ export function metadataRunnableMultithreadedPrompts(
                 ])
             });
             
-            const variableJson = {
-                [key]: {
-                    label: value.label,
-                    items: value.category.label,
-                    unit: value.category.unit
-                }
-            };
+            let systemMessage = '';
             
-            sendLog({ content: JSON.stringify(variableJson), eventType: 'log' });
+            if (promptFormat === 'json') {
+                systemMessage = JSON.stringify({
+                    [key]: {
+                        label: value.label,
+                        items: value.category.label,
+                        unit: value.category.unit
+                    }
+                });
+            } else {
+                systemMessage = `VARIABLE-CODE: ${key}, LABEL: ${value.label}\n\n`;
+                systemMessage += `'Item-key': 'Item-value' (unit?)\n\n`;
+                Object.entries(value.category.label).forEach(([itemKey, itemValue]) => {
+                    systemMessage += `'${itemKey}': '${itemValue}'`
+                    if (value.category.unit?.[itemKey]) {
+                        systemMessage += ` (${value.category.unit[itemKey].base})`;
+                    }
+                    systemMessage += '\n';
+                });
+            }
+            
+            sendLog({ content: systemMessage, eventType: 'log' });
 
             const prompt = ChatPromptTemplate.fromMessages([
                 new SystemMessage(metadataSystemPrompt),
-                new SystemMessage(JSON.stringify(variableJson)),
+                new SystemMessage(systemMessage),
                 ...messages
             ]);
             
