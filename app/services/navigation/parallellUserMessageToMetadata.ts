@@ -1,10 +1,10 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
-import {parallellNavigationRunnable} from "@/app/utils/LLM_navigation/parallellNavigationRunnable";
+import {parallellNavigationRunnable} from "@/app/services/navigation/runnables/parallellNavigationRunnable";
 import {HumanMessage} from "@langchain/core/messages";
 import {
     selectTableFromTablesRunnable
-} from "@/app/utils/LLM_navigation/selectTableFromTablesRunnable";
+} from "@/app/services/navigation/runnables/selectTableFromTablesRunnable";
 
 
 export async function parallellUserMessageToMetadata(

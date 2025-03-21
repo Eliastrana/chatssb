@@ -1,6 +1,6 @@
 // app/api/stream/route.ts
 import { NextResponse } from 'next/server';
-import {userRequestToLLMResponse} from "@/app/services/userRequestToLLMResponse";
+import {userMessageToTableData} from "@/app/services/userMessageToTableData";
 import {ServerLog} from "@/app/types";
 
 export async function GET(request: Request) {
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
-                const result = await userRequestToLLMResponse(userMessage, sendLog);
+                const result = await userMessageToTableData(userMessage, sendLog);
                 // Send the final JSON result as an SSE event named "final"
                 sendLog({ content: JSON.stringify(result), eventType: 'final' });
                 controller.close();

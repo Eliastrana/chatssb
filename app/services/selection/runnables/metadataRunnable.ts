@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {metadataSystemPrompt} from "@/app/utils/LLM_metadata_selection/metadataSystemPrompt";
+import {metadataSystemPrompt} from "@/app/services/selection/metadataSystemPrompt";
 import {Runnable, RunnableMap} from "@langchain/core/runnables";
 import {ServerLog, SSBTableMetadata} from '@/app/types';
 

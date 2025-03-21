@@ -6,8 +6,8 @@ import {PxWebData, ServerLog, SSBTableMetadata} from "@/app/types";
 import {
     metadataRunnableMultithreadedPrompts,
     multithreadedPromptSchemaToPxApiQuery
-} from "@/app/utils/LLM_metadata_selection/metadataRunnable";
-import {parallellUserMessageToMetadata} from "@/app/utils/LLM_navigation/parallellUserMessageToMetadata";
+} from "@/app/services/selection/runnables/metadataRunnable";
+import {parallellUserMessageToMetadata} from "@/app/services/navigation/parallellUserMessageToMetadata";
 
 const model = new ChatOpenAI({
     openAIApiKey: process.env.OPENAI_API_KEY,
@@ -15,7 +15,7 @@ const model = new ChatOpenAI({
     temperature: 0,
 });
 
-export async function userRequestToLLMResponse(
+export async function userMessageToTableData(
     userMessage: string,
     sendLog: (log: ServerLog) => void
 ): Promise<PxWebData> {
