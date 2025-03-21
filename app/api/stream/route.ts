@@ -33,7 +33,7 @@ export async function GET(request: Request) {
                 sendLog({ content: JSON.stringify(result), eventType: 'final' });
                 controller.close();
                 
-            } catch (error: any) {
+            } catch (error) {
                 controller.error(error);
             }
         }
