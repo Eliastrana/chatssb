@@ -32,7 +32,7 @@ export function selectTableFromTablesRunnable(
 
     systemMessageText += `\n${possibleTablesText}`;
     
-    sendLog({ content: `${systemMessageText}`, eventType: 'nav' });
+    sendLog({ content: `${systemMessageText}`, eventType: 'log' });
 
     const prompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(systemMessageText)

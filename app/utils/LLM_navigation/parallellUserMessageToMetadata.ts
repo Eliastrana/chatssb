@@ -33,13 +33,13 @@ export async function parallellUserMessageToMetadata(
 
     while (depth <= maxDepth) {
         
-        sendLog({ content: `Currently at folder level ${depth}`, eventType: 'nav' });
+        sendLog({ content: `Nåværende mappedybde: ${depth}`, eventType: 'nav' });
         
         // Extract and add tables from the current folder entries.
         currentFolderEntries.folderEntries.forEach((entry) => {
             if (entry.type === 'Table') {
                 possibleTables.push({ id: entry.id, label: entry.label });
-                sendLog({ content: `Possible table found: '${entry.id}' labeled '${entry.label}'`, eventType: 'log' });
+                sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'log' });
             }
         });
 
@@ -50,14 +50,14 @@ export async function parallellUserMessageToMetadata(
 
         // If there are no more folder entries to navigate, exit the loop.
         if (!folderEntries.some((entry) => entry.type === 'FolderInformation')) {
-            sendLog({ content: `Navigation finished`, eventType: 'nav' });
+            sendLog({ content: `Navigering fullført`, eventType: 'nav' });
             break;
         }
 
         // Fetch navigation data for each folder entry.
         const nextFolderEntries: SSBNavigationResponse[] = [];
         for (const folderEntry of folderEntries) {
-            sendLog({ content: `Folder chosen: '${folderEntry.id}' labeled '${folderEntry.label}'`, eventType: 'nav'});
+            sendLog({ content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`, eventType: 'nav'});
             
             const response: Response = await fetch(
                 'https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + folderEntry.id,
@@ -112,7 +112,7 @@ export async function parallellUserMessageToMetadata(
     
     const tableMetadata = await response.json() as SSBTableMetadata;
     
-    sendLog({ content: `Selected table '${tableMetadata.extension.px.tableid}' labeled '${tableMetadata.label}'`, eventType: 'nav' });
+    sendLog({ content: `Valgt tabell '${tableMetadata.extension.px.tableid}' navngitt '${tableMetadata.label}'`, eventType: 'nav' });
     
     return tableMetadata;
 }

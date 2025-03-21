@@ -19,6 +19,11 @@ export default function Home() {
     const [fullscreenPxData, setFullscreenPxData] = useState<PxWebData | null>(null);
     const [hasErrorOccurred, setHasErrorOccurred] = useState(false);
 
+    const [navLog, setNavLog] = useState("");
+    const [navLogSteps, setNavLogSteps] = useState<string[]>([]);
+
+
+
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
         setTimeout(() => {
@@ -55,13 +60,19 @@ export default function Home() {
                 eventSource.addEventListener('log', (e: MessageEvent) => {
                     console.log("Terminal log:\n", replaceNewLines(e.data));
                 });
-                
+
                 eventSource.addEventListener('nav', (e: MessageEvent) => {
-                    console.log("Navigation log:\n", replaceNewLines(e.data));
+                    const newLog = replaceNewLines(e.data);
+                    setNavLog(newLog);
+                    setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
+                    console.log("Navigation log:\n", newLog);
                 });
+
 
                 // Listen for the final event that carries the complete JSON result
                 eventSource.addEventListener('final', (e: MessageEvent) => {
+                    setNavLog("");  // Clear the live feed
+                    setNavLogSteps([]);      // Clear the history (which will hide the dropdown)
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
@@ -185,6 +196,8 @@ export default function Home() {
                     messagesEndRef={messagesEndRef}
                     onOpenFullscreen={handleOpenFullscreen}
                     isFullscreen={Boolean(fullscreenPxData)}
+                    navLog={navLog}
+                    navLogSteps={navLogSteps}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
