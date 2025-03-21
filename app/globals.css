@@ -63,3 +63,64 @@ h2, h3, h4, h5, h6, p {
     transform: scale(1);
   }
 }
+
+
+/* Keyframes for the shine moving from right to left */
+@keyframes shine {
+  0% {
+    background-position: 200%;
+  }
+  100% {
+    background-position: -200%;
+  }
+}
+
+.glowing-text {
+  position: relative;
+  display: inline-block;
+  color: #9cb1b1; /* your desired base text color */
+}
+
+/* Pseudo-element with the shine effect */
+.glowing-text::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+
+
+  background: linear-gradient(
+          90deg,
+          transparent 30%,
+          rgba(255, 255, 255, 0.8) 50%,
+          transparent 70%
+  );
+  background-size: 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 7s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes glideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.glide-in {
+  animation: glideIn 0.5s ease-out both;
+}
+
+
+
+

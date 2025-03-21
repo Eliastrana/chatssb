@@ -7,7 +7,6 @@ import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartMod
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 import { Message, PxWebData } from './types';
 import HoverInfoModal from "@/app/components/InfoModal";
-import { userRequestToLLMResponse } from "@/app/services/userRequestToLLMResponse";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -19,6 +18,11 @@ export default function Home() {
     const [error, setError] = useState<string | null>(null);
     const [fullscreenPxData, setFullscreenPxData] = useState<PxWebData | null>(null);
     const [hasErrorOccurred, setHasErrorOccurred] = useState(false);
+
+    const [navLog, setNavLog] = useState("");
+    const [navLogSteps, setNavLogSteps] = useState<string[]>([]);
+
+
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -45,9 +49,44 @@ export default function Home() {
         setError(null);
 
         try {
-            const tableData = await userRequestToLLMResponse(userMessage) as PxWebData;
-            console.log("Raw API Response (tableData):", tableData);
+            const tableData: PxWebData = await new Promise((resolve, reject) => {
+                console.log(`Client sending userMessage:\n`, userMessage);
+                const eventSource = new EventSource(
+                    `/api/stream?userMessage=${encodeURIComponent(userMessage)}&dev=true`
+                );
 
+                const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
+
+                eventSource.addEventListener('log', (e: MessageEvent) => {
+                    console.log("Terminal log:\n", replaceNewLines(e.data));
+                });
+
+                eventSource.addEventListener('nav', (e: MessageEvent) => {
+                    const newLog = replaceNewLines(e.data);
+                    setNavLog(newLog);
+                    setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
+                    console.log("Navigation log:\n", newLog);
+                });
+
+
+                // Listen for the final event that carries the complete JSON result
+                eventSource.addEventListener('final', (e: MessageEvent) => {
+                    setNavLog("");  // Clear the live feed
+                    setNavLogSteps([]);      // Clear the history (which will hide the dropdown)
+                    resolve(JSON.parse(e.data) as PxWebData);
+                    eventSource.close();
+                });
+
+                // Error handling for the EventSource
+                eventSource.onerror = (error) => {
+                    reject(new Error(error.toString()));
+                    eventSource.close();
+                };
+            });
+            
+            console.log("Recieved data:", tableData);
+            
+            // Litt skitten chat kode som klarer å hente ut prosent
             const metricKey = tableData.role?.metric?.[0];
             let baseUnit = '';
             let categoryLabels: Record<string, string> = {};
@@ -65,10 +104,10 @@ export default function Home() {
                     const firstCategoryLabel = categoryLabels[firstCategoryKey];
                     console.log("First Category Label:", firstCategoryLabel);
                 } else {
-                    console.error("Metric dimension not found");
+                    console.log("Metric dimension not found");
                 }
             } else {
-                console.error("Metric key not defined");
+                console.log("Metric key not defined");
             }
 
             const timeKey = tableData.role?.time?.[0];
@@ -157,6 +196,9 @@ export default function Home() {
                     messagesEndRef={messagesEndRef}
                     onOpenFullscreen={handleOpenFullscreen}
                     isFullscreen={Boolean(fullscreenPxData)}
+                    navLog={navLog}
+                    navLogSteps={navLogSteps}
+
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}

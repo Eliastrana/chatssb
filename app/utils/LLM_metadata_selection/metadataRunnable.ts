@@ -4,7 +4,7 @@ import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {metadataSystemPrompt} from "@/app/utils/LLM_metadata_selection/metadataSystemPrompt";
 import {Runnable, RunnableMap} from "@langchain/core/runnables";
-import {SSBTableMetadata} from '@/app/types';
+import {ServerLog, SSBTableMetadata} from '@/app/types';
 
 export function metadataRunnableSinglePrompt(
     selectedModel: BaseChatModel,
@@ -65,7 +65,9 @@ export function metadataRunnableSinglePrompt(
 export function metadataRunnableMultithreadedPrompts(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    metadataJson: SSBTableMetadata
+    metadataJson: SSBTableMetadata,
+    sendLog: (log: ServerLog) => void,
+    promptFormat: string = 'json'
 ): RunnableMap {
     const promptMap = Object.fromEntries(
         Object.entries(metadataJson.dimension).map(([key, value]) => {
@@ -89,27 +91,36 @@ export function metadataRunnableMultithreadedPrompts(
                 ])
             });
             
-            const variableJson = {
-                [key]: {
-                    label: value.label,
-                    items: value.category.label,
-                    unit: value.category.unit
-                }
-            };
+            let systemMessage = '';
             
-            console.log(JSON.stringify(variableJson) + '\n');
+            if (promptFormat === 'json') {
+                systemMessage = JSON.stringify({
+                    [key]: {
+                        label: value.label,
+                        items: value.category.label,
+                        unit: value.category.unit
+                    }
+                });
+            } else {
+                systemMessage = `VARIABLE-CODE: ${key}, LABEL: ${value.label}\n\n`;
+                systemMessage += `'Item-key': 'Item-value' (unit?)\n\n`;
+                Object.entries(value.category.label).forEach(([itemKey, itemValue]) => {
+                    systemMessage += `'${itemKey}': '${itemValue}'`
+                    if (value.category.unit?.[itemKey]) {
+                        systemMessage += ` (${value.category.unit[itemKey].base})`;
+                    }
+                    systemMessage += '\n';
+                });
+            }
+            
+            sendLog({ content: systemMessage, eventType: 'log' });
 
             const prompt = ChatPromptTemplate.fromMessages([
                 new SystemMessage(metadataSystemPrompt),
-                new SystemMessage(JSON.stringify(variableJson)),
+                new SystemMessage(systemMessage),
                 ...messages
             ]);
             
-            //console.log('-----------------------NEXT-VARIABLE----------------------');
-            //prompt.promptMessages.values().forEach((message) => {
-            //    console.log(message);
-            //});
-
             return [key + "Prompt", prompt.pipe(selectedModel.withStructuredOutput(schema))];
         })
     );
@@ -124,27 +135,27 @@ export interface PromptResponse {
 
 export function multithreadedPromptSchemaToPxApiQuery(
     responses: Record<string, Record<string, PromptResponse>>,
-    url: string
+    url: string,
+    sendLog: (log: ServerLog) => void
 ): string {
     // Iterate over the top-level keys in the responses object
     Object.entries(responses).forEach(([, responseValue]) => {
         // Each responseValue is itself an object that we need to iterate over
         Object.entries(responseValue).forEach(([key, value]) => {
-            console.log(value, key);
-
             if (value.itemSelections) {
                 // Join the selections into a comma-separated string
                 const selection = value.itemSelections.join(",");
-                console.log(key, 'Item Selection:', selection);
+                sendLog({ content: `Selections for ${key}: ${selection}`, eventType: 'log' });
                 url += `&valueCodes[${key}]=${selection}`;
             } else if (value.selectionExpressions) {
                 // Process each selection expression
                 value.selectionExpressions.forEach((expression: string) => {
-                    console.log(key, 'Selection Expression:', expression);
+                    sendLog({ content: `Expression for ${key}: ${expression}`, eventType: 'log' });
                     url += `&valueCodes[${key}]=[${expression}]`;
                 });
             } else {
-                console.log(key, 'No Selections or Expressions');
+                // If neither itemSelections nor selectionExpressions are defined, use a wildcard
+                sendLog({ content: `Wildcard * for ${key}`, eventType: 'log' });
                 url += `&valueCodes[${key}]=*`;
             }
         });

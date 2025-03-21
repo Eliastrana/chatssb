@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
 import {Message, PxWebData} from '@/app/types';
 import {ChartDisplay} from "@/app/components/Graphing/ChartDisplay";
@@ -10,6 +10,9 @@ interface ChatMessagesProps {
     messagesEndRef: React.RefObject<HTMLDivElement | null>;
     onOpenFullscreen: (pxData: PxWebData) => void;
     isFullscreen: boolean;
+    navLog: string;
+    navLogSteps: string[];
+
 }
 
 // Reusable message item
@@ -102,8 +105,20 @@ function ChatMessagesBase({
                               isLoading,
                               messagesEndRef,
                               onOpenFullscreen,
-                              isFullscreen
+                              isFullscreen,
+                              navLog,
+                              navLogSteps = [],
+
                           }: ChatMessagesProps) {
+
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    useEffect(() => {
+        if (navLogSteps.length === 0) {
+            setShowDropdown(false);
+        }
+    }, [navLogSteps]);
+
 
     // Dette gjør at den ikke renderer vanlig melding når den er i fullscreen
     // Extreme efficienty Elias
@@ -153,11 +168,49 @@ function ChatMessagesBase({
                         width={50}
                         height={50}
                     />
-                    <span className="loading-dots"></span>
+                    {/*<span className="loading-dots"></span>*/}
+
+                    <div className="flex-col">
+
+                        <div onClick={() => setShowDropdown(prev => !prev)} className="justify-center items-center">
+                            <h1
+                                className="text-md glowing-text cursor-pointer"
+                                data-text={navLog}
+                            >
+                                {navLog}
+                            </h1>
+
+                            <span
+                                className={`material-symbols-outlined transition-transform duration-300 ml-2 text-[#9cb1b1] ${showDropdown ? 'rotate-90' : ''}`}
+                                style={{fontSize: '16px'}}
+                            >
+                                arrow_forward_ios
+                            </span>
+
+                        </div>
+
+
+                        {showDropdown && navLogSteps.length > 0 && (
+                            <div className="text-[#9cb1b1] p-2 mt-2 z-10">
+                                {navLogSteps.map((step, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="text-sm last:border-0 py-1 glide-in"
+                                        style={{ animationDelay: `${idx * 0.1}s` }}
+                                    >
+                                        {step}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+
+                    </div>
                 </div>
             )}
 
-            <div ref={messagesEndRef} />
+
+            <div ref={messagesEndRef}/>
         </div>
     );
 }
@@ -166,7 +219,10 @@ const ChatMessages = React.memo(ChatMessagesBase, (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.messages !== nextProps.messages) return false;
     if (prevProps.onOpenFullscreen !== nextProps.onOpenFullscreen) return false;
+    if (prevProps.navLog !== nextProps.navLog) return false;
+    if (prevProps.navLogSteps !== nextProps.navLogSteps) return false;
     return prevProps.isFullscreen === nextProps.isFullscreen;
 });
+
 
 export default ChatMessages;

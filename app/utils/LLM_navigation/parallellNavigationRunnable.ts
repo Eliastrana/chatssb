@@ -3,24 +3,24 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
-import {SSBNavigationResponse} from "@/app/types";
+import {ServerLog, SSBNavigationResponse} from "@/app/types";
 
 /**
  * Creates a runnable that lets the LLM navigate one step deeper into the folder structure or
- * 
+ *
  * @param selectedModel The selected LLM instance to use.
  * @param messages Both the user and system messages to include in the prompt.
  * @param folderEntries The avialble folders or tables to navigate.
  * @param maxBreadth The maximum number of folders or tables the LLM can select.
+ * @param sendLog Logging function to send logs to the client.
  */
 export function parallellNavigationRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     folderEntries: SSBNavigationResponse[],
-    maxBreadth: number = 1
+    maxBreadth: number = 1,
+    sendLog: (log: ServerLog) => void
 ): Runnable {
-    
-    console.log(`\n=== Selecting most relevant folders or tables; max breadth: ${maxBreadth} ===\n`);
     
     const navigationSchema = z
         .object({
@@ -45,7 +45,8 @@ export function parallellNavigationRunnable(
             )
         });
     
-    let systemMessageText = "Folder contents:\n";
+    let systemMessageText = "Folder contents:";
+    
     for (const folderEntry of folderEntries) {
         const entries = folderEntry.folderContents.map((entry) => ({
             type: entry.type,
@@ -63,8 +64,8 @@ export function parallellNavigationRunnable(
         systemMessageText += `\n${navigationEntriesText}`;
     }
     
-    console.log(`${systemMessageText}\n`)
-
+    sendLog({ content: systemMessageText, eventType: 'log' });
+    
     const prompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(systemMessageText)
     ]);
