@@ -12,6 +12,7 @@ interface ChatMessagesProps {
     isFullscreen: boolean;
     navLog: string;
     navLogSteps: string[];
+
 }
 
 // Reusable message item

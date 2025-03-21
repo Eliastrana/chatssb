@@ -198,6 +198,7 @@ export default function Home() {
                     isFullscreen={Boolean(fullscreenPxData)}
                     navLog={navLog}
                     navLogSteps={navLogSteps}
+
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
