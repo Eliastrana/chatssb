@@ -67,3 +67,8 @@ export interface SSBNavigationResponse {
         label: string;
     }[];
 }
+
+export interface ServerLog {
+    content: string;
+    eventType: 'log' | 'nav' | 'final' | 'error';
+}

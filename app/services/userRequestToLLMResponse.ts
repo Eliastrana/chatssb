@@ -2,7 +2,7 @@
 
 import {ChatOpenAI} from '@langchain/openai';
 import {HumanMessage} from '@langchain/core/messages';
-import {PxWebData, SSBTableMetadata} from "@/app/types";
+import {PxWebData, ServerLog, SSBTableMetadata} from "@/app/types";
 import {
     metadataRunnableMultithreadedPrompts,
     multithreadedPromptSchemaToPxApiQuery
@@ -15,14 +15,17 @@ const model = new ChatOpenAI({
     temperature: 0,
 });
 
-export async function userRequestToLLMResponse(userMessage: string): Promise<PxWebData> {
+export async function userRequestToLLMResponse(
+    userMessage: string,
+    sendLog: (log: ServerLog) => void
+): Promise<PxWebData> {
     
-    console.log(`\n= User message received: ${userMessage} =\n`); 
-    
+
     const tableMetadata: SSBTableMetadata = await parallellUserMessageToMetadata(
         model,
         userMessage,
         2,
+        sendLog
     )
     
     const tableId = tableMetadata.extension.px.tableid;
@@ -36,11 +39,22 @@ export async function userRequestToLLMResponse(userMessage: string): Promise<PxW
     //SSBGetUrl = singlePromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
     
     // Multithreaded prompts for metadata selection
-    const LLMMetadataResponse = await metadataRunnableMultithreadedPrompts(model, [new HumanMessage(userMessage)], tableMetadata).invoke({}, {});
-    console.log(JSON.stringify(LLMMetadataResponse, null, 2));
-    SSBGetUrl = multithreadedPromptSchemaToPxApiQuery(LLMMetadataResponse, SSBGetUrl);
+    const LLMMetadataResponse = await metadataRunnableMultithreadedPrompts(
+        model, 
+        [new HumanMessage(userMessage)], 
+        tableMetadata,
+        sendLog
+    ).invoke({}, {});
     
-    console.log('SSBGetUrl:', SSBGetUrl)
+    sendLog({ content: JSON.stringify(LLMMetadataResponse, null, 2), eventType: 'log' });
+    
+    SSBGetUrl = multithreadedPromptSchemaToPxApiQuery(
+        LLMMetadataResponse,
+        SSBGetUrl,
+        sendLog
+    );
+    
+    sendLog({ content: SSBGetUrl, eventType: 'log' });
 
     const responseTableData = await fetch(SSBGetUrl, {
         method: 'GET',
@@ -51,5 +65,5 @@ export async function userRequestToLLMResponse(userMessage: string): Promise<PxW
 
     if (!responseTableData.ok) throw new Error('Failed to fetch SSB API table data from table ' + tableId + ' with URL ' + SSBGetUrl);
     
-    return await responseTableData.json();
+    return await responseTableData.json() as PxWebData;
 }

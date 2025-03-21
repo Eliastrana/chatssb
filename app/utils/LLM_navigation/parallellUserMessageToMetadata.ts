@@ -1,5 +1,5 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
+import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {parallellNavigationRunnable} from "@/app/utils/LLM_navigation/parallellNavigationRunnable";
 import {HumanMessage} from "@langchain/core/messages";
 import {
@@ -10,10 +10,11 @@ import {
 export async function parallellUserMessageToMetadata(
     model: BaseChatModel,
     userMessage: string,
-    maxBreadth: number = 1
+    maxBreadth: number = 1,
+    sendLog: (log: ServerLog) => void
 ): Promise<SSBTableMetadata> {
     
-    console.log(`\n== Navigating SSB API to find metadata; max breadth: ${maxBreadth} ==\n`);
+    sendLog({ content: `Navigating SSB API`, eventType: 'log' });
     
     let depth = 0;
     const maxDepth = 5;
@@ -27,17 +28,18 @@ export async function parallellUserMessageToMetadata(
             }
         ]
     }
-
-    console.log('Received message:', userMessage);
-
+    
     const possibleTables: { id: string, label: string }[] = []
 
-    while (depth < maxDepth) {
+    while (depth <= maxDepth) {
+        
+        sendLog({ content: `Currently at folder level ${depth}`, eventType: 'nav' });
+        
         // Extract and add tables from the current folder entries.
         currentFolderEntries.folderEntries.forEach((entry) => {
             if (entry.type === 'Table') {
                 possibleTables.push({ id: entry.id, label: entry.label });
-                console.log(`Adding table ID ${entry.label} to possible tables`);
+                sendLog({ content: `Possible table found: '${entry.id}' labeled '${entry.label}'`, eventType: 'log' });
             }
         });
 
@@ -48,14 +50,15 @@ export async function parallellUserMessageToMetadata(
 
         // If there are no more folder entries to navigate, exit the loop.
         if (!folderEntries.some((entry) => entry.type === 'FolderInformation')) {
-            console.log(`No more folders to navigate`);
+            sendLog({ content: `Navigation finished`, eventType: 'nav' });
             break;
         }
 
         // Fetch navigation data for each folder entry.
         const nextFolderEntries: SSBNavigationResponse[] = [];
         for (const folderEntry of folderEntries) {
-            console.log(`Selected folder ID ${folderEntry.id} labeled ${folderEntry.label}`);
+            sendLog({ content: `Folder chosen: '${folderEntry.id}' labeled '${folderEntry.label}'`, eventType: 'nav'});
+            
             const response: Response = await fetch(
                 'https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + folderEntry.id,
                 {
@@ -79,7 +82,8 @@ export async function parallellUserMessageToMetadata(
             model,
             [new HumanMessage(userMessage)],
             nextFolderEntries,
-            maxBreadth
+            maxBreadth,
+            sendLog
         ).invoke({}, {});
         
         depth++;
@@ -92,7 +96,8 @@ export async function parallellUserMessageToMetadata(
     const selectedTable: { id: string; } = await selectTableFromTablesRunnable(
         model,
         [new HumanMessage(userMessage)],
-        possibleTables
+        possibleTables,
+        sendLog
     ).invoke({}, {});
     
     const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {
@@ -107,7 +112,7 @@ export async function parallellUserMessageToMetadata(
     
     const tableMetadata = await response.json() as SSBTableMetadata;
     
-    console.log(`Selected table ID ${tableMetadata.extension.px.tableid}, labeled ${tableMetadata.label}`);
+    sendLog({ content: `Selected table '${tableMetadata.extension.px.tableid}' labeled '${tableMetadata.label}'`, eventType: 'nav' });
     
     return tableMetadata;
 }
