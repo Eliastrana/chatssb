@@ -6,12 +6,11 @@ interface LLMPickerProps {
     onSelectModel: (model: string) => void;
 }
 
-const LLM_picker: React.FC<LLMPickerProps> = ({ onSelectModel }) => {
+const ParameterPicker: React.FC<LLMPickerProps> = ({ onSelectModel }) => {
     const llmOptions: DropdownOption<string>[] = [
-        { label: 'GPT-4o-mini', value: 'GPT-4o-mini' },
-        { label: 'GPT-o3-mini', value: 'gpt-o3-mini' },
-        { label: 'Gemini Flash 2 Lite', value: 'gemini-2.0-flash-lite' },
-        { label: 'Groq', value: 'groq' },
+        { label: 'Veldig bestemt', value: 'veldig_bestemt' },
+        { label: 'Litt usikker', value: 'litt_usikker' },
+
     ];
 
     const [selectedModel, setSelectedModel] = useState<string>(llmOptions[0].value);
@@ -32,4 +31,4 @@ const LLM_picker: React.FC<LLMPickerProps> = ({ onSelectModel }) => {
     );
 };
 
-export default LLM_picker;
+export default ParameterPicker;

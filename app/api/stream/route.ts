@@ -5,14 +5,19 @@ import {BackendAPIParams, ServerLog} from "@/app/types";
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
-    // Parse query parameters into BackendAPIParams
+    const selParam = searchParams.get('sel');
+    const allowedSelValues = ['singlethreaded', 'multithreaded'];
+    if (!allowedSelValues.includes(selParam || '')) {
+        return NextResponse.json({ error: 'Invalid sel value' }, { status: 400 });
+    }
     const params: BackendAPIParams = {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
-        nav: searchParams.get('nav') as 'parallell' || 'parallell',
-        sel: searchParams.get('sel') as 'singlethreaded' | 'multithreaded' || 'multithreaded',
-        modelType: searchParams.get('modelType') || undefined
+        nav: (searchParams.get('nav') as 'parallell') || 'parallell',
+        sel: selParam as 'singlethreaded' | 'multithreaded',
+        modelType: searchParams.get('modelType') || undefined,
     };
+
     
     console.log(`Server received userMessage: ${params.userMessage}`);
     console.log(`Running with navigation technique: ${params.nav}`);
@@ -41,6 +46,9 @@ export async function GET(request: Request) {
                 controller.close();
                 
             } catch (error) {
+                //Denne måtte være med for å kunne builde, men som du sier, så kommer den jo ikke til
+                // å utløses, siden koden er programmert til å fungere.
+                console.error(error);
                 sendLog({ content: "Error found in backend API", eventType: 'error' });
             }
         }

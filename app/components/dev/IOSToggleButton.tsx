@@ -1,10 +1,17 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 const IOSToggleButton = () => {
-    const [enabled, setEnabled] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
+    // Set the initial state based on the current path
+    const [enabled, setEnabled] = useState(pathname === '/dev');
+
+    // Update the toggle state if the pathname changes
+    useEffect(() => {
+        setEnabled(pathname === '/dev');
+    }, [pathname]);
 
     const togglePages = () => {
         const newEnabled = !enabled;
@@ -23,7 +30,7 @@ const IOSToggleButton = () => {
             aria-checked={enabled}
             onClick={togglePages}
             className={`relative inline-flex items-center h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors duration-200 ease-in-out ${
-                enabled ? 'bg-green-500' : 'bg-gray-300'
+                enabled ? 'bg-[#274247]' : 'bg-gray-300'
             }`}
         >
             <span className="sr-only">Toggle switch</span>

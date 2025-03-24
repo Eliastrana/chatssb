@@ -82,6 +82,7 @@ export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
     nav?: 'parallell';
-    sel?: 'singlethreaded' | 'multithreaded';
+    sel?: 'singlethreaded' | 'multithreaded' | string;
     modelType?: string;
+
 }

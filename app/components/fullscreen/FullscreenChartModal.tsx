@@ -41,9 +41,9 @@ function FullscreenChartModalBase({ pxData, onClose }: FullscreenChartModalProps
         >
             <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 z-50 text-3xl font-bold"
+                className="absolute top-2 right-16 z-50 font-bold cursor-pointer"
             >
-        <span className="material-symbols-outlined">
+        <span className="material-symbols-outlined h-8 w-8">
           collapse_content
         </span>
             </button>
