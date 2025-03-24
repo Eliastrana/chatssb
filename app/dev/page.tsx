@@ -5,10 +5,15 @@ import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartMod
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 
 import HoverInfoModal from "@/app/components/InfoModal";
-import {Message, PxWebData} from "@/app/types";
+import {BackendAPIParams, Message, PxWebData} from "@/app/types";
 import TitleSection from "@/app/components/chat_interface/TitleSection";
 import ChatMessages from "@/app/components/chat_interface/ChatMessages";
 import ChatInput from "@/app/components/chat_interface/ChatInput";
+import LLM_picker from "@/app/components/dev/LLM_picker";
+import SearchPicker from "@/app/components/dev/SearchPicker";
+import ParameterPicker from "@/app/components/dev/ParameterPicker";
+import NavigationLog from "@/app/components/dev/NavigationLog";
+import StatisticsPanel from "@/app/components/dev/StatisticsPanel";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -22,9 +27,26 @@ export default function Home() {
     const [hasErrorOccurred, setHasErrorOccurred] = useState(false);
 
     const [navLog, setNavLog] = useState("");
-    const [navLogSteps, setNavLogSteps] = useState<string[]>([]);
+    const [tempNavLogSteps, setTempNavLogSteps] = useState<string[]>([]);
+    const [persistentNavLogSteps, setPersistentNavLogSteps] = useState<string[]>([]);
+    const [persistentAllLogSteps, setPersistentAllLogSteps] = useState<string[]>([]);
+    const [showAllLogs, setShowAllLogs] = useState(false); // toggle state
+
+    const [liveResponseTime, setLiveResponseTime] = useState(0);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const [searchMode, setSearchMode] = useState<string>('singlethreaded' as 'singlethreaded' | 'multithreaded');
+
+    const [selectedLLM, setSelectedLLM] = useState('gpt-4o-mini');
 
 
+    const logContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (logContainerRef.current) {
+            logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+    }, [persistentNavLogSteps, persistentAllLogSteps, showAllLogs]);
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -44,6 +66,14 @@ export default function Home() {
 
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
+
+        setLiveResponseTime(0);
+        const startTime = Date.now();
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+            setLiveResponseTime(Date.now() - startTime);
+        }, 100);
+
         setFullscreenPxData(null);
         setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
         setInput('');
@@ -53,33 +83,54 @@ export default function Home() {
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
-                const eventSource = new EventSource(
-                    `/api/stream?userMessage=${encodeURIComponent(userMessage)}&dev=true`
-                );
+
+
+                const params: BackendAPIParams = {
+                    userMessage,
+                    dev: true,
+                    nav: 'parallell',
+                    sel: searchMode,
+                    modelType: selectedLLM
+                };
+
+                // Convert params to query string
+                const queryString = Object.entries(params)
+                    .filter(([, value]) => value !== undefined)
+                    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+                    .join('&');
+
+                const eventSource = new EventSource(`/api/stream?${queryString}`);
 
                 const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
 
                 eventSource.addEventListener('log', (e: MessageEvent) => {
-                    console.log("Terminal log:\n", replaceNewLines(e.data));
+                    const newLog = replaceNewLines(e.data);
+                    setPersistentAllLogSteps(prev => [...prev, newLog]);
                 });
 
                 eventSource.addEventListener('nav', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
                     setNavLog(newLog);
-                    setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
+                    setTempNavLogSteps(prev => [...prev, newLog]);
+                    setPersistentNavLogSteps(prev => [...prev, newLog]);
+                    setPersistentAllLogSteps(prev => [...prev, newLog]);
                     console.log("Navigation log:\n", newLog);
                 });
 
-
-                // Listen for the final event that carries the complete JSON result
                 eventSource.addEventListener('final', (e: MessageEvent) => {
-                    setNavLog("");  // Clear the live feed
-                    setNavLogSteps([]);      // Clear the history (which will hide the dropdown)
+
+                    if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                        timerRef.current = null;
+                    }
+                    setLiveResponseTime(Date.now() - startTime);
+
+                    setNavLog("");
+                    setTempNavLogSteps([]);
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
 
-                // Error handling for the EventSource
                 eventSource.onerror = (error) => {
                     reject(new Error(error.toString()));
                     eventSource.close();
@@ -158,6 +209,12 @@ export default function Home() {
                 { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
             ]);
 
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+            setLiveResponseTime(Date.now() - startTime);
+
             if (!hasErrorOccurred) {
                 setMessages(prev => [
                     ...prev,
@@ -177,37 +234,60 @@ export default function Home() {
     return (
         <div className="relative flex items-center justify-center min-h-screen p-4 mb-10">
             {fullscreenPxData && (
-                <FullscreenChartModal
-                    pxData={fullscreenPxData}
-                    onClose={handleCloseModal}
-                />
+                <FullscreenChartModal pxData={fullscreenPxData} onClose={handleCloseModal}/>
             )}
 
-            <HoverInfoModal />
+            {!fullscreenPxData && (
 
-            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
+                <div className="fixed top-0 left-0 w-full h-14 bg-[#F0F8F9] z-40 hidden md:block ">
+                <div className="flex items-center justify-start ml-20 space-x-2 h-full">
+                    <HoverInfoModal/>
+                    <LLM_picker onSelectModel={setSelectedLLM} />
+                    <SearchPicker onSelectModel={setSearchMode} />
+                    <ParameterPicker onSelectModel={sendUserMessage}/>
+                </div>
+            </div>
+            )}
+
+            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>
 
             <div
                 className={`w-full md:w-1/2 flex flex-col transition-opacity duration-500 ${
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
-                <ChatMessages
-                    messages={messages}
-                    isLoading={isLoading}
-                    messagesEndRef={messagesEndRef}
-                    onOpenFullscreen={handleOpenFullscreen}
-                    isFullscreen={Boolean(fullscreenPxData)}
-                    navLog={navLog}
-                    navLogSteps={navLogSteps}
 
-                />
+                <div className="max-h-[80%] mt-20">
+                    <ChatMessages
+                        messages={messages}
+                        isLoading={isLoading}
+                        messagesEndRef={messagesEndRef}
+                        onOpenFullscreen={handleOpenFullscreen}
+                        isFullscreen={Boolean(fullscreenPxData)}
+                        navLog={navLog}
+                        navLogSteps={tempNavLogSteps}
+                    />
+                </div>
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
 
                 {messages.filter(msg => msg.sender === "user").length === 0 && (
-                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
+                    <ExamplePrompts onSelectPrompt={sendUserMessage}/>
                 )}
+
+                {!fullscreenPxData && (
+                    <>
+                        <NavigationLog
+                            showAllLogs={showAllLogs}
+                            toggleShowAllLogs={() => setShowAllLogs((prev) => !prev)}
+                            persistentAllLogSteps={persistentAllLogSteps}
+                            persistentNavLogSteps={persistentNavLogSteps}
+                            logContainerRef={logContainerRef}
+                        />
+                        <StatisticsPanel liveResponseTime={liveResponseTime} />
+                    </>
+                )}
+
             </div>
 
             <ChatInput

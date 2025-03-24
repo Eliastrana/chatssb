@@ -5,7 +5,7 @@ import ChatMessages from './components/chat_interface/ChatMessages';
 import ChatInput from './components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import { Message, PxWebData } from './types';
+import {BackendAPIParams, Message, PxWebData} from './types';
 import HoverInfoModal from "@/app/components/InfoModal";
 
 export default function Home() {
@@ -51,9 +51,21 @@ export default function Home() {
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
-                const eventSource = new EventSource(
-                    `/api/stream?userMessage=${encodeURIComponent(userMessage)}&dev=true`
-                );
+
+                const params: BackendAPIParams = {
+                    userMessage,
+                    dev: true,
+                    nav: 'parallell',
+                    sel: 'singlethreaded'
+                };
+
+                // Convert params to query string
+                const queryString = Object.entries(params)
+                    .filter(([, value]) => value !== undefined)
+                    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+                    .join('&');
+                
+                const eventSource = new EventSource(`/api/stream?${queryString}`);
 
                 const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
 
@@ -76,12 +88,11 @@ export default function Home() {
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
-
-                // Error handling for the EventSource
-                eventSource.onerror = (error) => {
-                    reject(new Error(error.toString()));
+                
+                eventSource.addEventListener('error', (e: MessageEvent) => {
+                    reject(e.data);
                     eventSource.close();
-                };
+                });
             });
             
             console.log("Recieved data:", tableData);

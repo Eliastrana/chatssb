@@ -3,7 +3,7 @@ import React from 'react';
 
 const HoverInfoModal: React.FC = () => {
     return (
-        <div className="fixed top-4 left-4  ">
+        <div className="fixed top-2 left-2">
             <div className="group relative inline-block">
                 <button
                     className="w-8 h-8 bg-[#274247] hover:bg-[#274240] rounded-full flex items-center justify-center text-white focus:outline-none text-xs">

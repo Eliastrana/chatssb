@@ -72,3 +72,17 @@ export interface ServerLog {
     content: string;
     eventType: 'log' | 'nav' | 'final' | 'error';
 }
+
+export interface PromptResponse {
+    itemSelections?: string[];
+    selectionExpressions?: string[];
+}
+
+export interface BackendAPIParams {
+    userMessage: string;
+    dev: boolean;
+    nav?: 'parallell';
+    sel?: 'singlethreaded' | 'multithreaded' | string;
+    modelType?: string;
+
+}
