@@ -1,14 +1,22 @@
-// app/api/stream/route.ts
 import { NextResponse } from 'next/server';
 import {userMessageToTableData} from "@/app/services/userMessageToTableData";
-import {ServerLog} from "@/app/types";
+import {BackendAPIParams, ServerLog} from "@/app/types";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const userMessage = searchParams.get('userMessage') || '';
-    const isDevMode = searchParams.get('dev') === 'true' || false;
+
+    // Parse query parameters into BackendAPIParams
+    const params: BackendAPIParams = {
+        userMessage: searchParams.get('userMessage') || '',
+        dev: searchParams.get('dev') === 'true',
+        nav: searchParams.get('nav') as 'parallell' || 'parallell',
+        sel: searchParams.get('sel') as 'singlethreaded' | 'multithreaded' || 'multithreaded',
+        modelType: searchParams.get('modelType') || undefined
+    };
     
-    console.log(`Server received userMessage: ${userMessage}`);
+    console.log(`Server received userMessage: ${params.userMessage}`);
+    console.log(`Running with navigation technique: ${params.nav}`);
+    console.log(`Running with selection technique: ${params.sel}`);
 
     const encoder = new TextEncoder();
 
@@ -16,20 +24,19 @@ export async function GET(request: Request) {
         async start(controller) {
             // Helper function to enqueue SSE-formatted messages
             const sendLog = (log: ServerLog) => {
-                if (!isDevMode && log.eventType === 'log') return;
+                if (!params.dev && log.eventType === 'log') return;
                 
                 const content = log.content.replace(/\n/g, '\\n');
-                const chunk =
-                    log.eventType === 'final'
-                        ? `event: final\ndata: ${content}\n\n`
-                        : `event: ${log.eventType}\ndata: ${content}\n\n`;
+                const chunk = `event: ${log.eventType}\ndata: ${content}\n\n`;
+                
                 controller.enqueue(encoder.encode(chunk));
             };
 
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
-                const result = await userMessageToTableData(userMessage, sendLog);
-                // Send the final JSON result as an SSE event named "final"
+                
+                const result = await userMessageToTableData(params, sendLog);
+                
                 sendLog({ content: JSON.stringify(result), eventType: 'final' });
                 controller.close();
                 
