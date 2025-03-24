@@ -27,7 +27,7 @@ export async function userMessageToTableData(
     config?: Record<string, unknown>,
 ): Promise<PxWebData> {
 
-    const { userMessage, nav, sel, modelType } = params;
+    const { userMessage, nav, sel } = params;
 
     // Navigation code
     // =================

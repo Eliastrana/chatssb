@@ -41,7 +41,7 @@ export async function GET(request: Request) {
                 controller.close();
                 
             } catch (error) {
-                controller.error(error);
+                sendLog({ content: "Error found in backend API", eventType: 'error' });
             }
         }
     });

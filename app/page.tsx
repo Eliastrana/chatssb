@@ -61,7 +61,7 @@ export default function Home() {
 
                 // Convert params to query string
                 const queryString = Object.entries(params)
-                    .filter(([_, value]) => value !== undefined)
+                    .filter(([, value]) => value !== undefined)
                     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
                     .join('&');
                 
@@ -88,12 +88,11 @@ export default function Home() {
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
-
-                // Error handling for the EventSource
-                eventSource.onerror = (error) => {
-                    reject(new Error(error.toString()));
+                
+                eventSource.addEventListener('error', (e: MessageEvent) => {
+                    reject(e.data);
                     eventSource.close();
-                };
+                });
             });
             
             console.log("Recieved data:", tableData);
