@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import TitleSection from './components/chat_interface/TitleSection';
 import ChatMessages from './components/chat_interface/ChatMessages';
 import ChatInput from './components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import {BackendAPIParams, Message, PxWebData} from './types';
+import {BackendAPIParams, Message, ModelType, NavType, PxWebData, SelType} from './types';
 import HoverInfoModal from "@/app/components/InfoModal";
 
 export default function Home() {
@@ -55,8 +55,9 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    nav: 'parallell',
-                    sel: 'singlethreaded'
+                    nav: NavType.Parallell,
+                    sel: SelType.EnumSingleThreaded,
+                    modelType: ModelType.GPT4oMini
                 };
 
                 // Convert params to query string

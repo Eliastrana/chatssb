@@ -1,19 +1,19 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 
 import HoverInfoModal from "@/app/components/InfoModal";
-import {BackendAPIParams, Message, PxWebData} from "@/app/types";
+import {BackendAPIParams, Message, ModelType, NavType, PxWebData, SelType} from "@/app/types";
 import TitleSection from "@/app/components/chat_interface/TitleSection";
 import ChatMessages from "@/app/components/chat_interface/ChatMessages";
 import ChatInput from "@/app/components/chat_interface/ChatInput";
-import LLM_picker from "@/app/components/dev/LLM_picker";
-import SearchPicker from "@/app/components/dev/SearchPicker";
-import ParameterPicker from "@/app/components/dev/ParameterPicker";
+import ModelPicker from "@/app/components/dev/ModelPicker";
+import SelectionPicker from "@/app/components/dev/SelectionPicker";
 import NavigationLog from "@/app/components/dev/NavigationLog";
 import StatisticsPanel from "@/app/components/dev/StatisticsPanel";
+import NavigationPicker from "@/app/components/dev/NavigationPicker";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -35,9 +35,9 @@ export default function Home() {
     const [liveResponseTime, setLiveResponseTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const [searchMode, setSearchMode] = useState<string>('singlethreaded' as 'singlethreaded' | 'multithreaded');
-
-    const [selectedLLM, setSelectedLLM] = useState('gpt-4o-mini');
+    const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
+    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell);
+    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SingleThreaded);
 
 
     const logContainerRef = useRef<HTMLDivElement>(null);
@@ -88,9 +88,9 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    nav: 'parallell',
-                    sel: searchMode,
-                    modelType: selectedLLM
+                    nav: navigationMode,
+                    sel: selectionMode,
+                    modelType: selectModel
                 };
 
                 // Convert params to query string
@@ -242,9 +242,9 @@ export default function Home() {
                 <div className="fixed top-0 left-0 w-full h-14 bg-[#F0F8F9] z-40 hidden md:block ">
                 <div className="flex items-center justify-start ml-20 space-x-2 h-full">
                     <HoverInfoModal/>
-                    <LLM_picker onSelectModel={setSelectedLLM} />
-                    <SearchPicker onSelectModel={setSearchMode} />
-                    <ParameterPicker onSelectModel={sendUserMessage}/>
+                    <ModelPicker onSelectModel={setSelectModel} />
+                    <NavigationPicker onSelectNavigation={setNavigationMode}/>
+                    <SelectionPicker onSelectSelection={setSelectionMode} />
                 </div>
             </div>
             )}

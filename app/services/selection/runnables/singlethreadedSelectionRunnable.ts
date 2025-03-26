@@ -20,14 +20,14 @@ export function singlethreadedSelectionRunnable(
         // Create a union schema for each key.
         const schemaForKey = z.union([
             z.object({
-                itemSelections: z
+                itemSelection: z
                     .array(z.string())
                     .describe(
                         `A list of valid item keys for the variable: ${key}. Must always be the JSON key(s) from the provided input data, not the corresponding item values.`
                     )
             }),
             z.object({
-                selectionExpressions: z
+                selectionExpression: z
                     .array(z.string())
                     .describe(
                         `A list of valid selection expressions for the variable: ${key}. If an item identifier is used in the expression, it must be the JSON key from the provided input data, not the corresponding item value.`
@@ -48,8 +48,7 @@ export function singlethreadedSelectionRunnable(
 
     const schema = z
         .object(variableSchema)
-        .describe("Item selection / selection expression for each variable in the table");
-
+    
     const systemMessage = JSON.stringify(variableJson);
     
     sendLog({ content: systemMessage, eventType: 'log' });

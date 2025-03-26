@@ -1,27 +1,19 @@
 import { NextResponse } from 'next/server';
 import {userMessageToTableData} from "@/app/services/userMessageToTableData";
-import {BackendAPIParams, ServerLog} from "@/app/types";
+import {BackendAPIParams, ModelType, NavType, SelType, ServerLog} from "@/app/types";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
-    const selParam = searchParams.get('sel');
-    const allowedSelValues = ['singlethreaded', 'multithreaded'];
-    if (!allowedSelValues.includes(selParam || '')) {
-        return NextResponse.json({ error: 'Invalid sel value' }, { status: 400 });
-    }
     const params: BackendAPIParams = {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
-        nav: (searchParams.get('nav') as 'parallell') || 'parallell',
-        sel: selParam as 'singlethreaded' | 'multithreaded',
-        modelType: searchParams.get('modelType') || undefined,
+        nav: searchParams.get('nav') as NavType || undefined,
+        sel: searchParams.get('sel') as SelType || undefined,
+        modelType: searchParams.get('modelType') as ModelType || undefined,
     };
-
     
-    console.log(`Server received userMessage: ${params.userMessage}`);
-    console.log(`Running with navigation technique: ${params.nav}`);
-    console.log(`Running with selection technique: ${params.sel}`);
+    console.log(params);
 
     const encoder = new TextEncoder();
 
