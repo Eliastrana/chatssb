@@ -1,7 +1,7 @@
 // BubbleChart.tsx
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import * as d3 from "d3";
-import { BubbleChartProps, HierarchyDatum } from "@/app/components/Graphing/charts/types/ChartProps";
+import {BubbleChartProps, HierarchyDatum} from "@/app/components/Graphing/charts/types/ChartProps";
 
 
 export const BubbleChart: React.FC<BubbleChartProps> = ({

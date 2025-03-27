@@ -1,70 +1,145 @@
-import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage } from '@langchain/core/messages';
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatGroq } from "@langchain/groq";
+import {ChatOpenAI} from '@langchain/openai';
+import {HumanMessage, SystemMessage} from '@langchain/core/messages';
+import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
+import {ChatGroq} from "@langchain/groq";
 
 
 import {
     BackendAPIParams,
-    PromptResponse,
+    ModelType,
+    NavType,
     PxWebData,
+    SelType,
     ServerLog,
     SSBTableMetadata
 } from "@/app/types";
-import { parallellUserMessageToMetadata } from "@/app/services/navigation/parallellUserMessageToMetadata";
-import { singlethreadedSelectionRunnable } from "@/app/services/selection/runnables/singlethreadedSelectionRunnable";
-import { multithreadedSelectionRunnable } from "@/app/services/selection/runnables/multithreadedSelectionRunnable";
+import {
+    parallellUserMessageToMetadata
+} from "@/app/services/navigation/parallellUserMessageToMetadata";
+import {
+    singlethreadedSelectionRunnable
+} from "@/app/services/selection/runnables/singlethreadedSelectionRunnable";
+import {
+    multithreadedSelectionRunnable
+} from "@/app/services/selection/runnables/multithreadedSelectionRunnable";
+import {
+    enumMultithreadedSelectionRunnable
+} from "@/app/services/selection/runnables/enumMultithreadedSelectionRunnable";
+import {
+    enumSinglethreadedSelectionRunnable
+} from "@/app/services/selection/runnables/enumSinglethreadedSelectionRunnable";
+import {
+    enumSinglethreadedRunnableToURL
+} from "@/app/services/selection/utils/enumSinglethreadedRunnableToURL";
+import {
+    enumMultithreadedRunnableToURL
+} from "@/app/services/selection/utils/enumMultithreadedRunnableToURL";
+import {BaseChatModel} from "@langchain/core/language_models/chat_models";
+import {Generation, LLMResult} from "@langchain/core/outputs";
+import {Serialized} from "@/node_modules/@langchain/core/dist/load/serializable";
+import {
+    expressionSinglethreadedToURL
+} from "@/app/services/selection/utils/expressionSinglethreadedToURL";
+import {
+    expressionMultithreadedToURL
+} from "@/app/services/selection/utils/expressionMultithreadedToURL";
 
 export async function userMessageToTableData(
     params: BackendAPIParams,
     sendLog: (log: ServerLog) => void,
     config?: Record<string, unknown>,
 ): Promise<PxWebData> {
+    const defaultLLMConfig = {
+        maxTokens: undefined,
+        callbacks: [
+            {
+                handleLLMStart(llm: Serialized, prompts: string[]) {
+                    sendLog({ content: JSON.stringify(prompts, null, 2), eventType: 'log' });
+                }
+            }
+            ,{
+                handleLLMEnd(output: LLMResult) {
+                    interface ExtendedGeneration extends Generation {
+                        message: {
+                            tool_calls: { args: unknown }[];
+                        };
+                    }
 
+                    // Bad implementation, but it works for now
+                    (output.generations as ExtendedGeneration[][])
+                        .flatMap(g => g)
+                        .forEach(g =>
+                            sendLog({ content: JSON.stringify(g.message.tool_calls[0].args, null, 2), eventType: 'log' }));
+                    
+                    if (output.llmOutput?.tokenUsage) {
+                        sendLog({ content: JSON.stringify(output.llmOutput.tokenUsage), eventType: 'tokens' });
+                    }
+                },
+            },
+        ],
+    };
+    
+    let model: BaseChatModel;
 
-    // Fallback modell for å unngå at modellen blir undefined
-    const modelName = params.modelType || 'gpt-4o-mini';
-
-    // Kan mest sannsynlig bli vagere
-    let model: ChatOpenAI | ChatGoogleGenerativeAI | ChatGroq;
-
-    // Velger modell basert på modellnavn
-    if (modelName === 'gpt-4o-mini') {
-        model = new ChatOpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: modelName,
-            temperature: 0,
-        });
-        console.log('Using GPT-4o-mini first');
-    } else if (modelName === 'gpt-o3-mini') {
-        model = new ChatOpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: 'o3-mini-2025-01-31',
-            reasoningEffort: 'low'
-        });
-        console.log('Using GPT-o3-mini');
-    } else if (modelName === 'gemini-2.0-flash-lite') {
-        model = new ChatGoogleGenerativeAI({
-            model: "gemini-2.0-flash-lite",
-            temperature: 0,
-            maxRetries: 2,
-        });
-        console.log('Using Gemini Flash 2 Lite');
-    } else if (modelName === 'groq') {
-        model = new ChatGroq({
-            model: "llama-3.3-70b-versatile",
-            temperature: 0,
-            maxTokens: undefined,
-            maxRetries: 2,
-        });
-        console.log('Using Groq');
-    } else {
-        model = new ChatOpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: modelName,
-            temperature: 0,
-        });
-        console.log('Using GPT-4o-mini from fallback');
+    switch (params.modelType) {
+        case ModelType.GPT4oMini:
+            model = new ChatOpenAI({
+                openAIApiKey: process.env.OPENAI_API_KEY,
+                modelName: ModelType.GPT4oMini,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using GPT-4o-mini first');
+            break;
+        case ModelType.GPTo3Mini:
+            model = new ChatOpenAI({
+                openAIApiKey: process.env.OPENAI_API_KEY,
+                modelName: ModelType.GPTo3Mini,
+                reasoningEffort: 'low',
+                ...defaultLLMConfig
+            });
+            console.log('Using GPT-o3-mini');
+            break;
+        case ModelType.GeminiFlash2Lite:
+            model = new ChatGoogleGenerativeAI({
+                model: ModelType.GeminiFlash2Lite,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using Gemini Flash 2 Lite');
+            break;
+        case ModelType.Llama33_70b:
+            model = new ChatGroq({
+                model: ModelType.Llama33_70b,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using Llama 3.3-70b');
+            break;
+        case ModelType.Llama32_1b:
+            model = new ChatGroq({
+                model: ModelType.Llama32_1b,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using Llama 3.2-1b');
+            break;
+        case ModelType.DeepseekR1_70b:
+            model = new ChatGroq({
+                model: ModelType.DeepseekR1_70b,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using Deepseek R1 70b');
+            break;
+        default:
+            model = new ChatOpenAI({
+                openAIApiKey: process.env.OPENAI_API_KEY,
+                modelName: ModelType.GPT4oMini,
+                temperature: 0,
+                ...defaultLLMConfig
+            });
+            console.log('Using GPT-4o-mini from fallback');
     }
 
     const { userMessage, nav, sel } = params;
@@ -73,13 +148,14 @@ export async function userMessageToTableData(
     let tableMetadata: SSBTableMetadata;
 
     switch (nav) {
-        case `parallell`:
+        case NavType.Parallell:
             tableMetadata = await parallellUserMessageToMetadata(
                 model,
                 userMessage,
-                config?.maxBreath ? (config.maxBreath as number) : 1,
+                config?.maxBreath ? (config.maxBreath as number) : 3,
                 sendLog
             );
+            
             break;
         default:
             throw new Error('Invalid navigation technique');
@@ -87,42 +163,61 @@ export async function userMessageToTableData(
 
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + tableId + '/data?lang=no&format=json-stat2';
+    
+    const messages = [
+        new SystemMessage('Select the best parameters based on the users request'),
+        new HumanMessage(userMessage)
+    ];
 
     // Selection code
     switch (sel) {
-        case `singlethreaded`:
+        case SelType.SingleThreaded:
             const singlethreadedSelectedVariables = await singlethreadedSelectionRunnable(
                 model,
-                [new HumanMessage(userMessage)],
-                tableMetadata,
-                sendLog
+                messages,
+                tableMetadata
             ).invoke({}, {});
-
-            sendLog({ content: JSON.stringify(singlethreadedSelectedVariables, null, 2), eventType: 'log' });
-
-            SSBGetUrl = singlethreadedToURL(
+            
+            SSBGetUrl = expressionSinglethreadedToURL(
                 singlethreadedSelectedVariables,
-                SSBGetUrl,
-                sendLog
+                SSBGetUrl
             );
-
             break;
-        case `multithreaded`:
+        case SelType.MultiThreaded:
             const multithreadedSelectedVariables = await multithreadedSelectionRunnable(
                 model,
-                [new HumanMessage(userMessage)],
+                messages,
                 tableMetadata,
-                sendLog
             ).invoke({}, {});
-
-            sendLog({ content: JSON.stringify(multithreadedSelectedVariables, null, 2), eventType: 'log' });
-
-            SSBGetUrl = multithreadedToURL(
+            
+            SSBGetUrl = expressionMultithreadedToURL(
                 multithreadedSelectedVariables,
                 SSBGetUrl,
-                sendLog
             );
-
+            break;
+        case SelType.EnumSingleThreaded:
+            const enumSinglethreadedSelectedVariables = await enumSinglethreadedSelectionRunnable(
+                model,
+                messages,
+                tableMetadata,
+            ).invoke({}, {});
+            
+            SSBGetUrl = enumSinglethreadedRunnableToURL(
+                enumSinglethreadedSelectedVariables,
+                SSBGetUrl,
+            )
+            break;
+        case SelType.EnumMultiThreaded:
+            const enumMultithreadedSelectedVariables = await enumMultithreadedSelectionRunnable(
+                model,
+                messages,
+                tableMetadata,
+            ).invoke({}, {});
+            
+            SSBGetUrl = enumMultithreadedRunnableToURL(
+                enumMultithreadedSelectedVariables,
+                SSBGetUrl,
+            )
             break;
         default:
             throw new Error('Invalid selection technique');
@@ -141,62 +236,4 @@ export async function userMessageToTableData(
         throw new Error('Failed to fetch SSB API table data from table ' + tableId + ' with URL ' + SSBGetUrl);
 
     return (await responseTableData.json()) as PxWebData;
-}
-
-function singlethreadedToURL(
-    response: Record<string, PromptResponse>,
-    url: string,
-    sendLog: (log: ServerLog) => void
-): string {
-    Object.entries(response).forEach(([key, value]) => {
-        if (value.itemSelections) {
-            // Join the selections into a comma-separated string
-            const selection = value.itemSelections.join(",");
-            sendLog({ content: `Selections for ${key}: ${selection}`, eventType: 'log' });
-            url += `&valueCodes[${key}]=${selection}`;
-        } else if (value.selectionExpressions) {
-            // Process each selection expression
-            value.selectionExpressions.forEach((expression: string) => {
-                sendLog({ content: `Expression for ${key}: ${expression}`, eventType: 'log' });
-                url += `&valueCodes[${key}]=[${expression}]`;
-            });
-        } else {
-            // If neither itemSelections nor selectionExpressions are defined, use a wildcard
-            sendLog({ content: `Wildcard * for ${key}`, eventType: 'log' });
-            url += `&valueCodes[${key}]=*`;
-        }
-    });
-
-    return url;
-}
-
-function multithreadedToURL(
-    responses: Record<string, Record<string, PromptResponse>>,
-    url: string,
-    sendLog: (log: ServerLog) => void
-): string {
-    // Iterate over the top-level keys in the responses object
-    Object.entries(responses).forEach(([, responseValue]) => {
-        // Each responseValue is itself an object that we need to iterate over
-        Object.entries(responseValue).forEach(([key, value]) => {
-            if (value.itemSelections) {
-                // Join the selections into a comma-separated string
-                const selection = value.itemSelections.join(",");
-                sendLog({ content: `Selections for ${key}: ${selection}`, eventType: 'log' });
-                url += `&valueCodes[${key}]=${selection}`;
-            } else if (value.selectionExpressions) {
-                // Process each selection expression
-                value.selectionExpressions.forEach((expression: string) => {
-                    sendLog({ content: `Expression for ${key}: ${expression}`, eventType: 'log' });
-                    url += `&valueCodes[${key}]=[${expression}]`;
-                });
-            } else {
-                // If neither itemSelections nor selectionExpressions are defined, use a wildcard
-                sendLog({ content: `Wildcard * for ${key}`, eventType: 'log' });
-                url += `&valueCodes[${key}]=*`;
-            }
-        });
-    });
-
-    return url;
 }

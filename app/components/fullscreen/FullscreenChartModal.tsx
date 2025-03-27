@@ -1,7 +1,8 @@
 "use client";
-import React, { useState, useEffect, memo } from 'react';
-import { PxWebData } from "@/app/types";
-import FullscreenChartDisplay from "@/app/components/Graphing/fullscreen_graphing/FullscreenChartDisplay";
+import React, {memo, useEffect, useState} from 'react';
+import {PxWebData} from "@/app/types";
+import FullscreenChartDisplay
+    from "@/app/components/Graphing/fullscreen_graphing/FullscreenChartDisplay";
 
 interface FullscreenChartModalProps {
     pxData: PxWebData;

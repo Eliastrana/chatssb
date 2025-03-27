@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import * as d3 from "d3";
-import { BarChart } from "./charts/BarChart";
-import { LineChart } from "./charts/LineChart";
-import { PieChart } from "./charts/PieChart";
-import { BubbleChart } from "./charts/BubbleChart";
+import {BarChart} from "./charts/BarChart";
+import {LineChart} from "./charts/LineChart";
+import {PieChart} from "./charts/PieChart";
+import {BubbleChart} from "./charts/BubbleChart";
 import DualRangeSlider from "./util/DualRangeSlider";
 import SingleRangeSlider from "./util/SingleRangeSlider";
-import { PxWebData } from "@/app/types";
-import { usePxWebData } from "@/app/components/Graphing/usePxWebData";
-import { CustomDropdown } from "@/app/components/Graphing/util/CustomDropdown";
+import {PxWebData} from "@/app/types";
+import {usePxWebData} from "@/app/components/Graphing/usePxWebData";
+import {CustomDropdown} from "@/app/components/Graphing/util/CustomDropdown";
 
 const customColors = [
     "#274247",

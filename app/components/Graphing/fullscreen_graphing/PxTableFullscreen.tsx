@@ -1,7 +1,7 @@
 // PxWebTableFullscreen.tsx
-import React, { useMemo, useState } from "react";
-import { PxWebData } from "@/app/types";
-import { cartesianProduct } from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct";
+import React, {useMemo, useState} from "react";
+import {PxWebData} from "@/app/types";
+import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct";
 
 interface TableRow {
     [key: string]: string | number;

@@ -3,13 +3,11 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
-import {ServerLog} from "@/app/types";
 
 export function selectTableFromTablesRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     possibleTables: { id: string, label: string }[],
-    sendLog: (log: ServerLog) => void
 ): Runnable {
     const navigationSchema = z
         .object({
@@ -32,8 +30,6 @@ export function selectTableFromTablesRunnable(
 
     systemMessageText += `\n${possibleTablesText}`;
     
-    sendLog({ content: `${systemMessageText}`, eventType: 'log' });
-
     const prompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(systemMessageText)
     ]);

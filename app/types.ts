@@ -70,19 +70,54 @@ export interface SSBNavigationResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'final' | 'error';
+    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error';
 }
 
-export interface PromptResponse {
-    itemSelections?: string[];
-    selectionExpressions?: string[];
+export interface SelectionParamaters {
+    itemSelection?: string[];
+    selectionExpression?: string[];
+    wildcard?: string;
+    exactMatch?: string;
+    top?: {
+        n: number;
+        offset?: number;
+    };
+    bottom?: {
+        n: number;
+        offset?: number;
+    };
+    range?: {
+        start: string;
+        end: string;
+    };
+    from?: string;
+    to?: string;
 }
 
 export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
-    nav?: 'parallell';
-    sel?: 'singlethreaded' | 'multithreaded' | string;
-    modelType?: string;
+    nav?: NavType;
+    sel?: SelType;
+    modelType?: ModelType;
+}
 
+export enum NavType {
+    Parallell = 'parallell'
+}
+
+export enum SelType {
+    SingleThreaded = 'singlethreaded',
+    MultiThreaded = 'multithreaded',
+    EnumMultiThreaded = 'enumMultithreaded',
+    EnumSingleThreaded = 'enumSinglethreaded'
+}
+
+export enum ModelType {
+    GPT4oMini = 'gpt-4o-mini',
+    GPTo3Mini = 'o3-mini-2025-01-31',
+    GeminiFlash2Lite = 'gemini-2.0-flash-lite',
+    Llama33_70b = 'llama-3.3-70b-versatile',
+    Llama32_1b = 'llama-3.2-1b-preview',
+    DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
 }

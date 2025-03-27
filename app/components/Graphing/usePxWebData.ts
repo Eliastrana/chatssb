@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
-import { PxWebData } from "@/app/types";
+import {useCallback, useMemo, useState} from "react";
+import {PxWebData} from "@/app/types";
 
 interface DimensionInfo {
     name: string;

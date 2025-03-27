@@ -7,7 +7,7 @@ import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 
 
-export function multithreadedSelectionRunnable(
+export function enumMultithreadedSelectionRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
@@ -15,22 +15,49 @@ export function multithreadedSelectionRunnable(
 ): RunnableMap {
     const promptMap = Object.fromEntries(
         Object.entries(metadataJson.dimension).map(([key, value]) => {
-
+            
+            // Get all keys from the category
+            const allKeys = Object.keys(value.category.label);
+            console.log([allKeys[0], ...allKeys.slice(1)])
+            
             const schema = z.object({
                 [key]: z.union([
                     z.object({
                         itemSelection: z
-                            .array(z.string())
-                            .describe(
-                                `A list of valid item keys for the variable: ${key}. Must always be the JSON key(s) from the provided input data, not the corresponding item values.`
-                            )
+                            .array(z.enum([allKeys[0], ...allKeys.slice(1)]))
                     }),
                     z.object({
-                        selectionExpression: z
-                            .array(z.string())
-                            .describe(
-                                `A list of valid selection expressions for the variable: ${key}. If an item identifier is used in the expression, it must be the JSON key from the provided input data, not the corresponding item value.`
-                            )
+                        wildcard: z.string(),
+                    }),
+                    z.object({
+                        exactMatch: z.string(),
+                    }),
+                    z.object({
+                        top: z
+                            .object({
+                                n: z.number(),
+                                offset: z.number().optional()
+                            })
+                    }),
+                    z.object({
+                        bottom: z
+                            .object({
+                                n: z.number(),
+                                offset: z.number().optional()
+                            })
+                    }),
+                    z.object({
+                        range: z
+                            .object({
+                                start: z.enum([allKeys[0], ...allKeys.slice(1)]),
+                                end: z.enum([allKeys[0], ...allKeys.slice(1)])
+                            })
+                    }),
+                    z.object({
+                        from: z.enum([allKeys[0], ...allKeys.slice(1)])
+                    }),
+                    z.object({
+                        to: z.enum([allKeys[0], ...allKeys.slice(1)])
                     })
                 ])
             });
@@ -63,7 +90,7 @@ export function multithreadedSelectionRunnable(
                 ...messages
             ]);
             
-            return [key + "Prompt", prompt.pipe(selectedModel.withStructuredOutput(schema))];
+            return [key, prompt.pipe(selectedModel.withStructuredOutput(schema))];
         })
     );
     
