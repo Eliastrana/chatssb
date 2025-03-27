@@ -57,7 +57,7 @@ export default function Home() {
 
     const [selectionMode, setSelectionMode] = useState<SelType>(() => {
         const stored = localStorage.getItem('selectionMode');
-        return stored ? (stored) as SelType : SelType.SingleThreaded;
+        return stored ? (stored) as SelType : SelType.Singlethreaded;
     });
 
 
