@@ -44,21 +44,31 @@ export default function Home() {
     const [liveResponseTime, setLiveResponseTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const [selectModel, setSelectModel] = useState<ModelType>(() => {
+
+    const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
+
+    useEffect(() => {
         const stored = localStorage.getItem('selectModel');
-        console.log(stored)
-        return stored != null ? (stored as ModelType) : ModelType.GPT4oMini;
-    });
+        if (stored) {
+            setSelectModel(stored as ModelType);
+        }
+    }, []);
 
-    const [navigationMode, setNavigationMode] = useState<NavType>(() => {
+    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell_1);
+    useEffect(() => {
         const stored = localStorage.getItem('navigationMode');
-        return stored ? (stored) as NavType : NavType.Parallell_1;
-    });
+        if (stored) {
+            setNavigationMode(stored as NavType);
+        }
+    }, []);
 
-    const [selectionMode, setSelectionMode] = useState<SelType>(() => {
+    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.Singlethreaded);
+    useEffect(() => {
         const stored = localStorage.getItem('selectionMode');
-        return stored ? (stored) as SelType : SelType.Singlethreaded;
-    });
+        if (stored) {
+            setSelectionMode(stored as SelType);
+        }
+    }, []);
 
 
     const logContainerRef = useRef<HTMLDivElement>(null);
