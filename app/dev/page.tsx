@@ -44,10 +44,21 @@ export default function Home() {
     const [liveResponseTime, setLiveResponseTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
-    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell);
-    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SingleThreaded);
+    const [selectModel, setSelectModel] = useState<ModelType>(() => {
+        const stored = localStorage.getItem('selectModel');
+        console.log(stored)
+        return stored != null ? (stored as ModelType) : ModelType.GPT4oMini;
+    });
 
+    const [navigationMode, setNavigationMode] = useState<NavType>(() => {
+        const stored = localStorage.getItem('navigationMode');
+        return stored ? (stored) as NavType : NavType.Parallell;
+    });
+
+    const [selectionMode, setSelectionMode] = useState<SelType>(() => {
+        const stored = localStorage.getItem('selectionMode');
+        return stored ? (stored) as SelType : SelType.SingleThreaded;
+    });
 
 
     const logContainerRef = useRef<HTMLDivElement>(null);
@@ -57,6 +68,21 @@ export default function Home() {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
         }
     }, [persistentNavLogSteps, persistentAllLogSteps, showAllLogs]);
+
+
+    useEffect(() => {
+        localStorage.setItem('selectModel', selectModel)
+    }, [selectModel]);
+
+    useEffect(() => {
+        localStorage.setItem('navigationMode', navigationMode)
+    }, [navigationMode]);
+
+    useEffect(() => {
+        localStorage.setItem('selectionMode', selectionMode)
+    }, [selectionMode]);
+
+
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -274,13 +300,24 @@ export default function Home() {
             {!fullscreenPxData && (
 
                 <div className="fixed top-0 left-0 w-full h-14 bg-[#F0F8F9] z-40 hidden md:block ">
-                <div className="flex items-center justify-start ml-20 space-x-2 h-full">
-                    <HoverInfoModal/>
-                    <ModelPicker onSelectModel={setSelectModel} />
-                    <NavigationPicker onSelectNavigation={setNavigationMode}/>
-                    <SelectionPicker onSelectSelection={setSelectionMode} />
+                    <div className="flex items-center justify-start ml-20 space-x-2 h-full">
+                        <HoverInfoModal/>
+                        <ModelPicker
+                            selectedModel={selectModel}
+                            onSelectModel={setSelectModel}
+                        />
+
+                        <NavigationPicker
+                            selectedNavigation={navigationMode}
+                            onSelectNavigation={setNavigationMode}
+                        />
+
+                        <SelectionPicker
+                            selectedSelection={selectionMode}
+                            onSelectSelection={setSelectionMode}/>
+                    </div>
+
                 </div>
-            </div>
             )}
 
             <TitleSection showTitle={showTitle} setShowTitle={setShowTitle}/>

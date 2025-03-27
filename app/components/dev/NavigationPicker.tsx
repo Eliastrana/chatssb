@@ -1,30 +1,27 @@
 'use client';
-import React, {useState} from 'react';
-import {CustomDropdown, DropdownOption} from "@/app/components/Graphing/util/CustomDropdown";
-import {NavType} from "@/app/types";
+import React from 'react';
+import { CustomDropdown, DropdownOption } from "@/app/components/Graphing/util/CustomDropdown";
+import { NavType } from "@/app/types";
 
 interface NavigationPickerProps {
-    onSelectNavigation: (model: NavType) => void;
+    selectedNavigation: NavType;
+    onSelectNavigation: (nav: NavType) => void;
 }
 
-const NavigationPicker: React.FC<NavigationPickerProps> = ({ onSelectNavigation }) => {
+const NavigationPicker: React.FC<NavigationPickerProps> = ({ selectedNavigation, onSelectNavigation }) => {
     const navigationOptions: DropdownOption<NavType>[] = [
         { label: 'Parallell', value: NavType.Parallell }
     ];
 
-    const [navigation, setNavigation] = useState<NavType>(navigationOptions[0].value);
-
-
     const handleSelect = (value: NavType) => {
-        setNavigation(value);
         onSelectNavigation(value);
-    }
+    };
 
     return (
         <div className="">
             <CustomDropdown
                 options={navigationOptions}
-                selectedValue={navigation}
+                selectedValue={selectedNavigation}
                 onSelect={handleSelect}
             />
         </div>

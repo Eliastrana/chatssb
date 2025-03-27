@@ -1,13 +1,14 @@
 'use client';
-import React, {useState} from 'react';
-import {CustomDropdown, DropdownOption} from "@/app/components/Graphing/util/CustomDropdown";
-import {ModelType} from "@/app/types";
+import React from 'react';
+import { CustomDropdown, DropdownOption } from "@/app/components/Graphing/util/CustomDropdown";
+import { ModelType } from "@/app/types";
 
 interface ModelPickerProps {
+    selectedModel: ModelType;
     onSelectModel: (model: ModelType) => void;
 }
 
-const ModelPicker: React.FC<ModelPickerProps> = ({ onSelectModel }) => {
+const ModelPicker: React.FC<ModelPickerProps> = ({ selectedModel, onSelectModel }) => {
     const ModelOptions: DropdownOption<ModelType>[] = [
         { label: 'GPT-4o-mini', value: ModelType.GPT4oMini },
         { label: 'GPT-o3-mini', value: ModelType.GPTo3Mini },
@@ -17,10 +18,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ onSelectModel }) => {
         { label: 'Deepseek R1 70b', value: ModelType.DeepseekR1_70b },
     ];
 
-    const [selectedModel, setSelectedModel] = useState<ModelType>(ModelOptions[0].value);
-
     const handleSelect = (model: ModelType) => {
-        setSelectedModel(model);
         onSelectModel(model);
     };
 
