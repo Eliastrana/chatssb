@@ -87,16 +87,20 @@ export async function parallellUserMessageToMetadata(
         
         depth++;
     }
+    
+    let selectedTable: { id: string };
 
     if (possibleTables.length === 0) {
         throw new Error('Failed to find a table in the SSB API');
+    } else if (possibleTables.length > 1) {
+        selectedTable = await selectTableFromTablesRunnable(
+            model,
+            [new HumanMessage(userMessage)],
+            possibleTables
+        ).invoke({}, {});
+    } else {
+        selectedTable = { id: possibleTables[0].id };
     }
-
-    const selectedTable: { id: string; } = await selectTableFromTablesRunnable(
-        model,
-        [new HumanMessage(userMessage)],
-        possibleTables
-    ).invoke({}, {});
     
     const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {
         method: 'GET',
