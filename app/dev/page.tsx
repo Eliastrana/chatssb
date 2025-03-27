@@ -105,6 +105,7 @@ export default function Home() {
 
                 eventSource.addEventListener('log', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
+                    console.log("Terminal log:\n", newLog);
                     setPersistentAllLogSteps(prev => [...prev, newLog]);
                 });
 
@@ -115,6 +116,10 @@ export default function Home() {
                     setPersistentNavLogSteps(prev => [...prev, newLog]);
                     setPersistentAllLogSteps(prev => [...prev, newLog]);
                     console.log("Navigation log:\n", newLog);
+                });
+                
+                eventSource.addEventListener('tokens', (e: MessageEvent) => {
+                    console.log("Tokens log:\n", replaceNewLines(e.data));
                 });
 
                 eventSource.addEventListener('final', (e: MessageEvent) => {

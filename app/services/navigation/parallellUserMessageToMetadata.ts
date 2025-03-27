@@ -1,6 +1,8 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
-import {parallellNavigationRunnable} from "@/app/services/navigation/runnables/parallellNavigationRunnable";
+import {
+    parallellNavigationRunnable
+} from "@/app/services/navigation/runnables/parallellNavigationRunnable";
 import {HumanMessage} from "@langchain/core/messages";
 import {
     selectTableFromTablesRunnable
@@ -13,8 +15,6 @@ export async function parallellUserMessageToMetadata(
     maxBreadth: number = 1,
     sendLog: (log: ServerLog) => void
 ): Promise<SSBTableMetadata> {
-    
-    sendLog({ content: `Navigating SSB API`, eventType: 'log' });
     
     let depth = 0;
     const maxDepth = 5;
@@ -39,7 +39,7 @@ export async function parallellUserMessageToMetadata(
         currentFolderEntries.folderEntries.forEach((entry) => {
             if (entry.type === 'Table') {
                 possibleTables.push({ id: entry.id, label: entry.label });
-                sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'log' });
+                sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'nav' });
             }
         });
 
@@ -83,7 +83,6 @@ export async function parallellUserMessageToMetadata(
             [new HumanMessage(userMessage)],
             nextFolderEntries,
             maxBreadth,
-            sendLog
         ).invoke({}, {});
         
         depth++;
@@ -96,8 +95,7 @@ export async function parallellUserMessageToMetadata(
     const selectedTable: { id: string; } = await selectTableFromTablesRunnable(
         model,
         [new HumanMessage(userMessage)],
-        possibleTables,
-        sendLog
+        possibleTables
     ).invoke({}, {});
     
     const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {

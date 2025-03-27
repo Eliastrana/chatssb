@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import {NextResponse} from 'next/server';
 import {userMessageToTableData} from "@/app/services/userMessageToTableData";
 import {BackendAPIParams, ModelType, NavType, SelType, ServerLog} from "@/app/types";
 

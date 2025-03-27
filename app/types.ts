@@ -70,7 +70,7 @@ export interface SSBNavigationResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'final' | 'error';
+    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error';
 }
 
 export interface SelectionParamaters {

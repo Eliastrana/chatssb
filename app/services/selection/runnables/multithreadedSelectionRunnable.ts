@@ -4,14 +4,13 @@ import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {metadataSystemPrompt} from "@/app/services/selection/metadataSystemPrompt";
 import {RunnableMap} from "@langchain/core/runnables";
-import {ServerLog, SSBTableMetadata} from '@/app/types';
+import {SSBTableMetadata} from '@/app/types';
 
 
 export function multithreadedSelectionRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
-    sendLog: (log: ServerLog) => void,
     promptFormat: string = 'json'
 ): RunnableMap {
     const promptMap = Object.fromEntries(
@@ -58,8 +57,6 @@ export function multithreadedSelectionRunnable(
                 });
             }
             
-            sendLog({ content: systemMessage, eventType: 'log' });
-
             const prompt = ChatPromptTemplate.fromMessages([
                 new SystemMessage(metadataSystemPrompt),
                 new SystemMessage(systemMessage),

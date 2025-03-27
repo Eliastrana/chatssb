@@ -1,6 +1,6 @@
 import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {BaseMessage, SystemMessage} from "@langchain/core/messages";
-import {ServerLog, SSBTableMetadata} from "@/app/types";
+import {SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
@@ -11,7 +11,6 @@ export function singlethreadedSelectionRunnable(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
-    sendLog: (log: ServerLog) => void
 ): Runnable {
     const variableSchema: Record<string, z.ZodTypeAny> = {};
     const variableJson: Record<string, unknown> = {};
@@ -51,11 +50,10 @@ export function singlethreadedSelectionRunnable(
     
     const systemMessage = JSON.stringify(variableJson);
     
-    sendLog({ content: systemMessage, eventType: 'log' });
-
     const prompt = ChatPromptTemplate.fromMessages([
         new SystemMessage(metadataSystemPrompt),
         new SystemMessage(systemMessage),
+        
         ...messages
     ]);
     
