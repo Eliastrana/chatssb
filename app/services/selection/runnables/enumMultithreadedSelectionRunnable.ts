@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {metadataSystemPrompt} from "@/app/services/selection/metadataSystemPrompt";
+import {completeMetadataSystemMessage} from "@/app/services/selection/completeMetadataSystemMessage";
 import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 
@@ -85,7 +85,7 @@ export function enumMultithreadedSelectionRunnable(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
-                new SystemMessage(metadataSystemPrompt),
+                new SystemMessage(completeMetadataSystemMessage),
                 new SystemMessage(systemMessage),
                 ...messages
             ]);

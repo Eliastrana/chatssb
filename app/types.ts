@@ -103,14 +103,16 @@ export interface BackendAPIParams {
 }
 
 export enum NavType {
-    Parallell = 'parallell'
+    Parallell_1 = 'parallell_1',
+    Parallell_2 = 'parallell_2',
+    Parallell_3 = 'parallell_3',
 }
 
 export enum SelType {
-    SingleThreaded = 'singlethreaded',
-    MultiThreaded = 'multithreaded',
-    EnumMultiThreaded = 'enumMultithreaded',
-    EnumSingleThreaded = 'enumSinglethreaded'
+    Singlethreaded = 'singlethreaded',
+    Multithreaded = 'multithreaded',
+    EnumMultithreaded = 'enumMultithreaded',
+    EnumSinglethreaded = 'enumSinglethreaded',
 }
 
 export enum ModelType {

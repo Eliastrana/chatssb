@@ -58,8 +58,8 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    nav: NavType.Parallell,
-                    sel: SelType.EnumSingleThreaded,
+                    nav: NavType.Parallell_1,
+                    sel: SelType.Singlethreaded,
                     modelType: ModelType.GPT4oMini
                 };
 

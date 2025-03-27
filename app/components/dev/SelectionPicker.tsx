@@ -9,10 +9,10 @@ interface SelectionPickerProps {
 
 const SelectionPicker: React.FC<SelectionPickerProps> = ({ onSelectSelection }) => {
     const selectionOptions: DropdownOption<SelType>[] = [
-        { label: 'Singlethreaded Manual', value: SelType.SingleThreaded },
-        { label: 'Multithreaded Manual', value: SelType.MultiThreaded },
-        { label: 'Singlethreaded Enum', value: SelType.EnumSingleThreaded},
-        { label: 'Multithreaded Enum', value: SelType.EnumMultiThreaded},
+        { label: 'Singlethreaded Manual', value: SelType.Singlethreaded },
+        { label: 'Multithreaded Manual', value: SelType.Multithreaded },
+        { label: 'Singlethreaded Enum', value: SelType.EnumSinglethreaded},
+        { label: 'Multithreaded Enum', value: SelType.EnumMultithreaded},
     ];
 
     const [selection, setSelection] = useState<SelType>(selectionOptions[0].value);

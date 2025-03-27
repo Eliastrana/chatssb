@@ -9,7 +9,9 @@ interface NavigationPickerProps {
 
 const NavigationPicker: React.FC<NavigationPickerProps> = ({ onSelectNavigation }) => {
     const navigationOptions: DropdownOption<NavType>[] = [
-        { label: 'Parallell', value: NavType.Parallell }
+        { label: 'Parallell 1', value: NavType.Parallell_1 },
+        { label: 'Parallell 2', value: NavType.Parallell_2 },
+        { label: 'Parallell 3', value: NavType.Parallell_3 },
     ];
 
     const [navigation, setNavigation] = useState<NavType>(navigationOptions[0].value);
