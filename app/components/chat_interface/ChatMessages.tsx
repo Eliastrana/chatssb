@@ -90,14 +90,17 @@ function MessageItem({ msg, isBot, onExpand }: {
 
             {msg.description && (
                 <div className={"mt-2"}>
-                <h1 className="text-xl font-semibold mt-2">{msg.text}</h1>
+                    <h1 className="text-xl font-semibold mt-2">{msg.text}</h1>
                     <div className="mt-2">
-                    <p style={{whiteSpace: 'pre-line'}}>{msg.description}</p>
+                        <p style={{whiteSpace: 'pre-line'}}>{msg.description}</p>
                     </div>
                 </div>
-            )}
+
+            )
+            }
         </div>
-    );
+    )
+        ;
 }
 
 function ChatMessagesBase({

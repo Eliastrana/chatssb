@@ -27,6 +27,15 @@ export default function Home() {
     const [hasErrorOccurred, setHasErrorOccurred] = useState(false);
 
     const [navLog, setNavLog] = useState("");
+
+
+    const [currentInputTokenUsage, setCurrentInputTokenUsage] = useState(0);
+    const [currentOutputTokenUsage, setCurrentOutputTokenUsage] = useState(0);
+    // Cumulative totals:
+    const [totalInputTokenUsage, setTotalInputTokenUsage] = useState(0);
+    const [totalOutputTokenUsage, setTotalOutputTokenUsage] = useState(0);
+
+
     const [tempNavLogSteps, setTempNavLogSteps] = useState<string[]>([]);
     const [persistentNavLogSteps, setPersistentNavLogSteps] = useState<string[]>([]);
     const [persistentAllLogSteps, setPersistentAllLogSteps] = useState<string[]>([]);
@@ -38,6 +47,7 @@ export default function Home() {
     const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
     const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell);
     const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SingleThreaded);
+
 
 
     const logContainerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +76,13 @@ export default function Home() {
 
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
+
+
+        setCurrentInputTokenUsage(0);
+        setCurrentOutputTokenUsage(0);
+        setTotalInputTokenUsage(0);
+        setTotalOutputTokenUsage(0);
+
 
         setLiveResponseTime(0);
         const startTime = Date.now();
@@ -117,9 +134,21 @@ export default function Home() {
                     setPersistentAllLogSteps(prev => [...prev, newLog]);
                     console.log("Navigation log:\n", newLog);
                 });
-                
+
                 eventSource.addEventListener('tokens', (e: MessageEvent) => {
-                    console.log("Tokens log:\n", replaceNewLines(e.data));
+                    try {
+                        const tokenData = JSON.parse(e.data);
+                        // tokenData example: { promptTokens: 419, completionTokens: 22, totalTokens: 441 }
+                        // Update live token counters with the freshest event values:
+                        setCurrentInputTokenUsage(tokenData.promptTokens);
+                        setCurrentOutputTokenUsage(tokenData.completionTokens);
+                        // Also add these values to the cumulative totals:
+                        setTotalInputTokenUsage(prev => prev + tokenData.promptTokens);
+                        setTotalOutputTokenUsage(prev => prev + tokenData.completionTokens);
+                        console.log("Updated tokens:", tokenData);
+                    } catch (error) {
+                        console.error("Token parsing error:", error);
+                    }
                 });
 
                 eventSource.addEventListener('final', (e: MessageEvent) => {
@@ -289,8 +318,13 @@ export default function Home() {
                             persistentNavLogSteps={persistentNavLogSteps}
                             logContainerRef={logContainerRef}
                         />
-                        <StatisticsPanel liveResponseTime={liveResponseTime} />
-                    </>
+                        <StatisticsPanel
+                            liveResponseTime={liveResponseTime}
+                            liveInputTokenUsage={currentInputTokenUsage}
+                            liveOutputTokenUsage={currentOutputTokenUsage}
+                            totalInputTokenUsage={totalInputTokenUsage}
+                            totalOutputTokenUsage={totalOutputTokenUsage}
+                        />                    </>
                 )}
 
             </div>
