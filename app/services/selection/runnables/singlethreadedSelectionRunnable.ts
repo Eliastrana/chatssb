@@ -4,7 +4,7 @@ import {SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {metadataSystemPrompt} from "@/app/services/selection/metadataSystemPrompt";
+import {schemaMetadataSystemMessage} from "@/app/services/selection/schemaMetadataSystemMessage";
 
 
 export function singlethreadedSelectionRunnable(
@@ -51,7 +51,7 @@ export function singlethreadedSelectionRunnable(
     const systemMessage = JSON.stringify(variableJson);
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(metadataSystemPrompt),
+        new SystemMessage(schemaMetadataSystemMessage),
         new SystemMessage(systemMessage),
         
         ...messages

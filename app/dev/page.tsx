@@ -52,7 +52,7 @@ export default function Home() {
 
     const [navigationMode, setNavigationMode] = useState<NavType>(() => {
         const stored = localStorage.getItem('navigationMode');
-        return stored ? (stored) as NavType : NavType.Parallell;
+        return stored ? (stored) as NavType : NavType.Parallell_1;
     });
 
     const [selectionMode, setSelectionMode] = useState<SelType>(() => {
