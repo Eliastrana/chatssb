@@ -45,8 +45,8 @@ export default function Home() {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
-    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell);
-    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SingleThreaded);
+    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell_1);
+    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.Singlethreaded);
 
 
 

@@ -1,5 +1,5 @@
 import {ChatOpenAI} from '@langchain/openai';
-import {HumanMessage, SystemMessage} from '@langchain/core/messages';
+import {HumanMessage} from '@langchain/core/messages';
 import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
 import {ChatGroq} from "@langchain/groq";
 
@@ -43,11 +43,16 @@ import {
 import {
     expressionMultithreadedToURL
 } from "@/app/services/selection/utils/expressionMultithreadedToURL";
+import {
+    schemaSinglethreadedSelectionRunnable
+} from "@/app/services/selection/runnables/schemaSinglethreadedSelectionRunnable";
+import {
+    secureSchemaSinglethreadedRunnableToURL
+} from "@/app/services/selection/utils/secureSchemaSinglethreadedRunnableToURL";
 
 export async function userMessageToTableData(
     params: BackendAPIParams,
     sendLog: (log: ServerLog) => void,
-    config?: Record<string, unknown>,
 ): Promise<PxWebData> {
     const defaultLLMConfig = {
         maxTokens: undefined,
@@ -148,14 +153,13 @@ export async function userMessageToTableData(
     let tableMetadata: SSBTableMetadata;
 
     switch (nav) {
-        case NavType.Parallell:
+        case NavType.Parallell_1:
             tableMetadata = await parallellUserMessageToMetadata(
                 model,
                 userMessage,
-                config?.maxBreath ? (config.maxBreath as number) : 3,
+                1,
                 sendLog
             );
-            
             break;
         default:
             throw new Error('Invalid navigation technique');
@@ -165,13 +169,12 @@ export async function userMessageToTableData(
     let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + tableId + '/data?lang=no&format=json-stat2';
     
     const messages = [
-        new SystemMessage('Select the best parameters based on the users request'),
         new HumanMessage(userMessage)
     ];
 
     // Selection code
     switch (sel) {
-        case SelType.SingleThreaded:
+        case SelType.Singlethreaded:
             const singlethreadedSelectedVariables = await singlethreadedSelectionRunnable(
                 model,
                 messages,
@@ -183,7 +186,7 @@ export async function userMessageToTableData(
                 SSBGetUrl
             );
             break;
-        case SelType.MultiThreaded:
+        case SelType.Multithreaded:
             const multithreadedSelectedVariables = await multithreadedSelectionRunnable(
                 model,
                 messages,
@@ -195,7 +198,7 @@ export async function userMessageToTableData(
                 SSBGetUrl,
             );
             break;
-        case SelType.EnumSingleThreaded:
+        case SelType.EnumSinglethreaded:
             const enumSinglethreadedSelectedVariables = await enumSinglethreadedSelectionRunnable(
                 model,
                 messages,
@@ -207,7 +210,7 @@ export async function userMessageToTableData(
                 SSBGetUrl,
             )
             break;
-        case SelType.EnumMultiThreaded:
+        case SelType.EnumMultithreaded:
             const enumMultithreadedSelectedVariables = await enumMultithreadedSelectionRunnable(
                 model,
                 messages,
@@ -218,6 +221,20 @@ export async function userMessageToTableData(
                 enumMultithreadedSelectedVariables,
                 SSBGetUrl,
             )
+            break;
+        case SelType.SchemaSinglethreaded:
+            const schemaSinglethreadedSelectedVariables = await schemaSinglethreadedSelectionRunnable(
+                model,
+                messages,
+                tableMetadata
+            ).invoke({}, {});
+            
+            SSBGetUrl = secureSchemaSinglethreadedRunnableToURL(
+                schemaSinglethreadedSelectedVariables,
+                SSBGetUrl,
+                tableMetadata,
+                sendLog
+            );
             break;
         default:
             throw new Error('Invalid selection technique');
