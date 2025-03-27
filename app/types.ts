@@ -113,6 +113,7 @@ export enum SelType {
     Multithreaded = 'multithreaded',
     EnumMultithreaded = 'enumMultithreaded',
     EnumSinglethreaded = 'enumSinglethreaded',
+    SchemaSinglethreaded = 'schemaSinglethreaded',
 }
 
 export enum ModelType {

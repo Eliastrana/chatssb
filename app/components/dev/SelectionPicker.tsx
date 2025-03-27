@@ -13,6 +13,7 @@ const SelectionPicker: React.FC<SelectionPickerProps> = ({ onSelectSelection }) 
         { label: 'Multithreaded Manual', value: SelType.Multithreaded },
         { label: 'Singlethreaded Enum', value: SelType.EnumSinglethreaded},
         { label: 'Multithreaded Enum', value: SelType.EnumMultithreaded},
+        { label: 'Singlethreaded Schema', value: SelType.SchemaSinglethreaded}
     ];
 
     const [selection, setSelection] = useState<SelType>(selectionOptions[0].value);
