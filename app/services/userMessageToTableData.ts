@@ -161,6 +161,22 @@ export async function userMessageToTableData(
                 sendLog
             );
             break;
+        case NavType.Parallell_2:
+            tableMetadata = await parallellUserMessageToMetadata(
+                model,
+                userMessage,
+                2,
+                sendLog
+            );
+            break;
+        case NavType.Parallell_3:
+            tableMetadata = await parallellUserMessageToMetadata(
+                model,
+                userMessage,
+                3,
+                sendLog
+            );
+            break;
         default:
             throw new Error('Invalid navigation technique');
     }
