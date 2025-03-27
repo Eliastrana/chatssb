@@ -1,12 +1,20 @@
 // FullscreenChartDisplay.tsx
-import React, { useState } from "react";
-import { PxWebBarChartFullscreen } from "@/app/components/Graphing/fullscreen_graphing/PxWebBarChartFullscreen";
+import React, {useState} from "react";
+import {
+    PxWebBarChartFullscreen
+} from "@/app/components/Graphing/fullscreen_graphing/PxWebBarChartFullscreen";
 
-import { PxWebData } from "@/app/types";
-import { CustomDropdown } from "@/app/components/Graphing/util/CustomDropdown";
-import {PxWebLineChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebLineChartFullscreen";
-import {PxWebPieChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebPieChartFullscreen";
-import {PxWebBubbleChartFullscreen} from "@/app/components/Graphing/fullscreen_graphing/PxWebBubbleChartFullscreen";
+import {PxWebData} from "@/app/types";
+import {CustomDropdown} from "@/app/components/Graphing/util/CustomDropdown";
+import {
+    PxWebLineChartFullscreen
+} from "@/app/components/Graphing/fullscreen_graphing/PxWebLineChartFullscreen";
+import {
+    PxWebPieChartFullscreen
+} from "@/app/components/Graphing/fullscreen_graphing/PxWebPieChartFullscreen";
+import {
+    PxWebBubbleChartFullscreen
+} from "@/app/components/Graphing/fullscreen_graphing/PxWebBubbleChartFullscreen";
 import PxWebTableFullscreen from "@/app/components/Graphing/fullscreen_graphing/PxTableFullscreen";
 
 type ChartType = "bar" | "line" | "pie" | "bubble" | "table";

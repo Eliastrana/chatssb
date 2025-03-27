@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import * as d3 from "d3";
-import { PxWebData } from "@/app/types";
+import {PxWebData} from "@/app/types";
 import SingleRangeSlider from "@/app/components/Graphing/util/SingleRangeSlider";
 import {cartesianProduct} from "@/app/components/Graphing/fullscreen_graphing/cartesianProduct"; // Adjust path as needed
 
