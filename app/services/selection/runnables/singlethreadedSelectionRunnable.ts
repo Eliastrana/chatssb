@@ -4,7 +4,6 @@ import {SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {completeMetadataSystemMessage} from "@/app/services/selection/completeMetadataSystemMessage";
 import {schemaMetadataSystemMessage} from "@/app/services/selection/schemaMetadataSystemMessage";
 
 
