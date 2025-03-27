@@ -48,9 +48,12 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
 
+
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
+
+
 
                 const params: BackendAPIParams = {
                     userMessage,
@@ -165,7 +168,8 @@ export default function Home() {
             console.error(err);
             setMessages(prev => [
                 ...prev,
-                { sender: 'bot', text: "Vi klarte dessverre ikke å finne det du var ute etter!" }
+                { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"
+                }
             ]);
 
             if (!hasErrorOccurred) {
@@ -174,8 +178,7 @@ export default function Home() {
                     {
                         sender: 'bot',
                         text: "Tips til å finne det du leter etter:",
-                        description: "1. Spissere spørsmål gir spissere svar \n2. Inkluder årstall, enten det er et eller flere \n3. Sett parametre i spørsmålet "
-                    }
+                        description: "1. Spissere spørsmål gir spissere svar \n2. Inkluder årstall, enten det er et eller flere \n3. Sett parametre i spørsmålet "}
                 ]);
                 setHasErrorOccurred(true);
             }
