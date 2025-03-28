@@ -1,21 +1,21 @@
 // BubbleChart.tsx
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import {BubbleChartProps, HierarchyDatum} from "@/app/components/Graphing/charts/types/ChartProps";
-
+import { BubbleChartProps, HierarchyDatum } from "@/app/components/Graphing/charts/types/ChartProps";
 
 export const BubbleChart: React.FC<BubbleChartProps> = ({
-                                                                    width = 600,
-                                                                    height = 400,
-                                                                    data,
-                                                                    colorDim,
-                                                                    customColorScale,
-                                                                }) => {
+                                                            width = 600,
+                                                            height = 400,
+                                                            data,
+                                                            colorDim,         // Unused now, as we base color solely on index
+                                                            customColorScale, // Optional custom color scale
+                                                        }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
     useEffect(() => {
         if (!svgRef.current) return;
 
+        // Create tooltip
         const tooltip = d3
             .select("body")
             .append("div")
@@ -49,16 +49,18 @@ export const BubbleChart: React.FC<BubbleChartProps> = ({
             .append("g")
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-        const fallbackColorScale = d3.scaleOrdinal(d3.schemeCategory10);
-        const effectiveColor = (d: d3.HierarchyCircularNode<HierarchyDatum>, idx: number) => {
-            if (customColorScale && colorDim && d.data.combo) {
-                const key = d.data.combo[colorDim];
-                if (key) return customColorScale(key);
-            }
-            return fallbackColorScale(String(idx));
-        };
-
+        // Create a color scale based solely on the number of leaves.
         const leaves = packedRoot.leaves();
+        const colorScale = d3
+            .scaleOrdinal(
+                customColorScale
+                    ? customColorScale.range()
+                    : ["#274247", "#7E5EE8", "#00824d", ...d3.schemeCategory10.slice(3)]
+            )
+            .domain(d3.range(leaves.length).map(String));
+
+        // Use the series index for color
+        const effectiveColor = (_: unknown, idx: number) => colorScale(String(idx));
 
         svg
             .selectAll("circle")
@@ -101,8 +103,9 @@ export const BubbleChart: React.FC<BubbleChartProps> = ({
             .attr("y", (d) => d.y)
             .attr("text-anchor", "middle")
             .attr("dy", "0.35em")
-            .style("font-size", "10px")
-            .text((d) => (d.data.value ?? 0).toString())
+            .style("font-size", "20px")
+            .style("fill", "white")
+            .text((d) => (d.data.value != null ? d.data.value.toString() : ""))
             .style("opacity", (d) => (d.r > 15 ? 1 : 0));
 
         return () => {
