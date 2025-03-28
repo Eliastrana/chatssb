@@ -1,14 +1,14 @@
 // BarChart.tsx
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import {BarChartProps} from "@/app/components/Graphing/charts/types/ChartProps";
+import { BarChartProps } from "@/app/components/Graphing/charts/types/ChartProps";
 
 export const BarChart: React.FC<BarChartProps> = ({
                                                       width = 600,
                                                       height = 400,
                                                       data,
-                                                      colorDim,
-                                                      customColorScale,
+                                                      colorDim,          // Unused now since we're basing color on index
+                                                      customColorScale,  // You can still pass this in if needed, but we'll rebuild our own scale
                                                   }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -17,6 +17,15 @@ export const BarChart: React.FC<BarChartProps> = ({
 
         const svgEl = d3.select(svgRef.current);
         svgEl.selectAll("*").remove();
+
+        // Create a color scale based on the number of series (data.length)
+        const colorScale = d3
+            .scaleOrdinal(
+                customColorScale
+                    ? customColorScale.range()
+                    : ["#274247", "#7E5EE8", "#00824d", ...d3.schemeCategory10.slice(3)]
+            )
+            .domain(d3.range(data.length).map(String));
 
         const margin = { top: 30, right: 30, bottom: 50, left: 60 };
         const innerWidth = width - margin.left - margin.right;
@@ -79,37 +88,44 @@ export const BarChart: React.FC<BarChartProps> = ({
             .attr("class", "time-group")
             .attr("transform", (d) => `translate(${xScale(d)}, 0)`);
 
+        // For each time slot, we map each series datum and also attach its combo info (if available)
         timeGroups
-            .selectAll<SVGRectElement, { value: number; xVal: string; colorKey: string }>("rect")
+            .selectAll<SVGRectElement, {
+                value: number;
+                xVal: string;
+                seriesIndex: number;
+                combo?: Record<string, string>;
+            }>("rect")
             .data((xVal) =>
                 data.map((seriesData, idx) => {
                     const point = seriesData.series.find((p) => p.x === xVal);
                     const val = point?.y ?? 0;
-
-                    const colorKey = colorDim
-                        ? seriesData.combo[colorDim] || `missing-${idx}`
-                        : `idx-${idx}`;
-
                     return {
                         value: val,
                         xVal,
-                        colorKey,
-                        subgroupIndex: idx,
+                        seriesIndex: idx,
+                        combo: seriesData.combo, // attach combo details if available
                     };
                 })
             )
             .enter()
             .append("rect")
-            .attr("x", (d) => xSubgroup(String(d.subgroupIndex))!)
+            .attr("x", (d) => xSubgroup(String(d.seriesIndex))!)
             .attr("width", xSubgroup.bandwidth())
             .attr("y", innerHeight)
             .attr("height", 0)
-            .attr("fill", (d) =>
-                customColorScale ? customColorScale(d.colorKey) : "#999"
-            )
+            .attr("fill", (d) => colorScale(String(d.seriesIndex)))
             .on("mouseover", function (event, d) {
                 tooltip.style("display", "block");
-                tooltip.html(`<strong>${d.xVal}</strong><br>Verdi: ${d.value}`);
+                let comboHtml = "";
+                if (d.combo && Object.keys(d.combo).length > 0) {
+                    comboHtml = Object.entries(d.combo)
+                        .map(([dim, cat]) => `<strong>${dim}:</strong> ${cat}`)
+                        .join("<br/>") + "<br/>";
+                }
+                tooltip.html(
+                    `${comboHtml}<strong>${d.xVal}</strong><br/>Verdi: ${d.value}`
+                );
             })
             .on("mousemove", function (event) {
                 tooltip

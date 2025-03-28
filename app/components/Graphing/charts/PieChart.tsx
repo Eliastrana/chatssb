@@ -1,15 +1,15 @@
 // PieChart.tsx
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import {PieChartProps} from "./types/ChartProps";
+import { PieChartProps } from "./types/ChartProps";
 
 export const PieChart: React.FC<PieChartProps> = ({
                                                       width = 600,
                                                       height = 400,
                                                       data,
                                                       dimension,         // dimension metadata (for tooltips)
-                                                      colorDim,          // dimension name for coloring
-                                                      customColorScale,  // color scale
+                                                      colorDim,          // dimension name for coloring (unused in this version)
+                                                      customColorScale,  // color scale (we use its range if provided)
                                                   }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -58,24 +58,18 @@ export const PieChart: React.FC<PieChartProps> = ({
 
         const arcs = pieGenerator(data);
 
-        // Fallback color scale if none provided
-        const fallbackColor = d3
-            .scaleOrdinal<string>()
-            .domain(arcs.map((_, i) => String(i)))
-            .range(d3.schemeCategory10);
+        // Create a color scale based solely on slice index
+        const colorScale = d3
+            .scaleOrdinal(
+                customColorScale
+                    ? customColorScale.range()
+                    : ["#274247", "#7E5EE8", "#00824d", ...d3.schemeCategory10.slice(3)]
+            )
+            .domain(d3.range(data.length).map(String));
 
-        // Helper function to pick a color for each slice
-        function getSliceColor(d: d3.PieArcDatum<{ combo: Record<string, string>; value: number }>, i: number) {
-            if (customColorScale && colorDim) {
-                // If we have a dimension name and color scale, look up the category
-                const catKey = d.data.combo[colorDim];
-                if (catKey) {
-                    return customColorScale(catKey);
-                }
-            }
-            // Otherwise, fallback to index-based color
-            return fallbackColor(String(i));
-        }
+        // Helper function: use the slice index for color
+        const getSliceColor = (d: d3.PieArcDatum<{ combo: Record<string, string>; value: number }>, i: number) =>
+            colorScale(String(i));
 
         // Create arc groups
         const arcGroup = svg
@@ -88,7 +82,7 @@ export const PieChart: React.FC<PieChartProps> = ({
         arcGroup
             .append("path")
             .on("mouseover", function (event, d) {
-                // Build dimension-based tooltip if dimension metadata is available
+                // Build tooltip content using dimension metadata if available
                 let comboLabelsHtml = "";
                 if (dimension) {
                     comboLabelsHtml = Object.entries(d.data.combo)
@@ -100,7 +94,6 @@ export const PieChart: React.FC<PieChartProps> = ({
                         })
                         .join("<br/>");
                 } else {
-                    // fallback if dimension not given
                     comboLabelsHtml = JSON.stringify(d.data.combo);
                 }
 
@@ -122,7 +115,7 @@ export const PieChart: React.FC<PieChartProps> = ({
             .transition()
             .duration(1000)
             .attrTween("d", function (d) {
-                // Start angles at 0 -> 0, animate to d.startAngle -> d.endAngle
+                // Animate from 0 to the slice's actual angles
                 const start: d3.PieArcDatum<{ combo: Record<string, string>; value: number }> = {
                     data: d.data,
                     index: d.index,
@@ -144,8 +137,11 @@ export const PieChart: React.FC<PieChartProps> = ({
             .attr("transform", (d) => `translate(${arcGenerator.centroid(d)})`)
             .attr("dy", "0.35em")
             .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .text((d) => d.data.value.toLocaleString());
+            .style("font-size", "20px")
+            .style("fill", "white")
+            .text((d) =>
+                d.data.value != null ? d.data.value.toLocaleString() : ""
+            );
 
         return () => {
             tooltip.remove();
