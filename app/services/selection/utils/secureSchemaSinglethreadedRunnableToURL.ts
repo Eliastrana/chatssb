@@ -22,9 +22,9 @@ export function secureSchemaSinglethreadedRunnableToURL(
         } else if (value.wildcard) {
             url += `&valueCodes[${key}]=*`;
         } else if (value.top) {
-            url += `&valueCodes[${key}]=[TOP${value.top.n}` + (value.top.offset ? `,${value.top.offset}]` : "]");
+            url += `&valueCodes[${key}]=[TOP(${value.top.n}` + (value.top.offset ? `,${value.top.offset})]` : ")]");
         } else if (value.bottom) {
-            url += `&valueCodes[${key}]=[BOTTOM${value.bottom.n}` + (value.bottom.offset ? `,${value.bottom.offset}]` : "]");
+            url += `&valueCodes[${key}]=[BOTTOM(${value.bottom.n}` + (value.bottom.offset ? `,${value.bottom.offset})]` : ")]");
         } else if (value.range) {
             if (!metadata.dimension[key].category.label[value.range.start] && !metadata.dimension[key].category.label[value.range.end]) {
                 sendLog({ content: `Invalid range selection for ${key}: ${value.range.start}-${value.range.end}`, eventType: 'log' });
