@@ -15,6 +15,17 @@ interface ChatMessagesProps {
 
 }
 
+interface MemoizedChartDisplayProps {
+    pxData: PxWebData;
+}
+
+const ChartDisplayMemo: React.FC<MemoizedChartDisplayProps> = ({ pxData }) => {
+    return <ChartDisplay pxData={pxData} width={600} height={400} />;
+};
+
+const MemoizedChartDisplay = React.memo(ChartDisplayMemo);
+MemoizedChartDisplay.displayName = "MemoizedChartDisplay";
+
 // Reusable message item
 function MessageItem({ msg, isBot, onExpand }: {
     msg: Message;
@@ -85,8 +96,9 @@ function MessageItem({ msg, isBot, onExpand }: {
             )}
 
             {msg.pxData && (
-                <ChartDisplay pxData={msg.pxData} width={600} height={400}/>
+                <MemoizedChartDisplay pxData={msg.pxData}/>
             )}
+
 
             {msg.description && (
                 <div className={"mt-2"}>

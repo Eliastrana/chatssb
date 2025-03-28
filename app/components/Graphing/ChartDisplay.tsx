@@ -68,6 +68,8 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
         .domain(domainKeys)
         .range(customColors);
 
+
+
     return (
         <div className="mt-2 p-2 relative">
 
@@ -84,57 +86,85 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
                         const isStatVar = dim.name === statVarDimName;
 
+                        const allSelected = selectedCategories[dim.name].size === dim.categoryKeys.length;
+
+                        const handleToggleSelection = () => {
+                            if (allSelected) {
+                                dim.categoryKeys.forEach((catKey) => {
+                                    if (selectedCategories[dim.name].has(catKey)) {
+                                        toggleCategory(dim.name, catKey);
+                                    }
+                                });
+                            } else {
+                                dim.categoryKeys.forEach((catKey) => {
+                                    if (!selectedCategories[dim.name].has(catKey)) {
+                                        toggleCategory(dim.name, catKey);
+                                    }
+                                });
+                            }
+                        };
+
                         return (
                             <div
                                 key={dim.name}
-                                className="border border-[#C3DCDC] rounded-md shadow-sm p-2 bg-white max-h-48 overflow-auto"
+                                className="border border-[#C3DCDC] rounded-md shadow-inner p-2 bg-white max-h-48 overflow-auto"
                             >
-                                <h4 className="font-semibold text-base mb-1">
-                                    {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
-                                </h4>
-                                <div className="flex flex-col space-y-1">
-                                    {dim.categoryKeys.map((catKey, idx) => {
-                                        const isChecked = selectedCategories[dim.name].has(catKey);
 
+                                <div className="">
+                                    <div className="flex space-x-2">
+                                    <h4 className="font-semibold text-base">
+                                        {dim.label.charAt(0).toUpperCase() + dim.label.slice(1)}
+                                    </h4>
 
-                                        const fillColor = isStatVar
-                                            ? statVarColorScale(catKey)
-                                            : customColors[idx % customColors.length]; // fallback
+                                    <div className="flex gap-2">
+                                        <button onClick={handleToggleSelection}>
+                                            <span className="material-symbols-outlined">
+                                        {allSelected ? "check_circle" : "radio_button_unchecked"}
+                                    </span>
+                                        </button>
+                                    </div>
+                                    </div>
+                                    <div className="flex flex-col space-y-1">
+                                        {dim.categoryKeys.map((catKey, idx) => {
+                                            const isChecked = selectedCategories[dim.name].has(catKey);
 
-                                        return (
-                                            <label
-                                                key={catKey}
-                                                className="inline-flex items-center gap-1"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={() => toggleCategory(dim.name, catKey)}
-                                                    className="peer hidden"
-                                                />
-                                                <div
-                                                    className="w-4 h-4 border-2 rounded-full flex items-center justify-center transition-all relative"
-                                                    style={{
-                                                        borderColor: fillColor,
-                                                        backgroundColor: isChecked ? fillColor : "transparent",
-                                                    }}
-                                                >
-                                                    {isChecked && (
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            height="24px"
-                                                            viewBox="0 -960 960 960"
-                                                            width="24px"
-                                                            fill="#F0F8F9"
-                                                        >
-                                                            <path d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z" />
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                                <span className="text-xs">{dim.categoryLabels[catKey]}</span>
-                                            </label>
-                                        );
-                                    })}
+                                            const fillColor = isStatVar
+                                                ? statVarColorScale(catKey)
+                                                : customColors[idx % customColors.length];
+
+                                            return (
+                                                <label key={catKey} className="inline-flex items-center gap-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => toggleCategory(dim.name, catKey)}
+                                                        className="peer hidden"
+                                                    />
+                                                    <div
+                                                        className="w-4 h-4 border-2 rounded-full flex items-center justify-center transition-all relative"
+                                                        style={{
+                                                            borderColor: fillColor,
+                                                            backgroundColor: isChecked ? fillColor : "transparent",
+                                                        }}
+                                                    >
+                                                        {isChecked && (
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                height="24px"
+                                                                viewBox="0 -960 960 960"
+                                                                width="24px"
+                                                                fill="#F0F8F9"
+                                                            >
+                                                                <path
+                                                                    d="M382-240 154-468l57-57 171 171 367-367 57 57-424 424Z"/>
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs">{dim.categoryLabels[catKey]}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -151,7 +181,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         rel="noreferrer"
                         className="text-gray-400 text-xl hover:underline"
                     >
-                        {numberPart.trim()}
+                    {numberPart.trim()}
                     </a>
                     <span className="material-symbols-outlined text-gray-400">
             open_in_new
@@ -198,6 +228,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
                             customColorScale={statVarColorScale}
                         />
                 )}
+
             </div>
 
             <div className="mb-4">

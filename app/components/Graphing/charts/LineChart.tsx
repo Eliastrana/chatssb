@@ -1,7 +1,7 @@
 // LineChart.tsx
-import React, {useEffect, useRef} from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import {LineChartProps} from "@/app/components/Graphing/charts/types/ChartProps";
+import { LineChartProps } from "@/app/components/Graphing/charts/types/ChartProps";
 
 export const LineChart: React.FC<LineChartProps> = ({
                                                         width = 600,
@@ -16,6 +16,14 @@ export const LineChart: React.FC<LineChartProps> = ({
         if (!svgRef.current) return;
         const svgEl = d3.select(svgRef.current);
         svgEl.selectAll("*").remove();
+
+        // Create a color scale based solely on series index.
+        // Use the customColorScale's range if provided, otherwise use a default set.
+        const colorScale = d3.scaleOrdinal(
+            customColorScale
+                ? customColorScale.range()
+                : ["#274247", "#7E5EE8", "#00824d", ...d3.schemeCategory10.slice(3)]
+        ).domain(d3.range(data.length).map(String));
 
         const tooltip = d3
             .select("body")
@@ -66,22 +74,9 @@ export const LineChart: React.FC<LineChartProps> = ({
 
         svg.append("g").call(d3.axisLeft(yScale));
 
-        const fallbackScale = d3
-            .scaleOrdinal<string>()
-            .domain(data.map((_, i) => String(i)))
-            .range(d3.schemeCategory10);
-
-        function getLineColor(seriesItem: { combo: Record<string, string> }, idx: number) {
-            if (customColorScale && colorDim) {
-                const catKey = seriesItem.combo[colorDim];
-                if (catKey) {
-                    return customColorScale(catKey);
-                }
-            }
-            return customColorScale
-                ? customColorScale(String(idx))
-                : fallbackScale(String(idx));
-        }
+        // In this version, we simply use the series index for coloring.
+        // A helper function to retrieve the color for series index i.
+        const getLineColor = (i: number) => colorScale(String(i));
 
         const lineGen = d3
             .line<{ x: string; y: number }>()
@@ -89,11 +84,17 @@ export const LineChart: React.FC<LineChartProps> = ({
             .y((d) => yScale(d.y));
 
         data.forEach((seriesItem, i) => {
+            // Attach combo data to every point in the series for tooltip info
+            const pointsWithCombo = seriesItem.series.map((point) => ({
+                ...point,
+                combo: seriesItem.combo,
+            }));
+
             const path = svg
                 .append("path")
                 .datum(seriesItem.series)
                 .attr("fill", "none")
-                .attr("stroke", getLineColor(seriesItem, i))
+                .attr("stroke", getLineColor(i))
                 .attr("stroke-width", 2)
                 .attr("d", lineGen);
 
@@ -108,17 +109,22 @@ export const LineChart: React.FC<LineChartProps> = ({
 
             svg
                 .selectAll(`.circle-${i}`)
-                .data(seriesItem.series)
+                .data(pointsWithCombo)
                 .enter()
                 .append("circle")
-                .attr("fill", getLineColor(seriesItem, i))
+                .attr("fill", getLineColor(i))
                 .attr("cx", (d) => xScale(d.x) ?? 0)
                 .attr("cy", (d) => yScale(d.y))
                 .attr("r", 3)
-                // Tooltip events
                 .on("mouseover", function (event, d) {
                     tooltip.style("display", "block");
-                    tooltip.html(`<strong>${d.x}</strong><br/>Verdi: ${d.y}`);
+                    const combo = d.combo || {};
+                    const comboHtml = Object.entries(combo)
+                        .map(([dim, cat]) => `<strong>${dim}:</strong> ${cat}`)
+                        .join("<br/>");
+                    tooltip.html(
+                        `${comboHtml}<br/><strong>${d.x}:</strong> ${d.y.toLocaleString()}`
+                    );
                 })
                 .on("mousemove", function (event) {
                     tooltip
