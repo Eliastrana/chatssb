@@ -54,6 +54,11 @@ export async function userMessageToTableData(
     params: BackendAPIParams,
     sendLog: (log: ServerLog) => void,
 ): Promise<PxWebData> {
+    
+    const baseURL = params.useQAURL 
+        ? 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/' 
+        : 'https://data.ssb.no/api/pxwebapi/v2-beta/';
+    
     const defaultLLMConfig = {
         maxTokens: undefined,
         callbacks: [
@@ -158,7 +163,8 @@ export async function userMessageToTableData(
                 model,
                 userMessage,
                 1,
-                sendLog
+                sendLog,
+                baseURL
             );
             break;
         case NavType.Parallell_2:
@@ -166,7 +172,8 @@ export async function userMessageToTableData(
                 model,
                 userMessage,
                 2,
-                sendLog
+                sendLog,
+                baseURL
             );
             break;
         case NavType.Parallell_3:
@@ -174,7 +181,8 @@ export async function userMessageToTableData(
                 model,
                 userMessage,
                 3,
-                sendLog
+                sendLog,
+                baseURL
             );
             break;
         default:
@@ -182,7 +190,7 @@ export async function userMessageToTableData(
     }
 
     const tableId = tableMetadata.extension.px.tableid;
-    let SSBGetUrl = 'https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + tableId + '/data?lang=no&format=json-stat2';
+    let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
     
     const messages = [
         new HumanMessage(userMessage)

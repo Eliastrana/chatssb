@@ -14,6 +14,7 @@ import SelectionPicker from "@/app/components/dev/SelectionPicker";
 import NavigationLog from "@/app/components/dev/NavigationLog";
 import StatisticsPanel from "@/app/components/dev/StatisticsPanel";
 import NavigationPicker from "@/app/components/dev/NavigationPicker";
+import BaseURLPicker from "@/app/components/dev/BaseURLPicker";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -45,8 +46,15 @@ export default function Home() {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
 
+    const [baseURL, setBaseURL] = useState<boolean>(false);
+    useEffect(() => {
+        const stored = localStorage.getItem('baseURL');
+        if (stored) {
+            setBaseURL(stored === 'true');
+        }
+    }, []);
+    
     const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
-
     useEffect(() => {
         const stored = localStorage.getItem('selectModel');
         if (stored) {
@@ -54,7 +62,7 @@ export default function Home() {
         }
     }, []);
 
-    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell_1);
+    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell_3);
     useEffect(() => {
         const stored = localStorage.getItem('navigationMode');
         if (stored) {
@@ -62,7 +70,7 @@ export default function Home() {
         }
     }, []);
 
-    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.Singlethreaded);
+    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SchemaSinglethreaded);
     useEffect(() => {
         const stored = localStorage.getItem('selectionMode');
         if (stored) {
@@ -79,6 +87,9 @@ export default function Home() {
         }
     }, [persistentNavLogSteps, persistentAllLogSteps, showAllLogs]);
 
+    useEffect(() => {
+        localStorage.setItem('baseURL', String(baseURL));
+    }, [baseURL]);
 
     useEffect(() => {
         localStorage.setItem('selectModel', selectModel)
@@ -91,8 +102,6 @@ export default function Home() {
     useEffect(() => {
         localStorage.setItem('selectionMode', selectionMode)
     }, [selectionMode]);
-
-
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -136,14 +145,14 @@ export default function Home() {
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
-
-
+                
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
                     nav: navigationMode,
                     sel: selectionMode,
-                    modelType: selectModel
+                    modelType: selectModel,
+                    useQAURL: baseURL
                 };
 
                 // Convert params to query string
@@ -312,6 +321,12 @@ export default function Home() {
                 <div className="fixed top-0 left-0 w-full h-14 bg-[#F0F8F9] z-40 hidden md:block ">
                     <div className="flex items-center justify-start ml-20 space-x-2 h-full">
                         <HoverInfoModal/>
+                        
+                        <BaseURLPicker 
+                            selectedBaseURL={baseURL} 
+                            onSelectBaseURL={setBaseURL}
+                        />
+                        
                         <ModelPicker
                             selectedModel={selectModel}
                             onSelectModel={setSelectModel}

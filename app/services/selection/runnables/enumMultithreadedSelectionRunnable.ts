@@ -18,7 +18,6 @@ export function enumMultithreadedSelectionRunnable(
             
             // Get all keys from the category
             const allKeys = Object.keys(value.category.label);
-            console.log([allKeys[0], ...allKeys.slice(1)])
             
             const schema = z.object({
                 [key]: z.union([

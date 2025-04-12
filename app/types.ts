@@ -97,9 +97,10 @@ export interface SelectionParamaters {
 export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
-    nav?: NavType;
-    sel?: SelType;
+    nav: NavType;
+    sel: SelType;
     modelType?: ModelType;
+    useQAURL?: boolean;
 }
 
 export enum NavType {
