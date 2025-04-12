@@ -63,10 +63,9 @@ export function parallellNavigationRunnable(
     }
     
     const prompt = ChatPromptTemplate.fromMessages([
+        ...messages,
         new SystemMessage(systemMessageText)
     ]);
-
-    prompt.promptMessages.push(...messages);
-
+    
     return prompt.pipe(selectedModel.withStructuredOutput(navigationSchema));
 }

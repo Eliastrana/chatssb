@@ -1,7 +1,7 @@
 // BarChart.tsx
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import * as d3 from "d3";
-import { BarChartProps } from "@/app/components/Graphing/charts/types/ChartProps";
+import {BarChartProps} from "@/app/components/Graphing/charts/types/ChartProps";
 
 export const BarChart: React.FC<BarChartProps> = ({
                                                       width = 600,

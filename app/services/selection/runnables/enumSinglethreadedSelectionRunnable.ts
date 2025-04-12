@@ -4,7 +4,9 @@ import {SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {completeMetadataSystemMessage} from "@/app/services/selection/completeMetadataSystemMessage";
+import {
+    completeMetadataSystemMessage
+} from "@/app/services/selection/completeMetadataSystemMessage";
 
 
 export function enumSinglethreadedSelectionRunnable(
@@ -72,9 +74,9 @@ export function enumSinglethreadedSelectionRunnable(
     const systemMessage = JSON.stringify(json);
     
     const prompt = ChatPromptTemplate.fromMessages([
+        ...messages,
         new SystemMessage(completeMetadataSystemMessage),
         new SystemMessage(systemMessage),
-        ...messages
     ]);
 
     return prompt.pipe(selectedModel.withStructuredOutput(finalSchema));

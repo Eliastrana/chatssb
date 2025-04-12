@@ -1,7 +1,7 @@
 // LineChart.tsx
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import * as d3 from "d3";
-import { LineChartProps } from "@/app/components/Graphing/charts/types/ChartProps";
+import {LineChartProps} from "@/app/components/Graphing/charts/types/ChartProps";
 
 export const LineChart: React.FC<LineChartProps> = ({
                                                         width = 600,

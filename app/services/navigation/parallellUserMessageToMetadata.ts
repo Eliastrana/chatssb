@@ -3,7 +3,7 @@ import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {
     parallellNavigationRunnable
 } from "@/app/services/navigation/runnables/parallellNavigationRunnable";
-import {HumanMessage} from "@langchain/core/messages";
+import {BaseMessage} from "@langchain/core/messages";
 import {
     selectTableFromTablesRunnable
 } from "@/app/services/navigation/runnables/selectTableFromTablesRunnable";
@@ -11,9 +11,10 @@ import {
 
 export async function parallellUserMessageToMetadata(
     model: BaseChatModel,
-    userMessage: string,
+    messages: BaseMessage[],
     maxBreadth: number = 1,
-    sendLog: (log: ServerLog) => void
+    sendLog: (log: ServerLog) => void,
+    baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
 ): Promise<SSBTableMetadata> {
     
     let depth = 0;
@@ -60,7 +61,7 @@ export async function parallellUserMessageToMetadata(
             sendLog({ content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`, eventType: 'nav'});
             
             const response: Response = await fetch(
-                'https://data.ssb.no/api/pxwebapi/v2-beta/navigation/' + folderEntry.id,
+                baseURL + 'navigation/' + folderEntry.id,
                 {
                     method: 'GET',
                     headers: {
@@ -69,7 +70,7 @@ export async function parallellUserMessageToMetadata(
                     },
                 }
             );
-
+            
             if (!response.ok) {
                 throw new Error('Failed to fetch SSB API navigation data from ID ' + folderEntry.id);
             }
@@ -80,7 +81,7 @@ export async function parallellUserMessageToMetadata(
         // Invoke the navigation runnable with the fetched folder entries.
         currentFolderEntries = await parallellNavigationRunnable(
             model,
-            [new HumanMessage(userMessage)],
+            messages,
             nextFolderEntries,
             maxBreadth,
         ).invoke({}, {});
@@ -95,14 +96,14 @@ export async function parallellUserMessageToMetadata(
     } else if (possibleTables.length > 1) {
         selectedTable = await selectTableFromTablesRunnable(
             model,
-            [new HumanMessage(userMessage)],
+            messages,
             possibleTables
         ).invoke({}, {});
     } else {
         selectedTable = { id: possibleTables[0].id };
     }
     
-    const response = await fetch('https://data.ssb.no/api/pxwebapi/v2-beta/tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {
+    const response = await fetch(baseURL + 'tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

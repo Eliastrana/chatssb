@@ -12,9 +12,6 @@ export function schemaSinglethreadedSelectionRunnable(
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
 ): Runnable {
-    const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(schemaMetadataSystemMessage)
-    ]);
     
     const schema: Record<string, z.ZodTypeAny> = {};
     const json: Record<string, unknown> = {};
@@ -70,9 +67,12 @@ export function schemaSinglethreadedSelectionRunnable(
     });
     
     const finalSchema = z.object(schema);
-    
-    prompt.promptMessages.push(new SystemMessage(JSON.stringify(json)));
-    prompt.promptMessages.push(...messages)
+
+    const prompt = ChatPromptTemplate.fromMessages([
+        ...messages,
+        new SystemMessage(schemaMetadataSystemMessage),
+        new SystemMessage(JSON.stringify(json)),
+    ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(finalSchema));
 }

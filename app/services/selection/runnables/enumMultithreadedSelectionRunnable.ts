@@ -2,7 +2,9 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {completeMetadataSystemMessage} from "@/app/services/selection/completeMetadataSystemMessage";
+import {
+    completeMetadataSystemMessage
+} from "@/app/services/selection/completeMetadataSystemMessage";
 import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 
@@ -18,7 +20,6 @@ export function enumMultithreadedSelectionRunnable(
             
             // Get all keys from the category
             const allKeys = Object.keys(value.category.label);
-            console.log([allKeys[0], ...allKeys.slice(1)])
             
             const schema = z.object({
                 [key]: z.union([
@@ -85,9 +86,9 @@ export function enumMultithreadedSelectionRunnable(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
+                ...messages,
                 new SystemMessage(completeMetadataSystemMessage),
                 new SystemMessage(systemMessage),
-                ...messages
             ]);
             
             return [key, prompt.pipe(selectedModel.withStructuredOutput(schema))];

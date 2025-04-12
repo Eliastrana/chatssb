@@ -1,7 +1,7 @@
 // PieChart.tsx
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 import * as d3 from "d3";
-import { PieChartProps } from "./types/ChartProps";
+import {PieChartProps} from "./types/ChartProps";
 
 export const PieChart: React.FC<PieChartProps> = ({
                                                       width = 600,

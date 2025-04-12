@@ -58,9 +58,13 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    nav: NavType.Parallell_2,
-                    sel: SelType.SchemaSinglethreaded,
-                    modelType: ModelType.GPT4oMini
+                    resonate: true,
+                    resonateModel: ModelType.GPT4oMini,
+                    navigationTechnique: NavType.Parallell_3,
+                    navigationModel: ModelType.GPT4oMini,
+                    selectionTechnique: SelType.SchemaSinglethreaded,
+                    selectionModel: ModelType.GPT4oMini,
+                    useQAURL: false,
                 };
 
                 // Convert params to query string

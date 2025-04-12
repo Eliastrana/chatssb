@@ -8,9 +8,13 @@ export async function GET(request: Request) {
     const params: BackendAPIParams = {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
-        nav: searchParams.get('nav') as NavType || undefined,
-        sel: searchParams.get('sel') as SelType || undefined,
-        modelType: searchParams.get('modelType') as ModelType || undefined,
+        resonate: searchParams.get('resonate') === 'true',
+        resonateModel: searchParams.get('resonateModel') as ModelType,
+        navigationTechnique: searchParams.get('navigationTechnique') as NavType,
+        navigationModel: searchParams.get('navigationModel') as ModelType,
+        selectionTechnique: searchParams.get('selectionTechnique') as SelType,
+        selectionModel: searchParams.get('selectionModel') as ModelType,
+        useQAURL: searchParams.get('useQAURL') === 'true',
     };
     
     console.log(params);
