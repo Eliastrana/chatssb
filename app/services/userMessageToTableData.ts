@@ -3,7 +3,6 @@ import {HumanMessage, SystemMessage} from '@langchain/core/messages';
 import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
 import {ChatGroq} from "@langchain/groq";
 
-
 import {
     BackendAPIParams,
     ModelType,
@@ -159,8 +158,10 @@ export async function userMessageToTableData(
     
     const { userMessage, nav, sel } = params;
 
+    
     const messages = [
         new HumanMessage(userMessage),
+        new SystemMessage(`Dato: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`),
     ]
     
     if (params.resonate) {
