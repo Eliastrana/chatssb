@@ -13,6 +13,7 @@ const ModelPicker: React.FC<ModelPickerProps> = ({ selectedModel, onSelectModel 
         { label: 'GPT-4o-mini', value: ModelType.GPT4oMini },
         { label: 'GPT-o3-mini', value: ModelType.GPTo3Mini },
         { label: 'Gemini Flash 2 Lite', value: ModelType.GeminiFlash2Lite },
+        { label: 'Gemini 2.5 Pro Exp', value: ModelType.Gemini2_5ProExp },
         { label: 'Llama 3.3 70b', value: ModelType.Llama33_70b },
         { label: 'Llama 3.2 1b', value: ModelType.Llama32_1b },
         { label: 'Deepseek R1 70b', value: ModelType.DeepseekR1_70b },

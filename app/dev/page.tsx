@@ -53,14 +53,6 @@ export default function Home() {
         }
     }, []);
     
-    const [selectModel, setSelectModel] = useState<ModelType>(ModelType.GPT4oMini);
-    useEffect(() => {
-        const stored = localStorage.getItem('selectModel');
-        if (stored) {
-            setSelectModel(stored as ModelType);
-        }
-    }, []);
-    
     const [resonate, setResonate] = useState(true);
     useEffect(() => {
         const stored = localStorage.getItem('resonate');
@@ -68,20 +60,46 @@ export default function Home() {
             setResonate(stored === 'true');
         }
     }, []);
-
-    const [navigationMode, setNavigationMode] = useState<NavType>(NavType.Parallell_3);
+    
+    const [resonateModel, setResonateModel] = useState<ModelType>(ModelType.GPT4oMini);
     useEffect(() => {
-        const stored = localStorage.getItem('navigationMode');
+        const stored = localStorage.getItem('resonateModel');
         if (stored) {
-            setNavigationMode(stored as NavType);
+            setResonateModel(stored as ModelType);
+        }
+    }, []);
+    
+    
+    const [navigationTechnique, setNavigationTechnique] = useState<NavType>(NavType.Parallell_3);
+    useEffect(() => {
+        const stored = localStorage.getItem('navigationTechnique');
+        if (stored) {
+            setNavigationTechnique(stored as NavType);
+        }
+    }, []);
+    
+    const [navigationModel, setNavigationModel] = useState<ModelType>(ModelType.GPT4oMini);
+    useEffect(() => {
+        const stored = localStorage.getItem('navigationModel');
+        if (stored) {
+            setNavigationModel(stored as ModelType);
         }
     }, []);
 
-    const [selectionMode, setSelectionMode] = useState<SelType>(SelType.SchemaSinglethreaded);
+    
+    const [selectionTechnique, setSelectionTechnique] = useState<SelType>(SelType.SchemaSinglethreaded);
     useEffect(() => {
-        const stored = localStorage.getItem('selectionMode');
+        const stored = localStorage.getItem('selectionTechnique');
         if (stored) {
-            setSelectionMode(stored as SelType);
+            setSelectionTechnique(stored as SelType);
+        }
+    }, []);
+    
+    const [selectionModel, setSelectionModel] = useState<ModelType>(ModelType.GPT4oMini);
+    useEffect(() => {
+        const stored = localStorage.getItem('selectionModel');
+        if (stored) {
+            setSelectionModel(stored as ModelType);
         }
     }, []);
 
@@ -97,22 +115,27 @@ export default function Home() {
     useEffect(() => {
         localStorage.setItem('baseURL', String(baseURL));
     }, [baseURL]);
-
-    useEffect(() => {
-        localStorage.setItem('selectModel', selectModel)
-    }, [selectModel]);
-
+    
     useEffect(() => {
         localStorage.setItem('resonate', String(resonate))
     }, [resonate]);
+    useEffect(() => {
+        localStorage.setItem('resonateModel', resonateModel)
+    }, [resonateModel]);
     
     useEffect(() => {
-        localStorage.setItem('navigationMode', navigationMode)
-    }, [navigationMode]);
+        localStorage.setItem('navigationTechnique', navigationTechnique)
+    }, [navigationTechnique]);
+    useEffect(() => {
+        localStorage.setItem('navigationModel', navigationModel)
+    }, [navigationModel]);
 
     useEffect(() => {
-        localStorage.setItem('selectionMode', selectionMode)
-    }, [selectionMode]);
+        localStorage.setItem('selectionTechnique', selectionTechnique)
+    }, [selectionTechnique]);
+    useEffect(() => {
+        localStorage.setItem('selectionModel', selectionModel)
+    }, [selectionModel]);
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -133,13 +156,11 @@ export default function Home() {
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
 
-
         setCurrentInputTokenUsage(0);
         setCurrentOutputTokenUsage(0);
         setTotalInputTokenUsage(0);
         setTotalOutputTokenUsage(0);
-
-
+        
         setLiveResponseTime(0);
         const startTime = Date.now();
         if (timerRef.current) clearInterval(timerRef.current);
@@ -161,9 +182,11 @@ export default function Home() {
                     userMessage,
                     dev: true,
                     resonate: resonate,
-                    nav: navigationMode,
-                    sel: selectionMode,
-                    modelType: selectModel,
+                    resonateModel: resonateModel,
+                    navigationTechnique: navigationTechnique,
+                    navigationModel: navigationModel,
+                    selectionTechnique: selectionTechnique,
+                    selectionModel: selectionModel,
                     useQAURL: baseURL
                 };
 
@@ -331,7 +354,7 @@ export default function Home() {
             {!fullscreenPxData && (
 
                 <div className="fixed top-0 left-0 w-full h-14 bg-[#F0F8F9] z-40 hidden md:block ">
-                    <div className="flex items-center justify-start ml-20 space-x-2 h-full">
+                    <div className="flex items-center justify-start ml-20 space-x-2 h-full mt-5">
                         <HoverInfoModal/>
                         
                         <BaseURLPicker 
@@ -339,24 +362,38 @@ export default function Home() {
                             onSelectBaseURL={setBaseURL}
                         />
                         
-                        <ModelPicker
-                            selectedModel={selectModel}
-                            onSelectModel={setSelectModel}
-                        />
-                        
-                        <ResonatePicker 
-                            selectedResonate={resonate} 
-                            oneSelectedResonate={setResonate}
-                        />
+                        <div className="flex flex-col gap-2">
+                            <ResonatePicker 
+                                selectedResonate={resonate} 
+                                oneSelectedResonate={setResonate}
+                            />
+                            <ModelPicker
+                                selectedModel={resonateModel}
+                                onSelectModel={setResonateModel}
+                            />
+                        </div>
 
-                        <NavigationPicker
-                            selectedNavigation={navigationMode}
-                            onSelectNavigation={setNavigationMode}
-                        />
+                        <div className="flex flex-col gap-2">
+                            <NavigationPicker
+                                selectedNavigation={navigationTechnique}
+                                onSelectNavigation={setNavigationTechnique}
+                            />
+                            <ModelPicker
+                                selectedModel={navigationModel}
+                                onSelectModel={setNavigationModel}
+                            />
+                        </div>
 
-                        <SelectionPicker
-                            selectedSelection={selectionMode}
-                            onSelectSelection={setSelectionMode}/>
+                        <div className="flex flex-col gap-2">
+                            <SelectionPicker
+                                selectedSelection={selectionTechnique}
+                                onSelectSelection={setSelectionTechnique}
+                            />
+                            <ModelPicker
+                                selectedModel={selectionModel}
+                                onSelectModel={setSelectionModel}
+                            />
+                        </div>
                     </div>
 
                 </div>

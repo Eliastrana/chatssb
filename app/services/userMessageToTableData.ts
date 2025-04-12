@@ -1,11 +1,7 @@
-import {ChatOpenAI} from '@langchain/openai';
 import {HumanMessage, SystemMessage} from '@langchain/core/messages';
-import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
-import {ChatGroq} from "@langchain/groq";
 
 import {
     BackendAPIParams,
-    ModelType,
     NavType,
     PxWebData,
     SelType,
@@ -33,9 +29,6 @@ import {
 import {
     enumMultithreadedRunnableToURL
 } from "@/app/services/selection/utils/enumMultithreadedRunnableToURL";
-import {BaseChatModel} from "@langchain/core/language_models/chat_models";
-import {Generation, LLMResult} from "@langchain/core/outputs";
-import {Serialized} from "@/node_modules/@langchain/core/dist/load/serializable";
 import {
     expressionSinglethreadedToURL
 } from "@/app/services/selection/utils/expressionSinglethreadedToURL";
@@ -49,6 +42,8 @@ import {
     secureSchemaSinglethreadedRunnableToURL
 } from "@/app/services/selection/utils/secureSchemaSinglethreadedRunnableToURL";
 import {resonateRunnable} from "@/app/services/resonate/runnable/resonateRunnable";
+import {initializeModel} from "@/app/services/initializeModel";
+
 
 export async function userMessageToTableData(
     params: BackendAPIParams,
@@ -59,114 +54,16 @@ export async function userMessageToTableData(
         ? 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/' 
         : 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
-    const defaultLLMConfig = {
-        maxTokens: undefined,
-        callbacks: [
-            {
-                handleLLMStart(llm: Serialized, prompts: string[]) {
-                    sendLog({ content: JSON.stringify(prompts, null, 2), eventType: 'log' });
-                }
-            }
-            ,{
-                handleLLMEnd(output: LLMResult) {
-                    interface ExtendedGeneration extends Generation {
-                        message: {
-                            tool_calls: { args: unknown }[];
-                        };
-                    }
-                    
-                    if (output.llmOutput?.tokenUsage) {
-                        sendLog({ content: JSON.stringify(output.llmOutput.tokenUsage), eventType: 'tokens' });
-                    }
-                    
-                    // Bad implementation, but it works for now
-                    (output.generations as ExtendedGeneration[][])
-                        .flatMap(g => g)
-                        .forEach(g => {
-                            if (g.message.tool_calls?.[0]?.args) {
-                                sendLog({ content: JSON.stringify(g.message.tool_calls[0].args, null, 2), eventType: 'log' });
-                            }
-                        });
-                    
-                },
-            },
-        ],
-    };
-    
-    let model: BaseChatModel;
-
-    switch (params.modelType) {
-        case ModelType.GPT4oMini:
-            model = new ChatOpenAI({
-                openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPT4oMini,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using GPT-4o-mini first');
-            break;
-        case ModelType.GPTo3Mini:
-            model = new ChatOpenAI({
-                openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPTo3Mini,
-                reasoningEffort: 'low',
-                ...defaultLLMConfig
-            });
-            console.log('Using GPT-o3-mini');
-            break;
-        case ModelType.GeminiFlash2Lite:
-            model = new ChatGoogleGenerativeAI({
-                model: ModelType.GeminiFlash2Lite,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using Gemini Flash 2 Lite');
-            break;
-        case ModelType.Llama33_70b:
-            model = new ChatGroq({
-                model: ModelType.Llama33_70b,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using Llama 3.3-70b');
-            break;
-        case ModelType.Llama32_1b:
-            model = new ChatGroq({
-                model: ModelType.Llama32_1b,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using Llama 3.2-1b');
-            break;
-        case ModelType.DeepseekR1_70b:
-            model = new ChatGroq({
-                model: ModelType.DeepseekR1_70b,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using Deepseek R1 70b');
-            break;
-        default:
-            model = new ChatOpenAI({
-                openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPT4oMini,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
-            console.log('Using GPT-4o-mini from fallback');
-    }
-    
-    const { userMessage, nav, sel } = params;
-
-    
     const messages = [
-        new HumanMessage(userMessage),
+        new HumanMessage(params.userMessage),
         new SystemMessage(`Dato: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`),
+        //new HumanMessage(params.userMessage + `\nDato: ${new
+        // Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`),
     ]
     
     if (params.resonate) {
         const resonatedContext = await resonateRunnable(
-            model,
+            initializeModel(params.resonateModel, sendLog),
             messages
         ).invoke({}, {});
         
@@ -174,18 +71,18 @@ export async function userMessageToTableData(
         messages.push(new SystemMessage(resonatedContext.content));
     }
     
-    // Navigation code
     let tableMetadata: SSBTableMetadata;
-
-    switch (nav) {
+    const navigationModel = initializeModel(params.navigationModel, sendLog);
+    
+    switch (params.navigationTechnique) {
         case NavType.Parallell_1:
-            tableMetadata = await parallellUserMessageToMetadata(model, messages, 1, sendLog, baseURL);
+            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 1, sendLog, baseURL);
             break;
         case NavType.Parallell_2:
-            tableMetadata = await parallellUserMessageToMetadata(model, messages, 2, sendLog, baseURL);
+            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 2, sendLog, baseURL);
             break;
         case NavType.Parallell_3:
-            tableMetadata = await parallellUserMessageToMetadata(model, messages, 3, sendLog, baseURL);
+            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 3, sendLog, baseURL);
             break;
         default:
             throw new Error('Invalid navigation technique');
@@ -194,11 +91,12 @@ export async function userMessageToTableData(
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
     
-    // Selection code
-    switch (sel) {
+    const selectionModel = initializeModel(params.selectionModel, sendLog);
+    
+    switch (params.selectionTechnique) {
         case SelType.Singlethreaded:
             const singlethreadedSelectedVariables = await singlethreadedSelectionRunnable(
-                model,
+                selectionModel,
                 messages,
                 tableMetadata
             ).invoke({}, {});
@@ -210,7 +108,7 @@ export async function userMessageToTableData(
             break;
         case SelType.Multithreaded:
             const multithreadedSelectedVariables = await multithreadedSelectionRunnable(
-                model,
+                selectionModel,
                 messages,
                 tableMetadata,
             ).invoke({}, {});
@@ -222,7 +120,7 @@ export async function userMessageToTableData(
             break;
         case SelType.EnumSinglethreaded:
             const enumSinglethreadedSelectedVariables = await enumSinglethreadedSelectionRunnable(
-                model,
+                selectionModel,
                 messages,
                 tableMetadata,
             ).invoke({}, {});
@@ -234,7 +132,7 @@ export async function userMessageToTableData(
             break;
         case SelType.EnumMultithreaded:
             const enumMultithreadedSelectedVariables = await enumMultithreadedSelectionRunnable(
-                model,
+                selectionModel,
                 messages,
                 tableMetadata,
             ).invoke({}, {});
@@ -246,7 +144,7 @@ export async function userMessageToTableData(
             break;
         case SelType.SchemaSinglethreaded:
             const schemaSinglethreadedSelectedVariables = await schemaSinglethreadedSelectionRunnable(
-                model,
+                selectionModel,
                 messages,
                 tableMetadata
             ).invoke({}, {});

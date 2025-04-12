@@ -9,9 +9,11 @@ export async function GET(request: Request) {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
         resonate: searchParams.get('resonate') === 'true',
-        nav: searchParams.get('nav') as NavType,
-        sel: searchParams.get('sel') as SelType,
-        modelType: searchParams.get('modelType') as ModelType || undefined,
+        resonateModel: searchParams.get('resonateModel') as ModelType,
+        navigationTechnique: searchParams.get('navigationTechnique') as NavType,
+        navigationModel: searchParams.get('navigationModel') as ModelType,
+        selectionTechnique: searchParams.get('selectionTechnique') as SelType,
+        selectionModel: searchParams.get('selectionModel') as ModelType,
         useQAURL: searchParams.get('useQAURL') === 'true',
     };
     

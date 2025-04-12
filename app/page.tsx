@@ -59,9 +59,12 @@ export default function Home() {
                     userMessage,
                     dev: true,
                     resonate: true,
-                    nav: NavType.Parallell_2,
-                    sel: SelType.SchemaSinglethreaded,
-                    modelType: ModelType.GPT4oMini
+                    resonateModel: ModelType.GPT4oMini,
+                    navigationTechnique: NavType.Parallell_3,
+                    navigationModel: ModelType.GPT4oMini,
+                    selectionTechnique: SelType.SchemaSinglethreaded,
+                    selectionModel: ModelType.GPT4oMini,
+                    useQAURL: false,
                 };
 
                 // Convert params to query string

@@ -37,7 +37,7 @@ export function CustomDropdown<T>({
     const selectedOption = options.find((opt) => opt.value === selectedValue);
 
     return (
-        <div className="relative inline-block text-left z-10" ref={dropdownRef}>
+        <div className="relative inline-block text-left" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen((prev) => !prev)}
                 className="px-2 py-1 border-2 border-[#274247] rounded-lg bg-white flex items-center"
@@ -52,7 +52,7 @@ export function CustomDropdown<T>({
                 </span>
             </button>
             {isOpen && (
-                <div className="absolute left-0 mt-1 w-48 rounded-lg shadow-md bg-white border-2 border-[#274247]">
+                <div className="absolute left-0 mt-1 w-48 rounded-lg shadow-md bg-white border-2 border-[#274247] z-10">
                     {options.map((opt) => {
                         const isSelected = opt.value === selectedValue;
                         return (
