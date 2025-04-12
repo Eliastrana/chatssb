@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
-import { CustomDropdown, DropdownOption } from "@/app/components/Graphing/util/CustomDropdown";
-import { SelType } from "@/app/types";
+import {CustomDropdown, DropdownOption} from "@/app/components/Graphing/util/CustomDropdown";
+import {SelType} from "@/app/types";
 
 interface SelectionPickerProps {
     selectedSelection: SelType;

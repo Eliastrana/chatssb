@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
-import { CustomDropdown, DropdownOption } from "@/app/components/Graphing/util/CustomDropdown";
-import { ModelType } from "@/app/types";
+import {CustomDropdown, DropdownOption} from "@/app/components/Graphing/util/CustomDropdown";
+import {ModelType} from "@/app/types";
 
 interface ModelPickerProps {
     selectedModel: ModelType;

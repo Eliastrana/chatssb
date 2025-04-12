@@ -2,7 +2,9 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {completeMetadataSystemMessage} from "@/app/services/selection/completeMetadataSystemMessage";
+import {
+    completeMetadataSystemMessage
+} from "@/app/services/selection/completeMetadataSystemMessage";
 import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 

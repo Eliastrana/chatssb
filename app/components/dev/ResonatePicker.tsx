@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { CustomDropdown, DropdownOption } from "@/app/components/Graphing/util/CustomDropdown";
+import {CustomDropdown, DropdownOption} from "@/app/components/Graphing/util/CustomDropdown";
 
 interface PickerProps {
     selectedResonate: boolean;
