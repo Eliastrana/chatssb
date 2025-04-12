@@ -1,5 +1,5 @@
 import {ChatOpenAI} from '@langchain/openai';
-import {HumanMessage} from '@langchain/core/messages';
+import {HumanMessage, SystemMessage} from '@langchain/core/messages';
 import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
 import {ChatGroq} from "@langchain/groq";
 
@@ -49,6 +49,7 @@ import {
 import {
     secureSchemaSinglethreadedRunnableToURL
 } from "@/app/services/selection/utils/secureSchemaSinglethreadedRunnableToURL";
+import {resonateRunnable} from "@/app/services/resonate/runnable/resonateRunnable";
 
 export async function userMessageToTableData(
     params: BackendAPIParams,
@@ -74,16 +75,20 @@ export async function userMessageToTableData(
                             tool_calls: { args: unknown }[];
                         };
                     }
-
-                    // Bad implementation, but it works for now
-                    (output.generations as ExtendedGeneration[][])
-                        .flatMap(g => g)
-                        .forEach(g =>
-                            sendLog({ content: JSON.stringify(g.message.tool_calls[0].args, null, 2), eventType: 'log' }));
                     
                     if (output.llmOutput?.tokenUsage) {
                         sendLog({ content: JSON.stringify(output.llmOutput.tokenUsage), eventType: 'tokens' });
                     }
+                    
+                    // Bad implementation, but it works for now
+                    (output.generations as ExtendedGeneration[][])
+                        .flatMap(g => g)
+                        .forEach(g => {
+                            if (g.message.tool_calls?.[0]?.args) {
+                                sendLog({ content: JSON.stringify(g.message.tool_calls[0].args, null, 2), eventType: 'log' });
+                            }
+                        });
+                    
                 },
             },
         ],
@@ -151,39 +156,35 @@ export async function userMessageToTableData(
             });
             console.log('Using GPT-4o-mini from fallback');
     }
-
+    
     const { userMessage, nav, sel } = params;
 
+    const messages = [
+        new HumanMessage(userMessage),
+    ]
+    
+    if (params.resonate) {
+        const resonatedContext = await resonateRunnable(
+            model,
+            messages
+        ).invoke({}, {});
+        
+        sendLog({content: resonatedContext.content, eventType: 'log'})
+        messages.push(new SystemMessage(resonatedContext.content));
+    }
+    
     // Navigation code
     let tableMetadata: SSBTableMetadata;
 
     switch (nav) {
         case NavType.Parallell_1:
-            tableMetadata = await parallellUserMessageToMetadata(
-                model,
-                userMessage,
-                1,
-                sendLog,
-                baseURL
-            );
+            tableMetadata = await parallellUserMessageToMetadata(model, messages, 1, sendLog, baseURL);
             break;
         case NavType.Parallell_2:
-            tableMetadata = await parallellUserMessageToMetadata(
-                model,
-                userMessage,
-                2,
-                sendLog,
-                baseURL
-            );
+            tableMetadata = await parallellUserMessageToMetadata(model, messages, 2, sendLog, baseURL);
             break;
         case NavType.Parallell_3:
-            tableMetadata = await parallellUserMessageToMetadata(
-                model,
-                userMessage,
-                3,
-                sendLog,
-                baseURL
-            );
+            tableMetadata = await parallellUserMessageToMetadata(model, messages, 3, sendLog, baseURL);
             break;
         default:
             throw new Error('Invalid navigation technique');
@@ -192,10 +193,6 @@ export async function userMessageToTableData(
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
     
-    const messages = [
-        new HumanMessage(userMessage)
-    ];
-
     // Selection code
     switch (sel) {
         case SelType.Singlethreaded:

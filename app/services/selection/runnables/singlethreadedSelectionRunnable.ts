@@ -51,10 +51,9 @@ export function singlethreadedSelectionRunnable(
     const systemMessage = JSON.stringify(variableJson);
     
     const prompt = ChatPromptTemplate.fromMessages([
+        ...messages,
         new SystemMessage(schemaMetadataSystemMessage),
         new SystemMessage(systemMessage),
-        
-        ...messages
     ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(schema));

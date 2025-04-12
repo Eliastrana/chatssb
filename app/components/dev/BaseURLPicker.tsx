@@ -7,7 +7,7 @@ interface BaseURLPickerProps {
     onSelectBaseURL: (model: boolean) => void;
 }
 
-const SelectionPicker: React.FC<BaseURLPickerProps> = ({ selectedBaseURL, onSelectBaseURL }) => {
+const BaseURLPicker: React.FC<BaseURLPickerProps> = ({ selectedBaseURL, onSelectBaseURL }) => {
     const baseURLOptions: DropdownOption<boolean>[] = [
         { label: 'Default URL', value: false },
         { label: 'QA URL', value: true },
@@ -28,4 +28,4 @@ const SelectionPicker: React.FC<BaseURLPickerProps> = ({ selectedBaseURL, onSele
     );
 };
 
-export default SelectionPicker;
+export default BaseURLPicker;

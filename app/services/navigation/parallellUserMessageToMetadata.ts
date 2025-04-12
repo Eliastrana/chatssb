@@ -3,7 +3,7 @@ import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {
     parallellNavigationRunnable
 } from "@/app/services/navigation/runnables/parallellNavigationRunnable";
-import {HumanMessage} from "@langchain/core/messages";
+import {BaseMessage} from "@langchain/core/messages";
 import {
     selectTableFromTablesRunnable
 } from "@/app/services/navigation/runnables/selectTableFromTablesRunnable";
@@ -11,7 +11,7 @@ import {
 
 export async function parallellUserMessageToMetadata(
     model: BaseChatModel,
-    userMessage: string,
+    messages: BaseMessage[],
     maxBreadth: number = 1,
     sendLog: (log: ServerLog) => void,
     baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
@@ -81,7 +81,7 @@ export async function parallellUserMessageToMetadata(
         // Invoke the navigation runnable with the fetched folder entries.
         currentFolderEntries = await parallellNavigationRunnable(
             model,
-            [new HumanMessage(userMessage)],
+            messages,
             nextFolderEntries,
             maxBreadth,
         ).invoke({}, {});
@@ -96,7 +96,7 @@ export async function parallellUserMessageToMetadata(
     } else if (possibleTables.length > 1) {
         selectedTable = await selectTableFromTablesRunnable(
             model,
-            [new HumanMessage(userMessage)],
+            messages,
             possibleTables
         ).invoke({}, {});
     } else {

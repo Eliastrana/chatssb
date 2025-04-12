@@ -97,6 +97,7 @@ export interface SelectionParamaters {
 export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
+    resonate: boolean;
     nav: NavType;
     sel: SelType;
     modelType?: ModelType;

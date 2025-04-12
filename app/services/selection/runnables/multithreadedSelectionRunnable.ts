@@ -58,9 +58,9 @@ export function multithreadedSelectionRunnable(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
+                ...messages,
                 new SystemMessage(completeMetadataSystemMessage),
                 new SystemMessage(systemMessage),
-                ...messages
             ]);
             
             return [key + "Prompt", prompt.pipe(selectedModel.withStructuredOutput(schema))];

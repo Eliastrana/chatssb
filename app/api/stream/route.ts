@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     const params: BackendAPIParams = {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
+        resonate: searchParams.get('resonate') === 'true',
         nav: searchParams.get('nav') as NavType,
         sel: searchParams.get('sel') as SelType,
         modelType: searchParams.get('modelType') as ModelType || undefined,

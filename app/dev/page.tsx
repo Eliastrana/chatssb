@@ -15,6 +15,7 @@ import NavigationLog from "@/app/components/dev/NavigationLog";
 import StatisticsPanel from "@/app/components/dev/StatisticsPanel";
 import NavigationPicker from "@/app/components/dev/NavigationPicker";
 import BaseURLPicker from "@/app/components/dev/BaseURLPicker";
+import ResonatePicker from "@/app/components/dev/ResonatePicker";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -35,8 +36,7 @@ export default function Home() {
     // Cumulative totals:
     const [totalInputTokenUsage, setTotalInputTokenUsage] = useState(0);
     const [totalOutputTokenUsage, setTotalOutputTokenUsage] = useState(0);
-
-
+    
     const [tempNavLogSteps, setTempNavLogSteps] = useState<string[]>([]);
     const [persistentNavLogSteps, setPersistentNavLogSteps] = useState<string[]>([]);
     const [persistentAllLogSteps, setPersistentAllLogSteps] = useState<string[]>([]);
@@ -44,8 +44,7 @@ export default function Home() {
 
     const [liveResponseTime, setLiveResponseTime] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-
+    
     const [baseURL, setBaseURL] = useState<boolean>(false);
     useEffect(() => {
         const stored = localStorage.getItem('baseURL');
@@ -59,6 +58,14 @@ export default function Home() {
         const stored = localStorage.getItem('selectModel');
         if (stored) {
             setSelectModel(stored as ModelType);
+        }
+    }, []);
+    
+    const [resonate, setResonate] = useState(true);
+    useEffect(() => {
+        const stored = localStorage.getItem('resonate');
+        if (stored) {
+            setResonate(stored === 'true');
         }
     }, []);
 
@@ -95,6 +102,10 @@ export default function Home() {
         localStorage.setItem('selectModel', selectModel)
     }, [selectModel]);
 
+    useEffect(() => {
+        localStorage.setItem('resonate', String(resonate))
+    }, [resonate]);
+    
     useEffect(() => {
         localStorage.setItem('navigationMode', navigationMode)
     }, [navigationMode]);
@@ -149,6 +160,7 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
+                    resonate: resonate,
                     nav: navigationMode,
                     sel: selectionMode,
                     modelType: selectModel,
@@ -330,6 +342,11 @@ export default function Home() {
                         <ModelPicker
                             selectedModel={selectModel}
                             onSelectModel={setSelectModel}
+                        />
+                        
+                        <ResonatePicker 
+                            selectedResonate={resonate} 
+                            oneSelectedResonate={setResonate}
                         />
 
                         <NavigationPicker
