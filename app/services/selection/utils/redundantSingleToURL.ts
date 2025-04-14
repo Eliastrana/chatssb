@@ -1,6 +1,6 @@
 import {SelectionParamaters, ServerLog, SSBTableMetadata} from "@/app/types";
 
-export function secureSchemaSinglethreadedRunnableToURL(
+export function redundantSingleToURL(
     response: Record<string, SelectionParamaters>,
     url: string,
     metadata: SSBTableMetadata,

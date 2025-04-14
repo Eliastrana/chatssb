@@ -4,7 +4,7 @@ import {BaseMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 
-export function keywordNavigationRunnable(
+export function keywordSearch(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     numKeywords: number,

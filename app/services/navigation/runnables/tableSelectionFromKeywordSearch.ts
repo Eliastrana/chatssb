@@ -6,7 +6,7 @@ import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
 
 
-export function selectKeywordTableFromTablesRunnable(
+export function tableSelectionFromKeywordSearch(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     possibleTables: SSBSearchResponse,

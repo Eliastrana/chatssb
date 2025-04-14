@@ -1,6 +1,6 @@
 import {SelectionParamaters} from "@/app/types";
 
-export function enumSinglethreadedRunnableToURL(
+export function enumSingleToURL(
     response: Record<string, SelectionParamaters>,
     url: string,
 ): string {

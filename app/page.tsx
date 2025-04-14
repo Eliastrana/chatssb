@@ -58,11 +58,11 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    resonate: true,
-                    resonateModel: ModelType.GPT4oMini,
-                    navigationTechnique: NavType.Parallell_3,
+                    reasoning: true,
+                    reasoningModel: ModelType.GPT4oMini,
+                    navigationTechnique: NavType.FolderNavigation_3,
                     navigationModel: ModelType.GPT4oMini,
-                    selectionTechnique: SelType.SchemaSinglethreaded,
+                    selectionTechnique: SelType.RedundantSingle,
                     selectionModel: ModelType.GPT4oMini,
                     useQAURL: false,
                 };

@@ -1,4 +1,4 @@
-export const resonateSystemMessage: string = `
+export const reasoningPrompt: string = `
 Du er en ekspert i å tolke åpne og ustrukturerte forespørsler om statistikk relatert til Norge. 
 Din oppgave er å analysere brukerens tekst og generere en strukturert hypotese om hva slags data brukeren etterspør,
 og hvilken type statistikk fra Statistisk sentralbyrå (SSB) som mest sannsynlig vil være relevant.

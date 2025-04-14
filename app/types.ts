@@ -107,8 +107,8 @@ export interface SelectionParamaters {
 export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
-    resonate: boolean;
-    resonateModel: ModelType;
+    reasoning: boolean;
+    reasoningModel: ModelType;
     navigationTechnique: NavType;
     navigationModel: ModelType;
     selectionTechnique: SelType;
@@ -117,24 +117,24 @@ export interface BackendAPIParams {
 }
 
 export enum NavType {
-    Parallell_1 = 'parallell_1',
-    Parallell_2 = 'parallell_2',
-    Parallell_3 = 'parallell_3',
-    Parallell_4 = 'parallell_4',
-    Parallell_5 = 'parallell_5',
-    Keyword_1 = 'keyword_1',
-    Keyword_2 = 'keyword_2',
-    Keyword_3 = 'keyword_3',
-    Keyword_4 = 'keyword_4',
-    Keyword_5 = 'keyword_5',
+    FolderNavigation_1 = 'folder_navigation_1',
+    FolderNavigation_2 = 'folder_navigation_2',
+    FolderNavigation_3 = 'folder_navigation_3',
+    FolderNavigation_4 = 'folder_navigation_4',
+    FolderNavigation_5 = 'folder_navigation_5',
+    KeywordSearch_1 = 'keyword_search_1',
+    KeywordSearch_2 = 'keyword_search_2',
+    KeywordSearch_3 = 'keyword_search_3',
+    KeywordSearch_4 = 'keyword_search_4',
+    KeywordSearch_5 = 'keyword_search_5',
 }
 
 export enum SelType {
-    Singlethreaded = 'singlethreaded',
-    Multithreaded = 'multithreaded',
-    EnumMultithreaded = 'enumMultithreaded',
-    EnumSinglethreaded = 'enumSinglethreaded',
-    SchemaSinglethreaded = 'schemaSinglethreaded',
+    ExpressionSingle = 'expression_single',
+    ExpressionMulti = 'expression_multi',
+    EnumMulti = 'enum_multi',
+    EnumSingle = 'enum_single',
+    RedundantSingle = 'redundant_single',
 }
 
 export enum ModelType {

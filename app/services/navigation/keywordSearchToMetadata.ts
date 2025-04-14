@@ -1,15 +1,13 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
 import {BaseMessage} from "@langchain/core/messages";
+import {keywordSearch} from "@/app/services/navigation/runnables/keywordSearch";
 import {
-    keywordNavigationRunnable
-} from "@/app/services/navigation/runnables/keywordNavigationRunnable";
-import {
-    selectKeywordTableFromTablesRunnable
-} from "@/app/services/navigation/runnables/selectKeywordTableFromTablesRunnable";
+    tableSelectionFromKeywordSearch
+} from "@/app/services/navigation/runnables/tableSelectionFromKeywordSearch";
 
 
-export async function keywordUserMessageToMetadata(
+export async function keywordSearchToMetadata(
     model: BaseChatModel,
     messages: BaseMessage[],
     numKeywords: number,
@@ -17,7 +15,7 @@ export async function keywordUserMessageToMetadata(
     baseURL: string,
 ): Promise<SSBTableMetadata> {
 
-    const chosenKeywords: { keywords: string[] } = await keywordNavigationRunnable(
+    const chosenKeywords: { keywords: string[] } = await keywordSearch(
         model,
         messages,
         numKeywords,
@@ -43,7 +41,7 @@ export async function keywordUserMessageToMetadata(
     
     sendLog({ content: `Hentet ${tableResponses.tables.length} tabeller`, eventType: 'nav' });
     
-    const selectedTable = await selectKeywordTableFromTablesRunnable(
+    const selectedTable = await tableSelectionFromKeywordSearch(
         model,
         messages,
         tableResponses

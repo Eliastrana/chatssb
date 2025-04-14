@@ -2,16 +2,16 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
-import {resonateSystemMessage} from "@/app/services/resonate/resonateSystemMessage";
+import {reasoningPrompt} from "@/app/services/reasoning/reasoningPrompt";
 
 
-export function resonateRunnable(
+export function reasoning(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
 ): Runnable {
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(resonateSystemMessage),
+        new SystemMessage(reasoningPrompt),
         ...messages
     ]);
     

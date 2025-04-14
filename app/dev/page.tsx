@@ -15,7 +15,7 @@ import NavigationLog from "@/app/components/dev/NavigationLog";
 import StatisticsPanel from "@/app/components/dev/StatisticsPanel";
 import NavigationPicker from "@/app/components/dev/NavigationPicker";
 import BaseURLPicker from "@/app/components/dev/BaseURLPicker";
-import ResonatePicker from "@/app/components/dev/ResonatePicker";
+import ReasoningPicker from "@/app/components/dev/ReasoningPicker";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -53,24 +53,24 @@ export default function Home() {
         }
     }, []);
     
-    const [resonate, setResonate] = useState(true);
+    const [reasoning, setReasoning] = useState(true);
     useEffect(() => {
-        const stored = localStorage.getItem('resonate');
+        const stored = localStorage.getItem('reasoning');
         if (stored) {
-            setResonate(stored === 'true');
+            setReasoning(stored === 'true');
         }
     }, []);
     
-    const [resonateModel, setResonateModel] = useState<ModelType>(ModelType.GPT4oMini);
+    const [reasoningModel, setReasoningModel] = useState<ModelType>(ModelType.GPT4oMini);
     useEffect(() => {
-        const stored = localStorage.getItem('resonateModel');
+        const stored = localStorage.getItem('reasoningModel');
         if (stored) {
-            setResonateModel(stored as ModelType);
+            setReasoningModel(stored as ModelType);
         }
     }, []);
     
     
-    const [navigationTechnique, setNavigationTechnique] = useState<NavType>(NavType.Parallell_3);
+    const [navigationTechnique, setNavigationTechnique] = useState<NavType>(NavType.FolderNavigation_3);
     useEffect(() => {
         const stored = localStorage.getItem('navigationTechnique');
         if (stored) {
@@ -87,7 +87,7 @@ export default function Home() {
     }, []);
 
     
-    const [selectionTechnique, setSelectionTechnique] = useState<SelType>(SelType.SchemaSinglethreaded);
+    const [selectionTechnique, setSelectionTechnique] = useState<SelType>(SelType.RedundantSingle);
     useEffect(() => {
         const stored = localStorage.getItem('selectionTechnique');
         if (stored) {
@@ -117,11 +117,11 @@ export default function Home() {
     }, [baseURL]);
     
     useEffect(() => {
-        localStorage.setItem('resonate', String(resonate))
-    }, [resonate]);
+        localStorage.setItem('reasoning', String(reasoning))
+    }, [reasoning]);
     useEffect(() => {
-        localStorage.setItem('resonateModel', resonateModel)
-    }, [resonateModel]);
+        localStorage.setItem('reasoningModel', reasoningModel)
+    }, [reasoningModel]);
     
     useEffect(() => {
         localStorage.setItem('navigationTechnique', navigationTechnique)
@@ -181,8 +181,8 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    resonate: resonate,
-                    resonateModel: resonateModel,
+                    reasoning: reasoning,
+                    reasoningModel: reasoningModel,
                     navigationTechnique: navigationTechnique,
                     navigationModel: navigationModel,
                     selectionTechnique: selectionTechnique,
@@ -363,13 +363,13 @@ export default function Home() {
                         />
                         
                         <div className="flex flex-col gap-2">
-                            <ResonatePicker 
-                                selectedResonate={resonate} 
-                                oneSelectedResonate={setResonate}
+                            <ReasoningPicker 
+                                selectedReasoning={reasoning} 
+                                onSelectedReasoning={setReasoning}
                             />
                             <ModelPicker
-                                selectedModel={resonateModel}
-                                onSelectModel={setResonateModel}
+                                selectedModel={reasoningModel}
+                                onSelectModel={setReasoningModel}
                             />
                         </div>
 

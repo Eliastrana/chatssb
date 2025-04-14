@@ -1,4 +1,4 @@
-export const schemaMetadataSystemMessage = `
+export const redundantMetadataPrompt = `
 **System Prompt for PxApi Querying**
 
 You are interacting with the PxApi, which queries specific regions of a data table using the \`valueCodes\` parameter. For each variable, item selections must be made using one or more of the predefined item keys (the JSON id values), not the human-readable item names. The selection is expressed as:

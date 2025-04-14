@@ -1,15 +1,13 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
-import {
-    parallellNavigationRunnable
-} from "@/app/services/navigation/runnables/parallellNavigationRunnable";
+import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
 import {BaseMessage} from "@langchain/core/messages";
 import {
-    selectNavigationTableFromTablesRunnable
-} from "@/app/services/navigation/runnables/selectNavigationTableFromTablesRunnable";
+    tableSelectionFromFolderNavigation
+} from "@/app/services/navigation/runnables/tableSelectionFromFolderNavigation";
 
 
-export async function parallellUserMessageToMetadata(
+export async function folderNavigationToMetadata(
     model: BaseChatModel,
     messages: BaseMessage[],
     maxBreadth: number = 1,
@@ -79,7 +77,7 @@ export async function parallellUserMessageToMetadata(
         }
 
         // Invoke the navigation runnable with the fetched folder entries.
-        currentFolderEntries = await parallellNavigationRunnable(
+        currentFolderEntries = await folderNavigation(
             model,
             messages,
             nextFolderEntries,
@@ -94,7 +92,7 @@ export async function parallellUserMessageToMetadata(
     if (possibleTables.length === 0) {
         throw new Error('Failed to find a table in the SSB API');
     } else if (possibleTables.length > 1) {
-        selectedTable = await selectNavigationTableFromTablesRunnable(
+        selectedTable = await tableSelectionFromFolderNavigation(
             model,
             messages,
             possibleTables

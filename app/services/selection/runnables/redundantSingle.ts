@@ -4,10 +4,10 @@ import {SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {schemaMetadataSystemMessage} from "@/app/services/selection/schemaMetadataSystemMessage";
+import {redundantMetadataPrompt} from "@/app/services/selection/redundantMetadataPrompt";
 
 
-export function schemaSinglethreadedSelectionRunnable(
+export function redundantSingle(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
@@ -70,7 +70,7 @@ export function schemaSinglethreadedSelectionRunnable(
 
     const prompt = ChatPromptTemplate.fromMessages([
         ...messages,
-        new SystemMessage(schemaMetadataSystemMessage),
+        new SystemMessage(redundantMetadataPrompt),
         new SystemMessage(JSON.stringify(json)),
     ]);
     

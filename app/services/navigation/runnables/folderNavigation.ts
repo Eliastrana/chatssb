@@ -13,7 +13,7 @@ import {SSBNavigationResponse} from "@/app/types";
  * @param folderEntries The avialble folders or tables to navigate.
  * @param maxBreadth The maximum number of folders or tables the LLM can select.
  */
-export function parallellNavigationRunnable(
+export function folderNavigation(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     folderEntries: SSBNavigationResponse[],

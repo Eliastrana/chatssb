@@ -1,6 +1,6 @@
 import {SelectionParamaters} from "@/app/types";
 
-export function expressionSinglethreadedToURL(
+export function expressionSingleToURL(
     response: Record<string, SelectionParamaters>,
     url: string,
 ): string {
