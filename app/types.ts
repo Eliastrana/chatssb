@@ -68,6 +68,16 @@ export interface SSBNavigationResponse {
     }[];
 }
 
+export interface SSBSearchResponse {
+    tables: {
+        id: string;
+        label: string;
+        firstPeriod: string;
+        lastPeriod: string;
+        variableNames: string[];
+    }[];
+}
+
 export interface ServerLog {
     content: string;
     eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error';
@@ -110,6 +120,13 @@ export enum NavType {
     Parallell_1 = 'parallell_1',
     Parallell_2 = 'parallell_2',
     Parallell_3 = 'parallell_3',
+    Parallell_4 = 'parallell_4',
+    Parallell_5 = 'parallell_5',
+    Keyword_1 = 'keyword_1',
+    Keyword_2 = 'keyword_2',
+    Keyword_3 = 'keyword_3',
+    Keyword_4 = 'keyword_4',
+    Keyword_5 = 'keyword_5',
 }
 
 export enum SelType {

@@ -43,6 +43,7 @@ import {
 } from "@/app/services/selection/utils/secureSchemaSinglethreadedRunnableToURL";
 import {resonateRunnable} from "@/app/services/resonate/runnable/resonateRunnable";
 import {initializeModel} from "@/app/services/initializeModel";
+import {keywordUserMessageToMetadata} from "@/app/services/navigation/keywordUserMessageToMetadata";
 
 
 export async function userMessageToTableData(
@@ -62,6 +63,8 @@ export async function userMessageToTableData(
     ]
     
     if (params.resonate) {
+        sendLog({content: 'Resonnerer...', eventType: 'nav'})
+        
         const resonatedContext = await resonateRunnable(
             initializeModel(params.resonateModel, sendLog),
             messages
@@ -73,16 +76,33 @@ export async function userMessageToTableData(
     
     let tableMetadata: SSBTableMetadata;
     const navigationModel = initializeModel(params.navigationModel, sendLog);
-    
+
     switch (params.navigationTechnique) {
         case NavType.Parallell_1:
-            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 1, sendLog, baseURL);
-            break;
         case NavType.Parallell_2:
-            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 2, sendLog, baseURL);
-            break;
         case NavType.Parallell_3:
-            tableMetadata = await parallellUserMessageToMetadata(navigationModel, messages, 3, sendLog, baseURL);
+        case NavType.Parallell_4:
+        case NavType.Parallell_5:
+                tableMetadata = await parallellUserMessageToMetadata(
+                navigationModel,
+                messages,
+                parseInt(params.navigationTechnique.slice(-1)),
+                sendLog,
+                baseURL
+            );
+            break;
+        case NavType.Keyword_1:
+        case NavType.Keyword_2:
+        case NavType.Keyword_3:
+        case NavType.Keyword_4:
+        case NavType.Keyword_5:
+            tableMetadata = await keywordUserMessageToMetadata(
+                navigationModel,
+                messages,
+                parseInt(params.navigationTechnique.slice(-1)),
+                sendLog,
+                baseURL
+            );
             break;
         default:
             throw new Error('Invalid navigation technique');

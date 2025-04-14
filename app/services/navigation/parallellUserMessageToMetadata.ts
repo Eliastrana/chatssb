@@ -5,8 +5,8 @@ import {
 } from "@/app/services/navigation/runnables/parallellNavigationRunnable";
 import {BaseMessage} from "@langchain/core/messages";
 import {
-    selectTableFromTablesRunnable
-} from "@/app/services/navigation/runnables/selectTableFromTablesRunnable";
+    selectNavigationTableFromTablesRunnable
+} from "@/app/services/navigation/runnables/selectNavigationTableFromTablesRunnable";
 
 
 export async function parallellUserMessageToMetadata(
@@ -94,7 +94,7 @@ export async function parallellUserMessageToMetadata(
     if (possibleTables.length === 0) {
         throw new Error('Failed to find a table in the SSB API');
     } else if (possibleTables.length > 1) {
-        selectedTable = await selectTableFromTablesRunnable(
+        selectedTable = await selectNavigationTableFromTablesRunnable(
             model,
             messages,
             possibleTables
