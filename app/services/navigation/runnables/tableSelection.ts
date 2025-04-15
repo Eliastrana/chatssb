@@ -5,9 +5,7 @@ import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {SSBEntry} from "@/app/types";
 
-import {
-    tableSelectionPrompt
-} from "@/app/services/navigation/tableSelectionPrompt";
+import {tableSelectionPrompt} from "@/app/services/navigation/tableSelectionPrompt";
 
 export function tableSelection(
     selectedModel: BaseChatModel,

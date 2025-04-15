@@ -2,9 +2,7 @@ import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBEntry, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
 import {BaseMessage} from "@langchain/core/messages";
-import {
-    tableSelection
-} from "@/app/services/navigation/runnables/tableSelection";
+import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
 
 
 export async function folderNavigationToMetadata(
@@ -83,8 +81,8 @@ export async function folderNavigationToMetadata(
     } else if (tableEntries.length > 1) {
         
         // Fetch the variable names for each table entry.
-        for (let entry of tableEntries) {
-            const response = await fetch(`${baseURL}tables/${entry.id}?lang=en`,{
+        for (const tableEntry of tableEntries) {
+            const response = await fetch(`${baseURL}tables/${tableEntry.id}?lang=en`,{
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -94,13 +92,13 @@ export async function folderNavigationToMetadata(
             );
             
             if (!response.ok) {
-                throw new Error('Failed to fetch SSB API table data from ID ' + entry.id);
+                throw new Error('Failed to fetch SSB API table data from ID ' + tableEntry.id);
             }
 
             const jsonResponse = await response.json() as SSBEntry;
-            entry.firstPeriod = jsonResponse.firstPeriod;
-            entry.lastPeriod = jsonResponse.lastPeriod;
-            entry.variableNames = jsonResponse.variableNames;
+            tableEntry.firstPeriod = jsonResponse.firstPeriod;
+            tableEntry.lastPeriod = jsonResponse.lastPeriod;
+            tableEntry.variableNames = jsonResponse.variableNames;
         }
         
         selectedTable = await tableSelection(
