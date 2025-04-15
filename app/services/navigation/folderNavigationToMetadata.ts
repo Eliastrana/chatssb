@@ -1,5 +1,5 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {ServerLog, SSBFolderEntry, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
+import {ServerLog, SSBEntry, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
 import {BaseMessage} from "@langchain/core/messages";
 import {
@@ -18,11 +18,11 @@ export async function folderNavigationToMetadata(
     let depth = 0;
     const maxDepth = 5;
 
-    let currentEntries: Record<string, SSBFolderEntry> = {
+    let currentEntries: Record<string, SSBEntry> = {
         entry_1: { type: 'FolderInformation', id: '', label: 'Root' },
     };
 
-    const tableEntries: SSBFolderEntry[] = [];
+    const tableEntries: SSBEntry[] = [];
 
     while (depth <= maxDepth) {
         sendLog({ content: `Nåværende mappedybde: ${depth}`, eventType: 'nav' });
@@ -81,6 +81,28 @@ export async function folderNavigationToMetadata(
     if (tableEntries.length === 0) {
         throw new Error('Failed to find a table in the SSB API');
     } else if (tableEntries.length > 1) {
+        
+        // Fetch the variable names for each table entry.
+        for (let entry of tableEntries) {
+            const response = await fetch(`${baseURL}tables/${entry.id}?lang=en`,{
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                }
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch SSB API table data from ID ' + entry.id);
+            }
+
+            const jsonResponse = await response.json() as SSBEntry;
+            entry.firstPeriod = jsonResponse.firstPeriod;
+            entry.lastPeriod = jsonResponse.lastPeriod;
+            entry.variableNames = jsonResponse.variableNames;
+        }
+        
         selectedTable = await tableSelectionFromFolderNavigation(
             model,
             messages,

@@ -33,11 +33,14 @@ export function folderNavigation(
     const folderNavigationSchema = z.object(entrySchema)
 
     let entriesPrompt = ``;
-    
+
     for (const folderEntries of folderEntriesList) {
         for (const entry of folderEntries.folderContents) {
-            if (entry.type !== 'Table' && entry.type !== 'FolderInformation') continue;
-            entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}"`;
+            if (entry.type === 'Table') {
+                entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}"`;
+            } else if (entry.type === 'FolderInformation') {
+                entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}"`;
+            }
         }
     }
     

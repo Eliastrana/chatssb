@@ -60,26 +60,21 @@ export interface SSBTableMetadata {
     };
 }
 
-export interface SSBFolderEntry {
+export interface SSBEntry {
     type: string;
     id: string;
     label: string;
     firstPeriod?: string;
     lastPeriod?: string;
+    variableNames?: string[];
 }
 
 export interface SSBNavigationResponse {
-    folderContents: SSBFolderEntry[];
+    folderContents: SSBEntry[];
 }
 
 export interface SSBSearchResponse {
-    tables: {
-        id: string;
-        label: string;
-        firstPeriod: string;
-        lastPeriod: string;
-        variableNames: string[];
-    }[];
+    tables: SSBEntry[];
 }
 
 export interface ServerLog {

@@ -3,28 +3,29 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
-import {SSBFolderEntry} from "@/app/types";
+import {SSBEntry} from "@/app/types";
+import {
+    tableSelectionFromKeywordSearch
+} from "@/app/services/navigation/runnables/tableSelectionFromKeywordSearch";
+import {
+    tableSelectionFromFolderNavigationPrompt
+} from "@/app/services/navigation/tableSelectionFromFolderNavigationPrompt";
 
 export function tableSelectionFromFolderNavigation(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    possibleTables: SSBFolderEntry[],
+    tableEntries: SSBEntry[],
 ): Runnable {
     const navigationSchema = z.object({id: z.string()})
     
-    let systemMessageText = "";
-
-    const possibleTablesText = possibleTables
-        .map(
-            (e) =>
-                `id: "${e.id}", label: ${e.label}`
-        )
-        .join("\n");
-
-    systemMessageText += `\n${possibleTablesText}`;
+    let tableEntriesPrompt = ``;
+    
+    for (const entry of tableEntries) {
+        tableEntriesPrompt += `\nid: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}", variableNames: [${entry.variableNames}]`;
+    }
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(systemMessageText),
+        new SystemMessage(`${tableSelectionFromFolderNavigationPrompt}\n${tableEntriesPrompt}`),
         ...messages,
     ]);
     

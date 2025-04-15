@@ -47,7 +47,7 @@ export async function keywordSearchToMetadata(
         tableResponses
     ).invoke({}, {});
     
-    const response = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=no&outputFormat=json-stat2`, {
+    const response = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
