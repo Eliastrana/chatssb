@@ -3,28 +3,21 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
+import {SSBFolderEntry} from "@/app/types";
 
 export function tableSelectionFromFolderNavigation(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    possibleTables: { id: string, label: string }[],
+    possibleTables: SSBFolderEntry[],
 ): Runnable {
-    const navigationSchema = z
-        .object({
-                    id: z
-                        .string()
-                        .describe("The unique identifier of the folder or table entry."),
-                })
-            .describe(
-                "The most relevant table that matches the user's request."
-            );
+    const navigationSchema = z.object({id: z.string()})
     
     let systemMessageText = "";
 
     const possibleTablesText = possibleTables
         .map(
             (e) =>
-                `ID: ${e.id}, Label: ${e.label}`
+                `id: "${e.id}", label: ${e.label}`
         )
         .join("\n");
 

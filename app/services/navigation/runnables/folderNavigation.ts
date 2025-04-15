@@ -37,7 +37,7 @@ export function folderNavigation(
     for (const folderEntries of folderEntriesList) {
         for (const entry of folderEntries.folderContents) {
             if (entry.type !== 'Table' && entry.type !== 'FolderInformation') continue;
-            entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}"`;
+            entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}"`;
         }
     }
     

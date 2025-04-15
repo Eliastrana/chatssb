@@ -22,7 +22,7 @@ export async function folderNavigationToMetadata(
         entry_1: { type: 'FolderInformation', id: '', label: 'Root' },
     };
 
-    const tableEntries: { id: string, label: string }[] = [];
+    const tableEntries: SSBFolderEntry[] = [];
 
     while (depth <= maxDepth) {
         sendLog({ content: `Nåværende mappedybde: ${depth}`, eventType: 'nav' });
@@ -30,7 +30,7 @@ export async function folderNavigationToMetadata(
         // Add tables from current entries to tableEntries.
         for (const entry of Object.values(currentEntries)) {
             if (entry.type === 'Table') {
-                tableEntries.push({ id: entry.id, label: entry.label });
+                tableEntries.push(entry);
                 sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'nav' });
             }
         }
