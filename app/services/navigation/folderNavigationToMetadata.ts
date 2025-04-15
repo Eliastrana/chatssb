@@ -3,8 +3,8 @@ import {ServerLog, SSBEntry, SSBNavigationResponse, SSBTableMetadata} from "@/ap
 import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
 import {BaseMessage} from "@langchain/core/messages";
 import {
-    tableSelectionFromFolderNavigation
-} from "@/app/services/navigation/runnables/tableSelectionFromFolderNavigation";
+    tableSelection
+} from "@/app/services/navigation/runnables/tableSelection";
 
 
 export async function folderNavigationToMetadata(
@@ -103,7 +103,7 @@ export async function folderNavigationToMetadata(
             entry.variableNames = jsonResponse.variableNames;
         }
         
-        selectedTable = await tableSelectionFromFolderNavigation(
+        selectedTable = await tableSelection(
             model,
             messages,
             tableEntries

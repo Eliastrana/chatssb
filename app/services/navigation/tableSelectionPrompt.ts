@@ -1,4 +1,4 @@
-export const tableSelectionFromFolderNavigationPrompt = `
+export const tableSelectionPrompt = `
 You are assisting a user in selecting the most relevant statistical table from Statistics Norway (SSB), based on their request and the conversation context.
 
 You are provided with a list of available tables. Each table includes:

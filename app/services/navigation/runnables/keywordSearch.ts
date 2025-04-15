@@ -3,6 +3,7 @@ import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
+import {keywordSearchPrompt} from "@/app/services/navigation/keywordSearchPrompt";
 
 export function keywordSearch(
     selectedModel: BaseChatModel,
@@ -10,17 +11,18 @@ export function keywordSearch(
     numKeywords: number,
 ): Runnable {
 
-    const keywordSchema = z.object({
-        keywords: z
-            .array(z.string())
-        });
+    const keywordSchema: Record<string, z.ZodTypeAny> = {};
+    
+    for (let i = 1; i <= numKeywords; i++) {
+        keywordSchema[`keyword_${i}`] = z.string();
+    }
+    
+    const keywordSearchSchema = z.object(keywordSchema);
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(`Lag en liste med ${numKeywords} nøkkelord som beskriver hovedtemaene i brukerens forespørsel. 
-                Nøkkelordene skal være generelle og relevante for å finne passende tabeller i Statistisk sentralbyrås database. 
-                Unngå spesifikke verdier som årstall, tall, kjønn eller andre variabler – fokuser på overordnede begreper som for eksempel "arbeidsledighet", "utdanning", "befolkning", "helse", "klima", "innvandring", osv.`),
+        new SystemMessage(keywordSearchPrompt),
         ...messages,
     ]);
     
-    return prompt.pipe(selectedModel.withStructuredOutput(keywordSchema));
+    return prompt.pipe(selectedModel.withStructuredOutput(keywordSearchSchema));
 }

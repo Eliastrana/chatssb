@@ -1,10 +1,8 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {ServerLog, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
+import {ServerLog, SSBEntry, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
 import {BaseMessage} from "@langchain/core/messages";
 import {keywordSearch} from "@/app/services/navigation/runnables/keywordSearch";
-import {
-    tableSelectionFromKeywordSearch
-} from "@/app/services/navigation/runnables/tableSelectionFromKeywordSearch";
+import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
 
 
 export async function keywordSearchToMetadata(
@@ -15,36 +13,36 @@ export async function keywordSearchToMetadata(
     baseURL: string,
 ): Promise<SSBTableMetadata> {
 
-    const chosenKeywords: { keywords: string[] } = await keywordSearch(
+    const keywords = await keywordSearch(
         model,
         messages,
         numKeywords,
-    ).invoke({}, {});
+    ).invoke({});
     
-    const tableResponses: SSBSearchResponse = { tables: [] };
+    let tableEntries: SSBEntry[] = []
 
-    for (const keyword of Object.values(chosenKeywords.keywords)) {
+    for (const keyword of Object.values(keywords)) {
         sendLog({ content: `Henter tabeller for søkeord '${keyword}'`, eventType: 'nav' });
 
-        const response = await fetch(`${baseURL}/tables?query=${keyword}`, {
+        const response = await fetch(`${baseURL}/tables?lang=en&query=${keyword}`, {
             method: "GET",
             headers: { "Content-Type": "application/json" },
         });
         
         const keywordTableResponses = (await response.json()) as SSBSearchResponse;
-        tableResponses.tables.push(...keywordTableResponses.tables);
+        tableEntries.push(...keywordTableResponses.tables);
     }
-    
-    tableResponses.tables = tableResponses.tables.filter((table, index, self) =>
+
+    tableEntries = tableEntries.filter((table, index, self) =>
         index === self.findIndex((t) => t.id === table.id)
     );
     
-    sendLog({ content: `Hentet ${tableResponses.tables.length} tabeller`, eventType: 'nav' });
+    sendLog({ content: `Hentet ${tableEntries.length} tabeller`, eventType: 'nav' });
     
-    const selectedTable = await tableSelectionFromKeywordSearch(
+    const selectedTable = await tableSelection(
         model,
         messages,
-        tableResponses
+        tableEntries
     ).invoke({}, {});
     
     const response = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {

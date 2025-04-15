@@ -4,14 +4,12 @@ import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {SSBEntry} from "@/app/types";
-import {
-    tableSelectionFromKeywordSearch
-} from "@/app/services/navigation/runnables/tableSelectionFromKeywordSearch";
-import {
-    tableSelectionFromFolderNavigationPrompt
-} from "@/app/services/navigation/tableSelectionFromFolderNavigationPrompt";
 
-export function tableSelectionFromFolderNavigation(
+import {
+    tableSelectionPrompt
+} from "@/app/services/navigation/tableSelectionPrompt";
+
+export function tableSelection(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     tableEntries: SSBEntry[],
@@ -25,7 +23,7 @@ export function tableSelectionFromFolderNavigation(
     }
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(`${tableSelectionFromFolderNavigationPrompt}\n${tableEntriesPrompt}`),
+        new SystemMessage(`${tableSelectionPrompt}\n${tableEntriesPrompt}`),
         ...messages,
     ]);
     
