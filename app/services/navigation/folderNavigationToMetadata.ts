@@ -1,5 +1,5 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {ServerLog, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
+import {ServerLog, SSBFolderEntry, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
 import {BaseMessage} from "@langchain/core/messages";
 import {
@@ -17,38 +17,29 @@ export async function folderNavigationToMetadata(
     
     let depth = 0;
     const maxDepth = 5;
-    
-    let currentFolderEntries = {
-        folderEntries: [
-            {
-                type: 'FolderInformation',
-                id: '',
-                label: 'Root'
-            }
-        ]
-    }
-    
-    const possibleTables: { id: string, label: string }[] = []
+
+    let currentEntries: Record<string, SSBFolderEntry> = {
+        entry_1: { type: 'FolderInformation', id: '', label: 'Root' },
+    };
+
+    const tableEntries: { id: string, label: string }[] = [];
 
     while (depth <= maxDepth) {
-        
         sendLog({ content: `Nåværende mappedybde: ${depth}`, eventType: 'nav' });
-        
-        // Extract and add tables from the current folder entries.
-        currentFolderEntries.folderEntries.forEach((entry) => {
+
+        // Add tables from current entries to tableEntries.
+        for (const entry of Object.values(currentEntries)) {
             if (entry.type === 'Table') {
-                possibleTables.push({ id: entry.id, label: entry.label });
+                tableEntries.push({ id: entry.id, label: entry.label });
                 sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'nav' });
             }
-        });
+        }
 
-        // Filter out folder entries (non-tables) for further navigation.
-        const folderEntries = currentFolderEntries.folderEntries.filter(
-            (entry) => entry.type !== 'Table'
-        );
+        // Get folder entries for further navigation.
+        const folderEntries = Object.values(currentEntries).filter(entry => entry.type !== 'Table');
 
-        // If there are no more folder entries to navigate, exit the loop.
-        if (!folderEntries.some((entry) => entry.type === 'FolderInformation')) {
+        // Exit loop if no folders are left to navigate.
+        if (!folderEntries.some(entry => entry.type === 'FolderInformation')) {
             sendLog({ content: `Navigering fullført`, eventType: 'nav' });
             break;
         }
@@ -58,7 +49,7 @@ export async function folderNavigationToMetadata(
         for (const folderEntry of folderEntries) {
             sendLog({ content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`, eventType: 'nav'});
 
-            const response: Response = await fetch(`${baseURL}navigation/${folderEntry.id}`,{
+            const response: Response = await fetch(`${baseURL}navigation/${folderEntry.id}?lang=en`,{
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -75,7 +66,7 @@ export async function folderNavigationToMetadata(
         }
 
         // Invoke the navigation runnable with the fetched folder entries.
-        currentFolderEntries = await folderNavigation(
+        currentEntries = await folderNavigation(
             model,
             messages,
             nextFolderEntries,
@@ -87,16 +78,16 @@ export async function folderNavigationToMetadata(
     
     let selectedTable: { id: string };
 
-    if (possibleTables.length === 0) {
+    if (tableEntries.length === 0) {
         throw new Error('Failed to find a table in the SSB API');
-    } else if (possibleTables.length > 1) {
+    } else if (tableEntries.length > 1) {
         selectedTable = await tableSelectionFromFolderNavigation(
             model,
             messages,
-            possibleTables
+            tableEntries
         ).invoke({});
     } else {
-        selectedTable = { id: possibleTables[0].id };
+        selectedTable = { id: tableEntries[0].id };
     }
     
     const response = await fetch(`${baseURL}tables/${selectedTable.id}/metadata?lang=no&outputFormat=json-stat2`, {

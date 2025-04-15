@@ -60,12 +60,16 @@ export interface SSBTableMetadata {
     };
 }
 
+export interface SSBFolderEntry {
+    type: string;
+    id: string;
+    label: string;
+    firstPeriod?: string;
+    lastPeriod?: string;
+}
+
 export interface SSBNavigationResponse {
-    folderContents: {
-        type: string;
-        id: string;
-        label: string;
-    }[];
+    folderContents: SSBFolderEntry[];
 }
 
 export interface SSBSearchResponse {

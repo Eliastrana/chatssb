@@ -4,68 +4,47 @@ import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {SSBNavigationResponse} from "@/app/types";
+import {folderNavigationPrompt} from "@/app/services/navigation/folderNavigationPrompt";
 
 /**
  * Creates a runnable that lets the LLM navigate one step deeper into the folder structure or
  *
  * @param selectedModel The selected LLM instance to use.
  * @param messages Both the user and system messages to include in the prompt.
- * @param folderEntries The avialble folders or tables to navigate.
+ * @param folderEntriesList The avialble folders or tables to navigate.
  * @param maxBreadth The maximum number of folders or tables the LLM can select.
  */
 export function folderNavigation(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
-    folderEntries: SSBNavigationResponse[],
+    folderEntriesList: SSBNavigationResponse[],
     maxBreadth: number,
 ): Runnable {
+    const entrySchema: Record<string, z.ZodTypeAny> = {};
     
-    const navigationSchema = z
-        .object({
-            folderEntries: z.array(z
-                .object({
-                    type: z
-                        .string()
-                        .describe("The entry type (e.g., 'FolderInformation' or 'Table')."),
-                    id: z
-                        .string()
-                        .describe("The unique identifier of the folder or table entry."),
-                    label: z
-                        .string()
-                        .describe("The display label for this navigation entry."),
-                })) // .max(maxBreadth) is not utilized as the LLM may return more entries
-                // anyways and breaking the schema validation is not desired. Instead, just
-                // select the first `maxBreadth` entries.
-            .describe(
-                "An array of maximum " + maxBreadth + " entries representing the selected" +
-                " folders or tables that match the user's request. The entries are ordered from" +
-                " most to least relevant."
-            )
+    for (let i = 1; i <= maxBreadth; i++) {
+        entrySchema[`entry_${i}`] = z.object({
+            type: z.string(),
+            id: z.string(),
+            label: z.string(),
         });
+    }
     
-    let systemMessageText = "";
+    const folderNavigationSchema = z.object(entrySchema)
+
+    let entriesPrompt = ``;
     
-    for (const folderEntry of folderEntries) {
-        const entries = folderEntry.folderContents.map((entry) => ({
-            type: entry.type,
-            id: entry.id,
-            label: entry.label,
-        }));
-
-        const navigationEntriesText = entries
-            .map(
-                (e) =>
-                    `Type: ${e.type}, ID: ${e.id}, Label: ${e.label}`
-            )
-            .join("\n");
-
-        systemMessageText += `\n${navigationEntriesText}`;
+    for (const folderEntries of folderEntriesList) {
+        for (const entry of folderEntries.folderContents) {
+            if (entry.type !== 'Table' && entry.type !== 'FolderInformation') continue;
+            entriesPrompt += `\ntype: "${entry.type}", id: "${entry.id}", label: "${entry.label}"`;
+        }
     }
     
     const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(systemMessageText),
+        new SystemMessage(`${folderNavigationPrompt}\n${entriesPrompt}`),
         ...messages,
     ]);
     
-    return prompt.pipe(selectedModel.withStructuredOutput(navigationSchema));
+    return prompt.pipe(selectedModel.withStructuredOutput(folderNavigationSchema));
 }
