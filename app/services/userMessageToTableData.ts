@@ -34,7 +34,7 @@ export async function userMessageToTableData(
         : 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
     const messages = [
-        new HumanMessage(`${params.userMessage}\nDato: ${new Date().toLocaleDateString('nb', {
+        new HumanMessage(`${params.userMessage}\nDate: ${new Date().toLocaleDateString('en-GB', {
             day: '2-digit',
             month: 'long',
             year: 'numeric'
