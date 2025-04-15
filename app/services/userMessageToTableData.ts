@@ -1,4 +1,4 @@
-import {HumanMessage, SystemMessage} from '@langchain/core/messages';
+import {HumanMessage} from '@langchain/core/messages';
 
 import {
     BackendAPIParams,
@@ -34,10 +34,11 @@ export async function userMessageToTableData(
         : 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
     const messages = [
-        new HumanMessage(params.userMessage),
-        new SystemMessage(`Dato: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`),
-        //new HumanMessage(params.userMessage + `\nDato: ${new
-        // Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`),
+        new HumanMessage(`${params.userMessage}\nDato: ${new Date().toLocaleDateString('nb', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric'
+        })}`),
     ]
     
     if (params.reasoning) {
@@ -46,10 +47,9 @@ export async function userMessageToTableData(
         const resonatedContext = await reasoning(
             modelInitializer(params.reasoningModel, sendLog),
             messages
-        ).invoke({}, {});
+        ).invoke({});
         
-        sendLog({content: resonatedContext.content, eventType: 'log'})
-        messages.push(new SystemMessage(resonatedContext.content));
+        messages[0].content += `\n${resonatedContext.content}`;
     }
     
     let tableMetadata: SSBTableMetadata;
@@ -97,7 +97,7 @@ export async function userMessageToTableData(
                 selectionModel,
                 messages,
                 tableMetadata
-            ).invoke({}, {});
+            ).invoke({});
             
             SSBGetUrl = expressionSingleToURL(
                 singlethreadedSelectedVariables,
@@ -109,7 +109,7 @@ export async function userMessageToTableData(
                 selectionModel,
                 messages,
                 tableMetadata,
-            ).invoke({}, {});
+            ).invoke({});
             
             SSBGetUrl = expressionMultiToURL(
                 multithreadedSelectedVariables,
@@ -121,7 +121,7 @@ export async function userMessageToTableData(
                 selectionModel,
                 messages,
                 tableMetadata,
-            ).invoke({}, {});
+            ).invoke({});
             
             SSBGetUrl = enumSingleToURL(
                 enumSinglethreadedSelectedVariables,
@@ -133,7 +133,7 @@ export async function userMessageToTableData(
                 selectionModel,
                 messages,
                 tableMetadata,
-            ).invoke({}, {});
+            ).invoke({});
             
             SSBGetUrl = enumMultiToURL(
                 enumMultithreadedSelectedVariables,
@@ -145,7 +145,7 @@ export async function userMessageToTableData(
                 selectionModel,
                 messages,
                 tableMetadata
-            ).invoke({}, {});
+            ).invoke({});
             
             SSBGetUrl = redundantSingleToURL(
                 schemaSinglethreadedSelectedVariables,

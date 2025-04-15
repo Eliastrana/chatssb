@@ -51,9 +51,8 @@ export function expressionSingle(
     const systemMessage = JSON.stringify(variableJson);
     
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(`${redundantMetadataPrompt}\n${systemMessage}`),
         ...messages,
-        new SystemMessage(redundantMetadataPrompt),
-        new SystemMessage(systemMessage),
     ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(schema));

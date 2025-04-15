@@ -72,9 +72,8 @@ export function enumSingle(
     const systemMessage = JSON.stringify(json);
     
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
         ...messages,
-        new SystemMessage(expressionMetadataPrompt),
-        new SystemMessage(systemMessage),
     ]);
 
     return prompt.pipe(selectedModel.withStructuredOutput(finalSchema));

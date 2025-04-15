@@ -57,10 +57,8 @@ export async function folderNavigationToMetadata(
         const nextFolderEntries: SSBNavigationResponse[] = [];
         for (const folderEntry of folderEntries) {
             sendLog({ content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`, eventType: 'nav'});
-            
-            const response: Response = await fetch(
-                baseURL + 'navigation/' + folderEntry.id,
-                {
+
+            const response: Response = await fetch(`${baseURL}navigation/${folderEntry.id}`,{
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -82,7 +80,7 @@ export async function folderNavigationToMetadata(
             messages,
             nextFolderEntries,
             maxBreadth,
-        ).invoke({}, {});
+        ).invoke({});
         
         depth++;
     }
@@ -96,12 +94,12 @@ export async function folderNavigationToMetadata(
             model,
             messages,
             possibleTables
-        ).invoke({}, {});
+        ).invoke({});
     } else {
         selectedTable = { id: possibleTables[0].id };
     }
     
-    const response = await fetch(baseURL + 'tables/' + selectedTable.id + '/metadata?lang=no&outputFormat=json-stat2', {
+    const response = await fetch(`${baseURL}tables/${selectedTable.id}/metadata?lang=no&outputFormat=json-stat2`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

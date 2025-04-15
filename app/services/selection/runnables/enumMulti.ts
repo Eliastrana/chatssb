@@ -84,9 +84,8 @@ export function enumMulti(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
+                new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
                 ...messages,
-                new SystemMessage(expressionMetadataPrompt),
-                new SystemMessage(systemMessage),
             ]);
             
             return [key, prompt.pipe(selectedModel.withStructuredOutput(schema))];

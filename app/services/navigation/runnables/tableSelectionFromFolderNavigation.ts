@@ -19,7 +19,7 @@ export function tableSelectionFromFolderNavigation(
                 "The most relevant table that matches the user's request."
             );
     
-    let systemMessageText = "Possible tables:\n";
+    let systemMessageText = "";
 
     const possibleTablesText = possibleTables
         .map(
@@ -31,8 +31,8 @@ export function tableSelectionFromFolderNavigation(
     systemMessageText += `\n${possibleTablesText}`;
     
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(systemMessageText),
         ...messages,
-        new SystemMessage(systemMessageText)
     ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(navigationSchema));

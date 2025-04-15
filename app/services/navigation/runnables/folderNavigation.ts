@@ -17,7 +17,7 @@ export function folderNavigation(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     folderEntries: SSBNavigationResponse[],
-    maxBreadth: number = 1,
+    maxBreadth: number,
 ): Runnable {
     
     const navigationSchema = z
@@ -43,7 +43,7 @@ export function folderNavigation(
             )
         });
     
-    let systemMessageText = "Folder contents:";
+    let systemMessageText = "";
     
     for (const folderEntry of folderEntries) {
         const entries = folderEntry.folderContents.map((entry) => ({
@@ -63,8 +63,8 @@ export function folderNavigation(
     }
     
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(systemMessageText),
         ...messages,
-        new SystemMessage(systemMessageText)
     ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(navigationSchema));

@@ -69,9 +69,8 @@ export function redundantSingle(
     const finalSchema = z.object(schema);
 
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(`${redundantMetadataPrompt}\n${JSON.stringify(json)}`),
         ...messages,
-        new SystemMessage(redundantMetadataPrompt),
-        new SystemMessage(JSON.stringify(json)),
     ]);
     
     return prompt.pipe(selectedModel.withStructuredOutput(finalSchema));

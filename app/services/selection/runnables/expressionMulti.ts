@@ -58,9 +58,8 @@ export function expressionMulti(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
+                new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
                 ...messages,
-                new SystemMessage(expressionMetadataPrompt),
-                new SystemMessage(systemMessage),
             ]);
             
             return [key + "Prompt", prompt.pipe(selectedModel.withStructuredOutput(schema))];

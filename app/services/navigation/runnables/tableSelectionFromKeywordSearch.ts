@@ -22,8 +22,8 @@ export function tableSelectionFromKeywordSearch(
     }
 
     const prompt = ChatPromptTemplate.fromMessages([
+        new SystemMessage(systemMessageText),
         ...messages,
-        new SystemMessage(systemMessageText)
     ]);
 
     return prompt.pipe(selectedModel.withStructuredOutput(tableIDSchema));
