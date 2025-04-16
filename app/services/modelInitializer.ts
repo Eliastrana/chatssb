@@ -74,16 +74,16 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
                 ...defaultLLMConfig
             });
             break;
-        case ModelType.Llama33_70b:
+        case ModelType.Llama3_3_70b:
             return new ChatGroq({
-                model: ModelType.Llama33_70b,
+                model: ModelType.Llama3_3_70b,
                 temperature: 0,
                 ...defaultLLMConfig
             });
             break;
-        case ModelType.Llama32_1b:
+        case ModelType.Llama3_1_8b:
             return new ChatGroq({
-                model: ModelType.Llama32_1b,
+                model: ModelType.Llama3_1_8b,
                 temperature: 0,
                 ...defaultLLMConfig
             });

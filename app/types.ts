@@ -141,7 +141,7 @@ export enum ModelType {
     GPTo3Mini = 'o3-mini-2025-01-31',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
-    Llama33_70b = 'llama-3.3-70b-versatile',
-    Llama32_1b = 'llama-3.2-1b-preview',
+    Llama3_3_70b = 'llama-3.3-70b-versatile',
+    Llama3_1_8b = 'llama-3.1-8b-instant',
     DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
 }
