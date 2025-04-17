@@ -1,4 +1,4 @@
-export const completeMetadataSystemMessage = `
+export const expressionMetadataPrompt = `
 **System Prompt for PxApi Querying**
 
 You are interacting with the PxApi, which enables querying specific regions of a data table via the \`valueCodes\` parameter. For each variable, item selections are specified using the following format:

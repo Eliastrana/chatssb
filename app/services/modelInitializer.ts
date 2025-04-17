@@ -6,7 +6,7 @@ import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
 import {ChatGroq} from "@langchain/groq";
 import {Serialized} from "@/node_modules/@langchain/core/dist/load/serializable";
 
-export function initializeModel(modelType: ModelType, sendLog: (log: ServerLog) => void): BaseChatModel {
+export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog) => void): BaseChatModel {
     const defaultLLMConfig = {
         maxTokens: undefined,
         callbacks: [
@@ -74,16 +74,16 @@ export function initializeModel(modelType: ModelType, sendLog: (log: ServerLog) 
                 ...defaultLLMConfig
             });
             break;
-        case ModelType.Llama33_70b:
+        case ModelType.Llama3_3_70b:
             return new ChatGroq({
-                model: ModelType.Llama33_70b,
+                model: ModelType.Llama3_3_70b,
                 temperature: 0,
                 ...defaultLLMConfig
             });
             break;
-        case ModelType.Llama32_1b:
+        case ModelType.Llama3_1_8b:
             return new ChatGroq({
-                model: ModelType.Llama32_1b,
+                model: ModelType.Llama3_1_8b,
                 temperature: 0,
                 ...defaultLLMConfig
             });

@@ -8,8 +8,8 @@ export async function GET(request: Request) {
     const params: BackendAPIParams = {
         userMessage: searchParams.get('userMessage') || '',
         dev: searchParams.get('dev') === 'true',
-        resonate: searchParams.get('resonate') === 'true',
-        resonateModel: searchParams.get('resonateModel') as ModelType,
+        reasoning: searchParams.get('reasoning') === 'true',
+        reasoningModel: searchParams.get('reasoningModel') as ModelType,
         navigationTechnique: searchParams.get('navigationTechnique') as NavType,
         navigationModel: searchParams.get('navigationModel') as ModelType,
         selectionTechnique: searchParams.get('selectionTechnique') as SelType,

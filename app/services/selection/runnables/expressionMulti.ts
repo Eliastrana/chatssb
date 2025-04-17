@@ -2,14 +2,12 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {
-    completeMetadataSystemMessage
-} from "@/app/services/selection/completeMetadataSystemMessage";
+import {expressionMetadataPrompt} from "@/app/services/selection/expressionMetadataPrompt";
 import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 
 
-export function multithreadedSelectionRunnable(
+export function expressionMulti(
     selectedModel: BaseChatModel,
     messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
@@ -60,9 +58,8 @@ export function multithreadedSelectionRunnable(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
+                new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
                 ...messages,
-                new SystemMessage(completeMetadataSystemMessage),
-                new SystemMessage(systemMessage),
             ]);
             
             return [key + "Prompt", prompt.pipe(selectedModel.withStructuredOutput(schema))];

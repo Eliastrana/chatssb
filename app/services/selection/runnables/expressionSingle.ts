@@ -1,17 +1,11 @@
-import {BaseChatModel} from "@langchain/core/language_models/chat_models";
-import {BaseMessage, SystemMessage} from "@langchain/core/messages";
-import {SSBTableMetadata} from "@/app/types";
-import {Runnable} from "@langchain/core/runnables";
+import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {z} from "zod";
-import {ChatPromptTemplate} from "@langchain/core/prompts";
-import {schemaMetadataSystemMessage} from "@/app/services/selection/schemaMetadataSystemMessage";
+import {redundantMetadataPrompt} from "@/app/services/selection/redundantMetadataPrompt";
 
 
-export function singlethreadedSelectionRunnable(
-    selectedModel: BaseChatModel,
-    messages: BaseMessage[],
+export function expressionSingle(
     metadataJson: SSBTableMetadata,
-): Runnable {
+): DecoupledRunnable {
     const variableSchema: Record<string, z.ZodTypeAny> = {};
     const variableJson: Record<string, unknown> = {};
 
@@ -45,16 +39,10 @@ export function singlethreadedSelectionRunnable(
         };
     });
 
-    const schema = z
+    const expressionSchema = z
         .object(variableSchema)
     
     const systemMessage = JSON.stringify(variableJson);
     
-    const prompt = ChatPromptTemplate.fromMessages([
-        ...messages,
-        new SystemMessage(schemaMetadataSystemMessage),
-        new SystemMessage(systemMessage),
-    ]);
-    
-    return prompt.pipe(selectedModel.withStructuredOutput(schema));
+    return { schema: expressionSchema, systemPrompt: `${redundantMetadataPrompt}\n${systemMessage}` }
 }

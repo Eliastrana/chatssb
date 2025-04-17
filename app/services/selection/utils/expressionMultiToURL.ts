@@ -1,6 +1,6 @@
 import {SelectionParamaters} from "@/app/types";
 
-export function expressionMultithreadedToURL(
+export function expressionMultiToURL(
     responses: Record<string, Record<string, SelectionParamaters>>,
     url: string,
 ): string {

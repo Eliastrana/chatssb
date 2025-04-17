@@ -1,3 +1,5 @@
+import {ZodSchema} from "zod";
+
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
@@ -60,12 +62,21 @@ export interface SSBTableMetadata {
     };
 }
 
+export interface SSBEntry {
+    type: string;
+    id: string;
+    label: string;
+    firstPeriod?: string;
+    lastPeriod?: string;
+    variableNames?: string[];
+}
+
 export interface SSBNavigationResponse {
-    folderContents: {
-        type: string;
-        id: string;
-        label: string;
-    }[];
+    folderContents: SSBEntry[];
+}
+
+export interface SSBSearchResponse {
+    tables: SSBEntry[];
 }
 
 export interface ServerLog {
@@ -97,8 +108,8 @@ export interface SelectionParamaters {
 export interface BackendAPIParams {
     userMessage: string;
     dev: boolean;
-    resonate: boolean;
-    resonateModel: ModelType;
+    reasoning: boolean;
+    reasoningModel: ModelType;
     navigationTechnique: NavType;
     navigationModel: ModelType;
     selectionTechnique: SelType;
@@ -107,17 +118,24 @@ export interface BackendAPIParams {
 }
 
 export enum NavType {
-    Parallell_1 = 'parallell_1',
-    Parallell_2 = 'parallell_2',
-    Parallell_3 = 'parallell_3',
+    FolderNavigation_1 = 'folder_navigation_1',
+    FolderNavigation_2 = 'folder_navigation_2',
+    FolderNavigation_3 = 'folder_navigation_3',
+    FolderNavigation_4 = 'folder_navigation_4',
+    FolderNavigation_5 = 'folder_navigation_5',
+    KeywordSearch_1 = 'keyword_search_1',
+    KeywordSearch_2 = 'keyword_search_2',
+    KeywordSearch_3 = 'keyword_search_3',
+    KeywordSearch_4 = 'keyword_search_4',
+    KeywordSearch_5 = 'keyword_search_5',
 }
 
 export enum SelType {
-    Singlethreaded = 'singlethreaded',
-    Multithreaded = 'multithreaded',
-    EnumMultithreaded = 'enumMultithreaded',
-    EnumSinglethreaded = 'enumSinglethreaded',
-    SchemaSinglethreaded = 'schemaSinglethreaded',
+    ExpressionSingle = 'expression_single',
+    ExpressionMulti = 'expression_multi',
+    EnumMulti = 'enum_multi',
+    EnumSingle = 'enum_single',
+    RedundantSingle = 'redundant_single',
 }
 
 export enum ModelType {
@@ -125,7 +143,12 @@ export enum ModelType {
     GPTo3Mini = 'o3-mini-2025-01-31',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
-    Llama33_70b = 'llama-3.3-70b-versatile',
-    Llama32_1b = 'llama-3.2-1b-preview',
+    Llama3_3_70b = 'llama-3.3-70b-versatile',
+    Llama3_1_8b = 'llama-3.1-8b-instant',
     DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
+}
+
+export interface DecoupledRunnable {
+    schema: ZodSchema,
+    systemPrompt: string,
 }

@@ -1,6 +1,6 @@
 import {SelectionParamaters} from "@/app/types";
 
-export function enumMultithreadedRunnableToURL(
+export function enumMultiToURL(
     respones: Record<string, Record<string, SelectionParamaters>>,
     url: string,
 ): string {
@@ -14,9 +14,9 @@ export function enumMultithreadedRunnableToURL(
                 const expression = value.wildcard ?? value.exactMatch;
                 url += `&valueCodes[${key}]=${expression}`;
             } else if (value.top) {
-                url += `&valueCodes[${key}]=[TOP${value.top.n}` + (value.top.offset ? `,${value.top.offset}]` : "]");
+                url += `&valueCodes[${key}]=[TOP(${value.top.n}` + (value.top.offset ? `,${value.top.offset})]` : ")]");
             } else if (value.bottom) {
-                url += `&valueCodes[${key}]=[BOTTOM${value.bottom.n}` + (value.bottom.offset ? `,${value.bottom.offset}]` : "]");
+                url += `&valueCodes[${key}]=[BOTTOM(${value.bottom.n}` + (value.bottom.offset ? `,${value.bottom.offset})]` : ")]");
             } else if (value.range) {
                 url += `&valueCodes[${key}]=[RANGE(${value.range.start},${value.range.end})]`;
             } else if (value.from) {
