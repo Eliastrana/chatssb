@@ -88,6 +88,16 @@ function MessageItem({ msg, isBot, onExpand }: {
                             {msg.unit === "antall" ? "" : msg.unit}
                         </span>
                     </div>
+                    
+                    <h3 className="text-xl mt-4 font-bold">Variabler</h3>
+                    <div className="border-y border-black" >
+                        {msg.variables && msg.variables.map((variable, index) => (
+                            <div key={index} className="flex justify-between border-t border-black">
+                                <span className="text-md font-semibold">{Object.keys(variable)[0]}</span>
+                                <span className="text-md text-right">{Object.values(variable)[0]}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
