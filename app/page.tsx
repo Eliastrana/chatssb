@@ -48,7 +48,6 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
 
-
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
@@ -144,6 +143,10 @@ export default function Home() {
             }
 
             if (Array.isArray(tableData.value) && tableData.value.length === 1) {
+                const variableList: Record<string, string>[] = Object.values(tableData.dimension).map(dimension => {
+                    return { [dimension.label]: Object.values(dimension.category.label)[0] }
+                });
+                
                 setMessages(prev => [
                     ...prev,
                     {
@@ -153,7 +156,8 @@ export default function Home() {
                         label: tableData.label,
                         tableid: tableData.extension.px.tableid,
                         value: tableData.value[0],
-                        unit: baseUnit
+                        unit: baseUnit,
+                        variables: variableList
                     },
                 ]);
             } else {

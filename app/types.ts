@@ -6,13 +6,10 @@ export interface Message {
     label?: string;
     underLabel?: string;
     value?: number;
-    title?: string;
+    variables?: Record<string, string>[];
     description?: string;
     tableid?: string;
     unit?: string;
-    jsonUrl?: string;
-    type?: 'json';
-    jsonData?: unknown;
     pxData?: PxWebData;
 
 }
