@@ -1,4 +1,3 @@
-import {Runnable} from "@langchain/core/runnables";
 import {ZodSchema} from "zod";
 
 export interface Message {

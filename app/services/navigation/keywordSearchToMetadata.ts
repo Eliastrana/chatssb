@@ -1,6 +1,5 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBEntry, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
-import {BaseMessage} from "@langchain/core/messages";
 import {keywordSearch} from "@/app/services/navigation/runnables/keywordSearch";
 import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
 import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
