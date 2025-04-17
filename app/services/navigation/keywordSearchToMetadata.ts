@@ -3,25 +3,26 @@ import {ServerLog, SSBEntry, SSBSearchResponse, SSBTableMetadata} from "@/app/ty
 import {BaseMessage} from "@langchain/core/messages";
 import {keywordSearch} from "@/app/services/navigation/runnables/keywordSearch";
 import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
+import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
 
 
 export async function keywordSearchToMetadata(
     model: BaseChatModel,
-    messages: BaseMessage[],
+    userPrompt: string,
     numKeywords: number,
     sendLog: (log: ServerLog) => void,
     baseURL: string,
 ): Promise<SSBTableMetadata> {
 
-    const keywords = await keywordSearch(
+    const keywords = await parsingRunnableRetryWrapper(
         model,
-        messages,
-        numKeywords,
-    ).invoke({});
+        userPrompt,
+        keywordSearch(numKeywords),
+    )
     
     let tableEntries: SSBEntry[] = []
 
-    for (const keyword of Object.values(keywords)) {
+    for (const keyword of keywords.keywords) {
         sendLog({ content: `Henter tabeller for søkeord '${keyword}'`, eventType: 'nav' });
 
         const response = await fetch(`${baseURL}/tables?lang=en&query=${keyword}`, {
@@ -39,11 +40,11 @@ export async function keywordSearchToMetadata(
     
     sendLog({ content: `Hentet ${tableEntries.length} tabeller`, eventType: 'nav' });
     
-    const selectedTable = await tableSelection(
+    const selectedTable = await parsingRunnableRetryWrapper(
         model,
-        messages,
-        tableEntries
-    ).invoke({}, {});
+        userPrompt,
+        tableSelection(tableEntries),
+    )
     
     const response = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
         method: "GET",

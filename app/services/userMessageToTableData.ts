@@ -22,6 +22,7 @@ import {redundantSingleToURL} from "@/app/services/selection/utils/redundantSing
 import {reasoning} from "@/app/services/reasoning/runnables/reasoning";
 import {modelInitializer} from "@/app/services/modelInitializer";
 import {keywordSearchToMetadata} from "@/app/services/navigation/keywordSearchToMetadata";
+import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
 
 
 export async function userMessageToTableData(
@@ -33,23 +34,19 @@ export async function userMessageToTableData(
         ? 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/' 
         : 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
-    const messages = [
-        new HumanMessage(`${params.userMessage}\nDate: ${new Date().toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric'
-        })}`),
-    ]
+    let userPrompt = `${params.userMessage}\nDate: ${new Date().toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'long', year: 'numeric'
+    })}`;
     
     if (params.reasoning) {
         sendLog({content: 'Resonnerer...', eventType: 'nav'})
         
         const resonatedContext = await reasoning(
             modelInitializer(params.reasoningModel, sendLog),
-            messages
+            userPrompt
         ).invoke({});
         
-        messages[0].content += `\n${resonatedContext.content}`;
+        userPrompt += `\n${resonatedContext.content}`;
     }
     
     let tableMetadata: SSBTableMetadata;
@@ -63,7 +60,7 @@ export async function userMessageToTableData(
         case NavType.FolderNavigation_5:
                 tableMetadata = await folderNavigationToMetadata(
                 navigationModel,
-                messages,
+                userPrompt,
                 parseInt(params.navigationTechnique.slice(-1)),
                 sendLog,
                 baseURL
@@ -76,7 +73,7 @@ export async function userMessageToTableData(
         case NavType.KeywordSearch_5:
             tableMetadata = await keywordSearchToMetadata(
                 navigationModel,
-                messages,
+                userPrompt,
                 parseInt(params.navigationTechnique.slice(-1)),
                 sendLog,
                 baseURL
@@ -93,60 +90,36 @@ export async function userMessageToTableData(
     
     switch (params.selectionTechnique) {
         case SelType.ExpressionSingle:
-            const singlethreadedSelectedVariables = await expressionSingle(
+            const singlethreadedSelectedVariables = await parsingRunnableRetryWrapper(
                 selectionModel,
-                messages,
-                tableMetadata
-            ).invoke({});
-            
+                userPrompt,
+                expressionSingle(tableMetadata)
+            )
+
             SSBGetUrl = expressionSingleToURL(
                 singlethreadedSelectedVariables,
                 SSBGetUrl
             );
             break;
-        case SelType.ExpressionMulti:
-            const multithreadedSelectedVariables = await expressionMulti(
-                selectionModel,
-                messages,
-                tableMetadata,
-            ).invoke({});
-            
-            SSBGetUrl = expressionMultiToURL(
-                multithreadedSelectedVariables,
-                SSBGetUrl,
-            );
-            break;
         case SelType.EnumSingle:
-            const enumSinglethreadedSelectedVariables = await enumSingle(
+            const enumSinglethreadedSelectedVariables = await parsingRunnableRetryWrapper(
                 selectionModel,
-                messages,
-                tableMetadata,
-            ).invoke({});
-            
+                userPrompt,
+                enumSingle(tableMetadata)
+            )
+
             SSBGetUrl = enumSingleToURL(
                 enumSinglethreadedSelectedVariables,
                 SSBGetUrl,
             )
             break;
-        case SelType.EnumMulti:
-            const enumMultithreadedSelectedVariables = await enumMulti(
-                selectionModel,
-                messages,
-                tableMetadata,
-            ).invoke({});
-            
-            SSBGetUrl = enumMultiToURL(
-                enumMultithreadedSelectedVariables,
-                SSBGetUrl,
-            )
-            break;
         case SelType.RedundantSingle:
-            const schemaSinglethreadedSelectedVariables = await redundantSingle(
+            const schemaSinglethreadedSelectedVariables = await parsingRunnableRetryWrapper(
                 selectionModel,
-                messages,
-                tableMetadata
-            ).invoke({});
-            
+                userPrompt,
+                redundantSingle(tableMetadata)
+            )
+
             SSBGetUrl = redundantSingleToURL(
                 schemaSinglethreadedSelectedVariables,
                 SSBGetUrl,

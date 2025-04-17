@@ -1,13 +1,13 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {ServerLog, SSBEntry, SSBNavigationResponse, SSBTableMetadata} from "@/app/types";
 import {folderNavigation} from "@/app/services/navigation/runnables/folderNavigation";
-import {BaseMessage} from "@langchain/core/messages";
 import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
+import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
 
 
 export async function folderNavigationToMetadata(
     model: BaseChatModel,
-    messages: BaseMessage[],
+    userPrompt: string,
     maxBreadth: number = 1,
     sendLog: (log: ServerLog) => void,
     baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
@@ -16,8 +16,8 @@ export async function folderNavigationToMetadata(
     let depth = 0;
     const maxDepth = 5;
 
-    let currentEntries: Record<string, SSBEntry> = {
-        entry_1: { type: 'FolderInformation', id: '', label: 'Root' },
+    let currentEntries: SSBNavigationResponse = {
+        folderContents: [{ type: 'FolderInformation', id: '', label: 'Root' }],
     };
 
     const tableEntries: SSBEntry[] = [];
@@ -25,19 +25,19 @@ export async function folderNavigationToMetadata(
     while (depth <= maxDepth) {
         sendLog({ content: `Nåværende mappedybde: ${depth}`, eventType: 'nav' });
 
-        // Add tables from current entries to tableEntries.
-        for (const entry of Object.values(currentEntries)) {
+        // For each element in the folder contents array.
+        for (const entry of currentEntries.folderContents) {
             if (entry.type === 'Table') {
                 tableEntries.push(entry);
                 sendLog({ content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`, eventType: 'nav' });
             }
         }
 
-        // Get folder entries for further navigation.
-        const folderEntries = Object.values(currentEntries).filter(entry => entry.type !== 'Table');
+        // Remove table entries from current entries.
+        const folderEntries = currentEntries.folderContents.filter(entry => entry.type !== 'Table');
 
         // Exit loop if no folders are left to navigate.
-        if (!folderEntries.some(entry => entry.type === 'FolderInformation')) {
+        if (folderEntries.length === 0) {
             sendLog({ content: `Navigering fullført`, eventType: 'nav' });
             break;
         }
@@ -62,14 +62,12 @@ export async function folderNavigationToMetadata(
 
             nextFolderEntries.push(await response.json() as SSBNavigationResponse);
         }
-
-        // Invoke the navigation runnable with the fetched folder entries.
-        currentEntries = await folderNavigation(
+        
+        currentEntries = await parsingRunnableRetryWrapper(
             model,
-            messages,
-            nextFolderEntries,
-            maxBreadth,
-        ).invoke({});
+            userPrompt,
+            folderNavigation(nextFolderEntries, maxBreadth),
+        ) as SSBNavigationResponse;
         
         depth++;
     }
@@ -101,16 +99,16 @@ export async function folderNavigationToMetadata(
             tableEntry.variableNames = jsonResponse.variableNames;
         }
         
-        selectedTable = await tableSelection(
+        selectedTable = await parsingRunnableRetryWrapper(
             model,
-            messages,
-            tableEntries
-        ).invoke({});
+            userPrompt,
+            tableSelection(tableEntries)
+        )
     } else {
         selectedTable = { id: tableEntries[0].id };
     }
     
-    const response = await fetch(`${baseURL}tables/${selectedTable.id}/metadata?lang=no&outputFormat=json-stat2`, {
+    const response = await fetch(`${baseURL}tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

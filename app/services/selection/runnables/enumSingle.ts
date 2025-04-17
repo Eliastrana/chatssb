@@ -1,6 +1,6 @@
 import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {BaseMessage, SystemMessage} from "@langchain/core/messages";
-import {SSBTableMetadata} from "@/app/types";
+import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {Runnable} from "@langchain/core/runnables";
 import {z} from "zod";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
@@ -8,10 +8,8 @@ import {expressionMetadataPrompt} from "@/app/services/selection/expressionMetad
 
 
 export function enumSingle(
-    selectedModel: BaseChatModel,
-    messages: BaseMessage[],
     metadataJson: SSBTableMetadata,
-): Runnable {
+): DecoupledRunnable {
     const schema: Record<string, z.ZodTypeAny> = {};
     const json: Record<string, unknown> = {};
 
@@ -68,13 +66,6 @@ export function enumSingle(
     });
     
     const finalSchema = z.object(schema);
-    
-    const systemMessage = JSON.stringify(json);
-    
-    const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
-        ...messages,
-    ]);
 
-    return prompt.pipe(selectedModel.withStructuredOutput(finalSchema));
+    return { schema: finalSchema, systemPrompt: `${expressionMetadataPrompt}\\n${JSON.stringify(json)}` };
 }

@@ -4,25 +4,18 @@ import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {Runnable} from "@langchain/core/runnables";
 import {keywordSearchPrompt} from "@/app/services/navigation/keywordSearchPrompt";
+import {DecoupledRunnable} from "@/app/types";
 
 export function keywordSearch(
-    selectedModel: BaseChatModel,
-    messages: BaseMessage[],
     numKeywords: number,
-): Runnable {
+): DecoupledRunnable {
 
-    const keywordSchema: Record<string, z.ZodTypeAny> = {};
-    
-    for (let i = 1; i <= numKeywords; i++) {
-        keywordSchema[`keyword_${i}`] = z.string();
-    }
-    
-    const keywordSearchSchema = z.object(keywordSchema);
-    
-    const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(keywordSearchPrompt),
-        ...messages,
-    ]);
-    
-    return prompt.pipe(selectedModel.withStructuredOutput(keywordSearchSchema));
+    const keywordSearchSchema = z.object({
+            keywords: z.array(z.string()).max(numKeywords),
+        }
+    );
+
+    const maxBreathPrompt = `You must select ${numKeywords} keyword(s).`;
+
+    return { schema: keywordSearchSchema, systemPrompt: `${keywordSearchPrompt}\n${maxBreathPrompt}` };
 }

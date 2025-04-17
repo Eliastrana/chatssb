@@ -52,18 +52,16 @@ export default function Home() {
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
-
-
-
+                
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
                     reasoning: true,
                     reasoningModel: ModelType.GPT4oMini,
-                    navigationTechnique: NavType.FolderNavigation_3,
+                    navigationTechnique: NavType.KeywordSearch_5,
                     navigationModel: ModelType.GPT4oMini,
                     selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GPT4oMini,
+                    selectionModel: ModelType.GPTo3Mini,
                     useQAURL: false,
                 };
 

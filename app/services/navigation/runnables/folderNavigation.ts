@@ -1,37 +1,21 @@
 import {z} from 'zod';
-import {ChatPromptTemplate} from '@langchain/core/prompts';
-import {BaseMessage, SystemMessage} from '@langchain/core/messages';
-import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {Runnable} from "@langchain/core/runnables";
-import {SSBNavigationResponse} from "@/app/types";
+import {DecoupledRunnable, SSBNavigationResponse} from "@/app/types";
 import {folderNavigationPrompt} from "@/app/services/navigation/folderNavigationPrompt";
 
-/**
- * Creates a runnable that lets the LLM navigate one step deeper into the folder structure or
- *
- * @param selectedModel The selected LLM instance to use.
- * @param messages Both the user and system messages to include in the prompt.
- * @param folderEntriesList The avialble folders or tables to navigate.
- * @param maxBreadth The maximum number of folders or tables the LLM can select.
- */
 export function folderNavigation(
-    selectedModel: BaseChatModel,
-    messages: BaseMessage[],
     folderEntriesList: SSBNavigationResponse[],
     maxBreadth: number,
-): Runnable {
-    const entrySchema: Record<string, z.ZodTypeAny> = {};
+): DecoupledRunnable {
+    const folderNavigationSchema = z.object({
+        folderContents: z.array(
+            z.object({
+                type: z.enum(['Table', 'FolderInformation']),
+                id: z.string(),
+                label: z.string(),
+            })
+        ).max(maxBreadth)
+    });
     
-    for (let i = 1; i <= maxBreadth; i++) {
-        entrySchema[`entry_${i}`] = z.object({
-            type: z.string(),
-            id: z.string(),
-            label: z.string(),
-        });
-    }
-    
-    const folderNavigationSchema = z.object(entrySchema)
-
     let entriesPrompt = ``;
 
     for (const folderEntries of folderEntriesList) {
@@ -44,10 +28,7 @@ export function folderNavigation(
         }
     }
     
-    const prompt = ChatPromptTemplate.fromMessages([
-        new SystemMessage(`${folderNavigationPrompt}\n${entriesPrompt}`),
-        ...messages,
-    ]);
+    const maxBreathPrompt = `You must select ${maxBreadth} entry(ies).`;
     
-    return prompt.pipe(selectedModel.withStructuredOutput(folderNavigationSchema));
+    return { schema: folderNavigationSchema, systemPrompt: `${folderNavigationPrompt}\n${maxBreathPrompt}\n${entriesPrompt}` };
 }

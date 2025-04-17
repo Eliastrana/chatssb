@@ -1,3 +1,6 @@
+import {Runnable} from "@langchain/core/runnables";
+import {ZodSchema} from "zod";
+
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
@@ -144,4 +147,9 @@ export enum ModelType {
     Llama3_3_70b = 'llama-3.3-70b-versatile',
     Llama3_1_8b = 'llama-3.1-8b-instant',
     DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
+}
+
+export interface DecoupledRunnable {
+    schema: ZodSchema,
+    systemPrompt: string,
 }
