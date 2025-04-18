@@ -17,9 +17,8 @@ export interface SelectionParameters {
     tableId: string,
     parameters: {
         [key: string]: string[] // Omitted values will just not be included in the correct
-        ContentsCode: string[]; // The contents code that should be selected
-        Tid: string[]; // The year that should be selected
     }
+    errorUrl?: string; // URL to the error page if the selection is not correct
 }
 export interface EvaluationBenchmark {
     userPrompt: string, // Functions as the key for the benchmark
@@ -36,8 +35,7 @@ export interface NavigationAnswers {
         navigationConfiguration: NavigationConfiguration,
         benchmarkAnswers: {
             userPrompt: string,
-            responses: { // Each configuraiton and benchmark can be run multiple times to test
-                // averge performance.
+            responses: {
                 tableId: string,
                 milliseconds: number, // Time for response in ms
                 tokenUsage: {
@@ -51,12 +49,11 @@ export interface NavigationAnswers {
 }
 
 export interface SelectionAnswers {
-    configBenchmarkPairs: {
-        configuration: SelectionConfiguration,
-        answers: {
-            benchmark: EvaluationBenchmark
-            responses: { // Each configuraiton and benchmark can be run multiple times to test
-                // averge performance.
+    configurations: {
+        selectionConfiguration: SelectionConfiguration,
+        benchmarkAnswers: {
+            userPrompt: string,
+            responses: {
                 selectedParameters: SelectionParameters,
                 milliseconds: number, // Time for response in ms
                 tokenUsage: {
@@ -65,6 +62,6 @@ export interface SelectionAnswers {
                     totalTokens: number,
                 }
             }[]
-        }
+        }[]
     }[]
 }

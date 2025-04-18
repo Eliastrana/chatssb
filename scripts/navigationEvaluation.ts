@@ -31,7 +31,7 @@ async function run() {
     // [false], [true], [false, true]
     const reasoning: [false] | [true] | [false, true] = [false, true];
     
-    const configurations: NavigationConfiguration[] = []
+    const configurations: NavigationConfiguration[] = [];
     
     for (const model of models) {
         for (const isReasoning of reasoning) {
@@ -102,7 +102,7 @@ async function run() {
         for (const benchmark of evaluationBenchmark.slice(0, 1)) {
             let result;
             
-            let prompt = `${benchmark.userPrompt}\nDate: 1 Jan 2025`;
+            let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
             
             const startTime = Date.now();
