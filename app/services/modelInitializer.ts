@@ -57,8 +57,7 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
                 reasoningEffort: 'low',
                 ...defaultLLMConfig
             });
-        case ModelType.GeminiFlash2Lite: // Bug: To utilize the Gemini models, there can only be
-            // 1 system message and 1 user message. This is a bug in the langchain library.
+        case ModelType.GeminiFlash2Lite:
             return new ChatGoogleGenerativeAI({
                 model: ModelType.GeminiFlash2Lite,
                 temperature: 0,
