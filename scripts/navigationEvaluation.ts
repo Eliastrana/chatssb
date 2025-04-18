@@ -99,7 +99,7 @@ async function run() {
         
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
-        for (const benchmark of evaluationBenchmark.slice(0, 1)) {
+        for (const benchmark of evaluationBenchmark.slice(0, 5)) {
             let result;
             
             let prompt = `${benchmark.userPrompt}\nDate: 1 Jan 2025`;
