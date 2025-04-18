@@ -8,7 +8,9 @@ import {NavigationAnswers, NavigationConfiguration} from "@/scripts/evaluationTy
 import _ from "lodash";
 
 const sendLog = (log: ServerLog) => {
-    //console.log(log.content)
+    if (log.eventType === 'tokens') {
+        //console.log(`Token usage: ${JSON.stringify(log.content)}`);
+    }
 };
 
 async function run() {
@@ -75,7 +77,19 @@ async function run() {
     }
     
     for (const config of configurations) {
-        const model = await modelInitializer(config.model, sendLog);
+
+        let tokenUsage = {
+            completionTokens: 0,
+            promptTokens: 0,
+            totalTokens: 0
+        };
+        
+        const model = await modelInitializer(
+            config.model,
+            sendLog,
+            tokenUsage,
+        );
+        
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
         for (const benchmark of evaluationBenchmark.slice(-1)) {
@@ -103,7 +117,7 @@ async function run() {
             }
             const queryTime = Date.now() - startTime;
             
-            console.log(`Prompt: ${benchmark.userPrompt}, Result: ${result}, Time: ${queryTime}ms`);
+            console.log(`Prompt: ${benchmark.userPrompt}, Result: ${result}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
 
             // If this configuration and benchmark already exists, add the result to the
             // existing list.
@@ -115,7 +129,8 @@ async function run() {
             if (existingAnswer) {
                 existingAnswer.answers.responses.push({
                     tableId: result,
-                    milliseconds: queryTime
+                    milliseconds: queryTime,
+                    tokenUsage: tokenUsage,
                 });
             } else {
                 answers.configBenchmarkPairs.push({
@@ -125,6 +140,7 @@ async function run() {
                         responses: [{
                             tableId: result,
                             milliseconds: queryTime,
+                            tokenUsage: tokenUsage,
                         }],
                     }
                 })
@@ -136,7 +152,13 @@ async function run() {
                 } else {
                     console.log('File written successfully');
                 }
-            });
+            })
+
+            tokenUsage = {
+                completionTokens: 0,
+                promptTokens: 0,
+                totalTokens: 0
+            };
         }
     }
 }

@@ -34,6 +34,11 @@ export interface NavigationAnswers {
                 // averge performance.
                 tableId: string,
                 milliseconds: number, // Time for response in ms
+                tokenUsage: {
+                    completionTokens: number,
+                    promptTokens: number,
+                    totalTokens: number,
+                }
             }[]
         }
     }[]
