@@ -79,7 +79,7 @@ async function run() {
     } else {
         console.warn(`File not found: ${filePath}\nFile will be created.`);
         answers = {
-            configBenchmarkPairs: []
+            configurations: []
         };
     }
     
@@ -99,7 +99,7 @@ async function run() {
         
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
-        for (const benchmark of evaluationBenchmark.slice(1, 2)) {
+        for (const benchmark of evaluationBenchmark.slice(0, 1)) {
             let result;
             
             let prompt = `${benchmark.userPrompt}\nDate: 1 Jan 2025`;
@@ -131,28 +131,41 @@ async function run() {
 
             // If this configuration and benchmark already exists, add the result to the
             // existing list.
-            const existingAnswer = answers.configBenchmarkPairs.find(a =>
-                _.isEqual(a.configuration, config) &&
-                a.answers.benchmark.userPrompt === benchmark.userPrompt
+            
+            const existingConfig = answers.configurations.find(configuration =>
+                _.isEqual(configuration.navigationConfiguration, config)
+            );
+            
+            const existingAnswer = existingConfig?.benchmarkAnswers.find(answer =>
+                answer.userPrompt === benchmark.userPrompt
             );
 
             if (existingAnswer) {
-                existingAnswer.answers.responses.push({
+                existingAnswer.responses.push({
                     tableId: result,
                     milliseconds: queryTime,
                     tokenUsage: tokenUsage,
                 });
+            } else if (existingConfig) {
+                existingConfig.benchmarkAnswers.push({
+                    userPrompt: benchmark.userPrompt,
+                    responses: [{
+                        tableId: result,
+                        milliseconds: queryTime,
+                        tokenUsage: tokenUsage,
+                    }],
+                });
             } else {
-                answers.configBenchmarkPairs.push({
-                    configuration: config,
-                    answers: {
-                        benchmark: benchmark,
+                answers.configurations.push({
+                    navigationConfiguration: config,
+                    benchmarkAnswers: [{
+                        userPrompt: benchmark.userPrompt,
                         responses: [{
                             tableId: result,
                             milliseconds: queryTime,
                             tokenUsage: tokenUsage,
                         }],
-                    }
+                    }]
                 })
             }
             

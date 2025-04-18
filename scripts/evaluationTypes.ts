@@ -7,6 +7,12 @@ export interface NavigationConfiguration {
     reasoning: boolean,
 }
 
+export interface SelectionConfiguration {
+    model: ModelType,
+    selectionTechnique: 'expression' | 'enum' | 'redundant'
+    reasoning: boolean,
+}
+
 export interface SelectionParameters {
     tableId: string,
     parameters: {
@@ -16,7 +22,7 @@ export interface SelectionParameters {
     }
 }
 export interface EvaluationBenchmark {
-    userPrompt: string,
+    userPrompt: string, // Functions as the key for the benchmark
     reasoningPrompt?: string, // Optional prompt to be used for reasoning
     difficulty: 'easy' | 'medium' | 'hard';
     expectedCorrectTables: string[]; // Tables that the LLM should pick
@@ -26,13 +32,32 @@ export interface EvaluationBenchmark {
 }
 
 export interface NavigationAnswers {
+    configurations: {
+        navigationConfiguration: NavigationConfiguration,
+        benchmarkAnswers: {
+            userPrompt: string,
+            responses: { // Each configuraiton and benchmark can be run multiple times to test
+                // averge performance.
+                tableId: string,
+                milliseconds: number, // Time for response in ms
+                tokenUsage: {
+                    completionTokens: number,
+                    promptTokens: number,
+                    totalTokens: number,
+                }
+            }[]
+        }[]
+    }[]
+}
+
+export interface SelectionAnswers {
     configBenchmarkPairs: {
-        configuration: NavigationConfiguration,
+        configuration: SelectionConfiguration,
         answers: {
             benchmark: EvaluationBenchmark
             responses: { // Each configuraiton and benchmark can be run multiple times to test
                 // averge performance.
-                tableId: string,
+                selectedParameters: SelectionParameters,
                 milliseconds: number, // Time for response in ms
                 tokenUsage: {
                     completionTokens: number,
