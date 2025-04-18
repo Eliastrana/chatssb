@@ -1,30 +1,11 @@
-interface EvaluationBenchmark {
-    userPrompt: string,
-    reasoningPrompt?: string, // Optional prompt to be used for reasoning
-    difficulty: 'easy' | 'medium' | 'hard';
-    expectedCorrectTables: string[]; // Tables that the LLM should pick
-    technicallyCorrectTables?: string[]; // Tables that the LLM can pick, but are not logically
-    // correct according to the query and available options.
-    selectionExamples?: {
-        tableId: string,
-        correctParameters: {
-            [key: string]: string[] // Omitted values will just not be included in the correct
-            ContentsCode: string[]; // The contents code that should be selected
-            Tid: string[]; // The year that should be selected
-        }
-    }[];
-}
+import {EvaluationBenchmark} from "@/scripts/evaluationTypes";
 
 function timeArrayGenerator(startYear: number, endYear: number, subStep?: { start: number, end: number, interval?: number, prefix?: string, postfix?: string }): string[] {
     const years: string[] = [];
     for (let i = startYear; i <= endYear; i++) {
         if (subStep) {
             for (let j = subStep.start; j <= subStep.end; j += subStep.interval || 1) {
-                if (subStep.end > 10 && j < 10) {
-                    years.push(`${i}${subStep.prefix || ''}0${j}${subStep.postfix || ''}`);
-                } else {
-                    years.push(`${i}${subStep.prefix || ''}${j}${subStep.postfix || ''}`);
-                }
+                years.push(`${i}${subStep.prefix || ''}${(subStep.end >= 10 && j < 10) ? '0' : ''}${j}${subStep.postfix || ''}`);
             }
         } else {
             years.push(`${i}`);
@@ -41,10 +22,10 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
         difficulty: 'easy',
         expectedCorrectTables: ['07459', '06913', '03027', '03031', '11342', '12871', '13536', '05803', '10211', '05810', '05328'],
         technicallyCorrectTables: ['01222', '01223', '04362', '05196'],
-        selectionExamples: [
+        selectionBenchmarks: [
             {
                 tableId: '07459',
-                correctParameters: {
+                parameters: {
                     ContentsCode: ['Personer1'],
                     Tid: ['2022'],
                 },
@@ -55,10 +36,10 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
         userPrompt: 'Hvor mange heter Trygve til fornavn i dag?',
         difficulty: 'easy',
         expectedCorrectTables: ['10501'],
-        selectionExamples: [
+        selectionBenchmarks: [
             {
                 tableId: '10501',
-                correctParameters: {
+                parameters: {
                     Fornavn: ['2TRYGVE'],
                     ContentsCode: ['Fornavn'],
                     Tid: ['2024'],
@@ -71,10 +52,10 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
         difficulty: 'easy',
         expectedCorrectTables: ['09189'],
         technicallyCorrectTables: ['11721'],
-        selectionExamples: [
+        selectionBenchmarks: [
             {
                 tableId: '09189',
-                correctParameters: {
+                parameters: {
                     ContentsCode: ['BNP'],
                     Tid: timeArrayGenerator(2010, 2020),
                 }
