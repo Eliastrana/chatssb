@@ -8,6 +8,7 @@ import {NavigationAnswers, NavigationConfiguration} from "@/scripts/evaluationTy
 import _ from "lodash";
 
 const sendLog = (log: ServerLog) => {
+    //console.log(log.content)
     if (log.eventType === 'tokens') {
         //console.log(`Token usage: ${JSON.stringify(log.content)}`);
     }
@@ -23,28 +24,34 @@ async function run() {
         //modelInitializer(ModelType.Llama3_1_8b, sendLog),
     ]
     
-    const numFolderNavigation = { start: 1, end: 1, step: 1 };
-    const numKeywordSearch = { start: 1, end: 1, step: 1 };
+    const numFolderNavigation = { start: 3, end: 3, step: 1 };
+    const numKeywordSearch = { start: 3, end: 3, step: 1 };
+    
+    // Reasoning can only be one of these three
+    // [false], [true], [false, true]
+    const reasoning: [false] | [true] | [false, true] = [false, true];
     
     const configurations: NavigationConfiguration[] = []
     
     for (const model of models) {
-        for (let i = numFolderNavigation.start; i <= numFolderNavigation.end; i += numFolderNavigation.step) {
-            configurations.push({
-                model: model,
-                navigationTechnique: 'folderNavigation',
-                navigationValue: i,
-                reasoning: false,
-            });
-        }
-        
-        for (let i = numKeywordSearch.start; i <= numKeywordSearch.end; i += numKeywordSearch.step) {
-            configurations.push({
-                model: model,
-                navigationTechnique: 'keywordSearch',
-                navigationValue: i,
-                reasoning: false,
-            });
+        for (const isReasoning of reasoning) {
+            for (let i = numFolderNavigation.start; i <= numFolderNavigation.end; i += numFolderNavigation.step) {
+                configurations.push({
+                    model: model,
+                    navigationTechnique: 'folderNavigation',
+                    navigationValue: i,
+                    reasoning: isReasoning,
+                });
+            }
+
+            for (let i = numKeywordSearch.start; i <= numKeywordSearch.end; i += numKeywordSearch.step) {
+                configurations.push({
+                    model: model,
+                    navigationTechnique: 'keywordSearch',
+                    navigationValue: i,
+                    reasoning: isReasoning,
+                });
+            }
         }
     }
     
@@ -92,21 +99,24 @@ async function run() {
         
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
-        for (const benchmark of evaluationBenchmark.slice(-1)) {
+        for (const benchmark of evaluationBenchmark.slice(1, 2)) {
             let result;
+            
+            let prompt = `${benchmark.userPrompt}\nDate: 1 Jan 2025`;
+            prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
             
             const startTime = Date.now();
             try {
                 const table = config.navigationTechnique === 'folderNavigation' ?
                     await folderNavigationToTableId(
                     model,
-                    benchmark.userPrompt,
+                        prompt,
                     config.navigationValue,
                     sendLog
                 ) :
                     await keywordSearchToTableId(
                     model,
-                    benchmark.userPrompt,
+                        prompt,
                     config.navigationValue,
                     sendLog
                 );
