@@ -1,5 +1,6 @@
-interface EvaluationAnswers {
-    prompt: string,
+interface EvaluationBenchmark {
+    userPrompt: string,
+    reasoningPrompt?: string, // Optional prompt to be used for reasoning
     difficulty: 'easy' | 'medium' | 'hard';
     expectedCorrectTables: string[]; // Tables that the LLM should pick
     technicallyCorrectTables?: string[]; // Tables that the LLM can pick, but are not logically
@@ -34,9 +35,9 @@ function timeArrayGenerator(startYear: number, endYear: number, subStep?: { star
 
 // These answers are made with the date being 01.01.2024 as that gives some leeway for data that
 // maybe is not available yet, but will be in the future.
-export const evaluationAnswers: EvaluationAnswers[] = [
+export const evaluationBenchmark: EvaluationBenchmark[] = [
     {
-        prompt: 'Hva var befolkningstallet i Norge i 2022?',
+        userPrompt: 'Hva var befolkningstallet i Norge i 2022?',
         difficulty: 'easy',
         expectedCorrectTables: ['07459', '06913', '03027', '03031', '11342', '12871', '13536', '05803', '10211', '05810', '05328'],
         technicallyCorrectTables: ['01222', '01223', '04362', '05196'],
@@ -51,7 +52,7 @@ export const evaluationAnswers: EvaluationAnswers[] = [
         ],
     },
     {
-        prompt: 'Hvor mange heter Trygve til fornavn i dag?',
+        userPrompt: 'Hvor mange heter Trygve til fornavn i dag?',
         difficulty: 'easy',
         expectedCorrectTables: ['10501'],
         selectionExamples: [
@@ -66,7 +67,7 @@ export const evaluationAnswers: EvaluationAnswers[] = [
         ]
     },
     {
-        prompt: 'Hva var Norges BNP fra 2010-2020?',
+        userPrompt: 'Hva var Norges BNP fra 2010-2020?',
         difficulty: 'easy',
         expectedCorrectTables: ['09189'],
         technicallyCorrectTables: ['11721'],

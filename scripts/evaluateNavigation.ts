@@ -1,4 +1,4 @@
-import {evaluationAnswers} from "./evaluationAnswers";
+import {evaluationBenchmark} from "./evaluationBenchmark";
 import {ModelType, ServerLog} from "@/app/types";
 import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {modelInitializer} from "@/app/services/modelInitializer";
@@ -26,14 +26,14 @@ async function run() {
     const keywordResults = [];
     
     for (const model of models) {
-        for (const test of evaluationAnswers) {
+        for (const test of evaluationBenchmark) {
             for (let i = numFolderNavigation.start; i <= numFolderNavigation.end; i += numFolderNavigation.step) {
                 try {
-                    console.log(`Model: ${model.name}, Folder Navigation: ${i}, Prompt: ${test.prompt}`);
+                    console.log(`Model: ${model.name}, Folder Navigation: ${i}, Prompt: ${test.userPrompt}`);
                     
                     const result = await folderNavigationToTableId(
                         model,
-                        test.prompt,
+                        test.userPrompt,
                         i,
                         sendLog
                     );
@@ -47,10 +47,10 @@ async function run() {
             
             for (let i = numKeywordSearch.start; i <= numKeywordSearch.end; i += numKeywordSearch.step) {
                 try {
-                    console.log(`Model: ${model.name}, Keyword Search: ${i}, Prompt: ${test.prompt}`);
+                    console.log(`Model: ${model.name}, Keyword Search: ${i}, Prompt: ${test.userPrompt}`);
                     const result = await keywordSearchToTableId(
                         model,
-                        test.prompt,
+                        test.userPrompt,
                         i,
                         sendLog
                     )
