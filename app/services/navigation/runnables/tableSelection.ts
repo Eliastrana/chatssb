@@ -6,7 +6,11 @@ import {tableSelectionPrompt} from "@/app/services/navigation/tableSelectionProm
 export function tableSelection(
     tableEntries: SSBEntry[],
 ): DecoupledRunnable {
-    const navigationSchema = z.object({id: z.string()})
+    const ids = tableEntries.map(entry => entry.id);
+    
+    const navigationSchema = z.object({
+        id: z.enum([ids[0], ...ids.slice(1)]),
+    })
     
     let tableEntriesPrompt = ``;
     

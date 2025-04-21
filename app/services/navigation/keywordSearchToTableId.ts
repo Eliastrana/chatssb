@@ -20,17 +20,20 @@ export async function keywordSearchToTableId(
 
     let tableEntries: SSBEntry[] = []
 
-    for (const keyword of keywords.keywords) {
-        sendLog({content: `Henter tabeller for søkeord '${keyword}'`, eventType: 'nav'});
+    const keywordTableResponses = await Promise.all(
+        keywords.keywords.map(async (keyword: string) => {
+            sendLog({content: `Henter tabeller for søkeord '${keyword}'`, eventType: 'nav'});
 
-        const response = await fetch(`${baseURL}/tables?lang=en&query=${keyword}`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
-        });
+            const response = await fetch(`${baseURL}/tables?lang=en&query=${keyword}`, {
+                method: "GET",
+                headers: {"Content-Type": "application/json"},
+            });
 
-        const keywordTableResponses = (await response.json()) as SSBSearchResponse;
-        tableEntries.push(...keywordTableResponses.tables);
-    }
+            return (await response.json()) as SSBSearchResponse;
+        })
+    );
+
+    tableEntries = keywordTableResponses.flatMap((response) => response.tables);
 
     tableEntries = tableEntries.filter((table, index, self) =>
         index === self.findIndex((t) => t.id === table.id)

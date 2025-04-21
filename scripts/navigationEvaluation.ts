@@ -29,7 +29,7 @@ async function run() {
     
     // Reasoning can only be one of these three
     // [false], [true], [false, true]
-    const reasoning: [false] | [true] | [false, true] = [true];
+    const reasoning: [false] | [true] | [false, true] = [false];
     
     const configurations: NavigationConfiguration[] = [];
     
