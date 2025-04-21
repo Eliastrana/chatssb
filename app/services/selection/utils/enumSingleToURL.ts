@@ -9,8 +9,8 @@ export function enumSingleToURL(
             // Join the selections into a comma-separated string
             const selection = value.itemSelection.join(",");
             url += `&valueCodes[${key}]=${selection}`;
-        } else if (value.wildcard || value.exactMatch) {
-            const expression = value.wildcard ?? value.exactMatch;
+        } else if (value.wildcard) {
+            const expression = value.wildcard;
             url += `&valueCodes[${key}]=${expression}`;
         } else if (value.top) {
             url += `&valueCodes[${key}]=[TOP(${value.top.n}` + (value.top.offset ? `,${value.top.offset})]` : ")]");

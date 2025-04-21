@@ -6,7 +6,11 @@ import {ChatGoogleGenerativeAI} from "@langchain/google-genai";
 import {ChatGroq} from "@langchain/groq";
 import {Serialized} from "@/node_modules/@langchain/core/dist/load/serializable";
 
-export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog) => void): BaseChatModel {
+export function modelInitializer(
+    modelType: ModelType, 
+    sendLog: (log: ServerLog) => void, 
+    evaluationTokenUsage?: { completionTokens: number, promptTokens: number, totalTokens: number },
+): BaseChatModel {
     const defaultLLMConfig = {
         maxTokens: undefined,
         callbacks: [
@@ -25,6 +29,12 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
 
                     if (output.llmOutput?.tokenUsage) {
                         sendLog({ content: JSON.stringify(output.llmOutput.tokenUsage), eventType: 'tokens' });
+                    }
+
+                    if (evaluationTokenUsage && output.llmOutput?.tokenUsage) {
+                        evaluationTokenUsage.completionTokens += output.llmOutput.tokenUsage.completionTokens;
+                        evaluationTokenUsage.promptTokens += output.llmOutput.tokenUsage.promptTokens;
+                        evaluationTokenUsage.totalTokens += output.llmOutput.tokenUsage.totalTokens;
                     }
 
                     // Bad implementation, but it works for now
@@ -49,7 +59,6 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
                 temperature: 0,
                 ...defaultLLMConfig
             });
-            break;
         case ModelType.GPTo3Mini:
             return new ChatOpenAI({
                 openAIApiKey: process.env.OPENAI_API_KEY,
@@ -57,15 +66,13 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
                 reasoningEffort: 'low',
                 ...defaultLLMConfig
             });
-        case ModelType.GeminiFlash2Lite: // Bug: To utilize the Gemini models, there can only be
-            // 1 system message and 1 user message. This is a bug in the langchain library.
+        case ModelType.GeminiFlash2Lite:
             return new ChatGoogleGenerativeAI({
                 model: ModelType.GeminiFlash2Lite,
                 temperature: 0,
                 convertSystemMessageToHumanContent: true,
                 ...defaultLLMConfig
             });
-            break;
         case ModelType.Gemini2_5ProExp:
             return new ChatGoogleGenerativeAI({
                 model: ModelType.Gemini2_5ProExp,
@@ -73,28 +80,24 @@ export function modelInitializer(modelType: ModelType, sendLog: (log: ServerLog)
                 convertSystemMessageToHumanContent: true,
                 ...defaultLLMConfig
             });
-            break;
         case ModelType.Llama3_3_70b:
             return new ChatGroq({
                 model: ModelType.Llama3_3_70b,
                 temperature: 0,
                 ...defaultLLMConfig
             });
-            break;
         case ModelType.Llama3_1_8b:
             return new ChatGroq({
                 model: ModelType.Llama3_1_8b,
                 temperature: 0,
                 ...defaultLLMConfig
             });
-            break;
         case ModelType.DeepseekR1_70b:
             return new ChatGroq({
                 model: ModelType.DeepseekR1_70b,
                 temperature: 0,
                 ...defaultLLMConfig
             });
-            break;
         default:
             console.log('Using GPT-4o-mini from fallback');
             return new ChatOpenAI({

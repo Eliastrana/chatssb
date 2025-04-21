@@ -1,6 +1,6 @@
 import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {z} from "zod";
-import {redundantMetadataPrompt} from "@/app/services/selection/redundantMetadataPrompt";
+import {redundantPrompt} from "@/app/services/selection/redundantPrompt";
 
 
 export function redundantSingle(
@@ -13,7 +13,7 @@ export function redundantSingle(
 
     Object.entries(metadataJson.dimension).forEach(([key, value]) => {
         schema[key] = z.union([
-            z.object({ itemSelection: z.array(z.string()) }),
+            z.object({ itemSelection: z.array(z.string()).min(1) }),
             z.object({ wildcard: z.boolean() }),
             z.object({ top: z.object({ n: z.number(), offset: z.number().optional() }) }),
             z.object({ bottom: z.object({ n: z.number(), offset: z.number().optional() }) }),
@@ -30,9 +30,12 @@ export function redundantSingle(
         if (value.category.unit) {
             parametersPrompt += `, unit: ${JSON.stringify(value.category.unit)}`;
         }
+        if (value.extension.elimination) {
+            parametersPrompt += `, optional: ${value.extension.elimination}`;
+        }
     });
     
     const finalSchema = z.object(schema);
 
-    return { schema: finalSchema, systemPrompt: `${redundantMetadataPrompt}\n${parametersPrompt}` }
+    return { schema: finalSchema, systemPrompt: `${redundantPrompt}\n${parametersPrompt}` }
 }
