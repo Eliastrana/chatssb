@@ -1,48 +1,41 @@
 import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {z} from "zod";
-import {redundantMetadataPrompt} from "@/app/services/selection/redundantMetadataPrompt";
+import {expressionPrompt} from "@/app/services/selection/expressionPrompt";
 
 
 export function expressionSingle(
     metadataJson: SSBTableMetadata,
 ): DecoupledRunnable {
-    const variableSchema: Record<string, z.ZodTypeAny> = {};
-    const variableJson: Record<string, unknown> = {};
+    const schema: Record<string, z.ZodTypeAny> = {};
 
-    Object.entries(metadataJson.dimension).forEach(([key, dimension]) => {
+    let parametersPrompt = ``;
+
+    Object.entries(metadataJson.dimension).forEach(([key, value]) => {
         // Create a union schema for each key.
-        const schemaForKey = z.union([
+        schema[key] = z.union([
             z.object({
                 itemSelection: z
-                    .array(z.string())
-                    .describe(
-                        `A list of valid item keys for the variable: ${key}. Must always be the JSON key(s) from the provided input data, not the corresponding item values.`
-                    )
+                    .array(z.string()).min(1)
             }),
             z.object({
-                selectionExpression: z
-                    .array(z.string())
-                    .describe(
-                        `A list of valid selection expressions for the variable: ${key}. If an item identifier is used in the expression, it must be the JSON key from the provided input data, not the corresponding item value.`
-                    )
+                selectionExpression: z.string()
             })
         ]);
 
-        // Apply optionality based on the elimination flag.
-        variableSchema[key] = dimension.extension.elimination ? schemaForKey : schemaForKey.optional();
+        if (value.extension.elimination) {
+            schema[key] = schema[key].optional();
+        }
 
-        // Build the JSON used for the prompt.
-        variableJson[key] = {
-            label: dimension.label,
-            items: dimension.category.label,
-            unit: dimension.category.unit
-        };
+        parametersPrompt += `\nvariable: "${key}", label: "${value.label}", item-key-value-pairs: ${JSON.stringify(value.category.label)}`;
+        if (value.category.unit) {
+            parametersPrompt += `, unit: ${JSON.stringify(value.category.unit)}`;
+        }
+        if (value.extension.elimination) {
+            parametersPrompt += `, optional: ${value.extension.elimination}`;
+        }
     });
 
-    const expressionSchema = z
-        .object(variableSchema)
+    const finalSchema = z.object(schema);
     
-    const systemMessage = JSON.stringify(variableJson);
-    
-    return { schema: expressionSchema, systemPrompt: `${redundantMetadataPrompt}\n${systemMessage}` }
+    return { schema: finalSchema, systemPrompt: `${expressionPrompt}\n${parametersPrompt}` }
 }
