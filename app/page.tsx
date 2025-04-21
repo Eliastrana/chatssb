@@ -57,7 +57,7 @@ export default function Home() {
                     dev: true,
                     reasoning: false,
                     reasoningModel: ModelType.GPT4oMini,
-                    navigationTechnique: NavType.FolderNavigation_2,
+                    navigationTechnique: NavType.FolderNavigation_1,
                     navigationModel: ModelType.GPT4oMini,
                     selectionTechnique: SelType.RedundantSingle,
                     selectionModel: ModelType.GPT4oMini,
