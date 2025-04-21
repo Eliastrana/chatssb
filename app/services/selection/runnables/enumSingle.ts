@@ -1,6 +1,6 @@
 import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {z} from "zod";
-import {expressionMetadataPrompt} from "@/app/services/selection/expressionMetadataPrompt";
+import {expressionPrompt} from "@/app/services/selection/expressionPrompt";
 
 
 export function enumSingle(
@@ -63,5 +63,5 @@ export function enumSingle(
     
     const finalSchema = z.object(schema);
 
-    return { schema: finalSchema, systemPrompt: `${expressionMetadataPrompt}\\n${JSON.stringify(json)}` };
+    return { schema: finalSchema, systemPrompt: `${expressionPrompt}\\n${JSON.stringify(json)}` };
 }

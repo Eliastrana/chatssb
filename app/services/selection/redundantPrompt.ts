@@ -1,4 +1,4 @@
-export const redundantMetadataPrompt = `
+export const redundantPrompt = `
 You are selecting query parameters for a structured API that fetches statistical data from Statistics Norway (SSB).
 
 Your task is to choose the most relevant item values for each variable (dimension) in the dataset, based on the user's request and the metadata.

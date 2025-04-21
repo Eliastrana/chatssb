@@ -1,6 +1,6 @@
 import {DecoupledRunnable, SSBTableMetadata} from "@/app/types";
 import {z} from "zod";
-import {redundantMetadataPrompt} from "@/app/services/selection/redundantMetadataPrompt";
+import {redundantPrompt} from "@/app/services/selection/redundantPrompt";
 
 
 export function redundantSingle(
@@ -34,5 +34,5 @@ export function redundantSingle(
     
     const finalSchema = z.object(schema);
 
-    return { schema: finalSchema, systemPrompt: `${redundantMetadataPrompt}\n${parametersPrompt}` }
+    return { schema: finalSchema, systemPrompt: `${redundantPrompt}\n${parametersPrompt}` }
 }

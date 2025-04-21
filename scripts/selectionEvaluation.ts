@@ -35,9 +35,9 @@ async function run() {
     const configurations: SelectionConfiguration[] = [];
     
     const selectionTechniques = {
-        expression: false,
+        expression: true,
         enum: false,
-        redundant: true,
+        redundant: false,
     }
     const reasoning: [false] | [true] | [false, true] = [false];
 

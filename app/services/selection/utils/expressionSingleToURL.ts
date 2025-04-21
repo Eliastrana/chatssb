@@ -10,13 +10,7 @@ export function expressionSingleToURL(
             const selection = value.itemSelection.join(",");
             url += `&valueCodes[${key}]=${selection}`;
         } else if (value.selectionExpression) {
-            // Process each selection expression
-            value.selectionExpression.forEach((expression: string) => {
-                url += `&valueCodes[${key}]=[${expression}]`;
-            });
-        } else {
-            // If neither itemSelections nor selectionExpressions are defined, use a wildcard
-            url += `&valueCodes[${key}]=*`;
+            url += `&valueCodes[${key}]=[${value.selectionExpression}]`;
         }
     });
 

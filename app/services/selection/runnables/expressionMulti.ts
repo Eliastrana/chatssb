@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {ChatPromptTemplate} from '@langchain/core/prompts';
 import {BaseMessage, SystemMessage} from '@langchain/core/messages';
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {expressionMetadataPrompt} from "@/app/services/selection/expressionMetadataPrompt";
+import {expressionPrompt} from "@/app/services/selection/expressionPrompt";
 import {RunnableMap} from "@langchain/core/runnables";
 import {SSBTableMetadata} from '@/app/types';
 
@@ -58,7 +58,7 @@ export function expressionMulti(
             }
             
             const prompt = ChatPromptTemplate.fromMessages([
-                new SystemMessage(`${expressionMetadataPrompt}\n${systemMessage}`),
+                new SystemMessage(`${expressionPrompt}\n${systemMessage}`),
                 ...messages,
             ]);
             
