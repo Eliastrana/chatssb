@@ -56,11 +56,11 @@ export default function Home() {
                     userMessage,
                     dev: true,
                     reasoning: false,
-                    reasoningModel: ModelType.GPT4oMini,
+                    reasoningModel: ModelType.GeminiFlash2Lite,
                     navigationTechnique: NavType.FolderNavigation_1,
-                    navigationModel: ModelType.GPT4oMini,
+                    navigationModel: ModelType.GeminiFlash2Lite,
                     selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GPT4oMini,
+                    selectionModel: ModelType.GeminiFlash2Lite,
                     useQAURL: false,
                 };
 
