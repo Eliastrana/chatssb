@@ -55,12 +55,12 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    reasoning: true,
+                    reasoning: false,
                     reasoningModel: ModelType.GPT4oMini,
-                    navigationTechnique: NavType.KeywordSearch_5,
+                    navigationTechnique: NavType.FolderNavigation_2,
                     navigationModel: ModelType.GPT4oMini,
                     selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GPTo3Mini,
+                    selectionModel: ModelType.GPT4oMini,
                     useQAURL: false,
                 };
 
