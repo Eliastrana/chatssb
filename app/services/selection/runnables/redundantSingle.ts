@@ -13,7 +13,7 @@ export function redundantSingle(
 
     Object.entries(metadataJson.dimension).forEach(([key, value]) => {
         schema[key] = z.union([
-            z.object({ itemSelection: z.array(z.string()) }),
+            z.object({ itemSelection: z.array(z.string()).min(1) }),
             z.object({ wildcard: z.boolean() }),
             z.object({ top: z.object({ n: z.number(), offset: z.number().optional() }) }),
             z.object({ bottom: z.object({ n: z.number(), offset: z.number().optional() }) }),
@@ -29,6 +29,9 @@ export function redundantSingle(
         parametersPrompt += `\nvariable: "${key}", label: "${value.label}", item-key-value-pairs: ${JSON.stringify(value.category.label)}`;
         if (value.category.unit) {
             parametersPrompt += `, unit: ${JSON.stringify(value.category.unit)}`;
+        }
+        if (value.extension.elimination) {
+            parametersPrompt += `, optional: ${value.extension.elimination}`;
         }
     });
     
