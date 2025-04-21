@@ -77,6 +77,7 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
             {
                 tableId: '09189',
                 parameters: {
+                    Makrost: ['bnpb.nr23_9'],
                     ContentsCode: ['BNP'],
                     Tid: timeArrayGenerator(2010, 2020),
                 }
@@ -144,7 +145,7 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
                     ContentsCode: ['Markedsverdi'],
                     Utstedersektor: ['4300'],
                     Finansobjekt5: ['560'],
-                    Tid: ['2023K1, 2023K2', '2023K3', '2023K4', '2024K1', '2024K2', '2024K3', '2024K4'],
+                    Tid: timeArrayGenerator(2023, 2024, { start: 1, end: 4, interval: 1, prefix: 'K' }),
                 }
             }
         ]

@@ -18,8 +18,20 @@ export interface SelectionParameters {
     parameters: {
         [key: string]: string[] // Omitted values will just not be included in the correct
     }
-    errorUrl?: string; // URL to the error page if the selection is not correct
 }
+
+export interface SelectionEvaluationParameters {
+    tableId: string,
+    parameters: {
+        [key: string]: {
+            correctValues: number,
+            extraValues: number,
+            missingValues: number,
+        }
+    }
+    url?: string; // URL to the error page if the selection is not correct
+}
+
 export interface EvaluationBenchmark {
     userPrompt: string, // Functions as the key for the benchmark
     reasoningPrompt?: string, // Optional prompt to be used for reasoning
@@ -54,7 +66,7 @@ export interface SelectionAnswers {
         benchmarkAnswers: {
             userPrompt: string,
             responses: {
-                selectedParameters: SelectionParameters,
+                selectedParameters: SelectionEvaluationParameters,
                 milliseconds: number, // Time for response in ms
                 tokenUsage: {
                     completionTokens: number,

@@ -5,7 +5,7 @@ import 'dotenv/config';
 import {
     SelectionAnswers,
     SelectionConfiguration,
-    SelectionParameters
+    SelectionEvaluationParameters
 } from "@/scripts/evaluationTypes";
 import _ from "lodash";
 import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
@@ -33,26 +33,37 @@ async function run() {
     ];
 
     const configurations: SelectionConfiguration[] = [];
-
+    
+    const selectionTechniques = {
+        expression: false,
+        enum: false,
+        redundant: true,
+    }
     const reasoning: [false] | [true] | [false, true] = [false];
 
     for (const model of models) {
         for (const isReasoning of reasoning) {
-            configurations.push({
-                model: model,
-                selectionTechnique: 'expression',
-                reasoning: isReasoning,
-            });
-            configurations.push({
-                model: model,
-                selectionTechnique: 'enum',
-                reasoning: isReasoning,
-            });
-            configurations.push({
-                model: model,
-                selectionTechnique: 'redundant',
-                reasoning: isReasoning,
-            });
+            if (selectionTechniques.expression) {
+                configurations.push({
+                    model: model,
+                    selectionTechnique: 'expression',
+                    reasoning: isReasoning,
+                });
+            }
+            if (selectionTechniques.enum) {
+                configurations.push({
+                    model: model,
+                    selectionTechnique: 'enum',
+                    reasoning: isReasoning,
+                });
+            }
+            if (selectionTechniques.redundant) {
+                configurations.push({
+                    model: model,
+                    selectionTechnique: 'redundant',
+                    reasoning: isReasoning,
+                });
+            }
         }
     }
 
@@ -105,7 +116,7 @@ async function run() {
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
 
             for (const selectionBenchmark of benchmark.selectionBenchmarks) {
-                let result: SelectionParameters;
+                let result: SelectionEvaluationParameters;
 
                 const response = await fetch(`https://data.ssb.no/api/pxwebapi/v2-beta/tables/${selectionBenchmark.tableId}/metadata?lang=en&outputFormat=json-stat2`, {
                     method: "GET",
@@ -156,7 +167,8 @@ async function run() {
                         )
                     }
 
-                    console.log(`SSBGetUrl: ${SSBGetUrl}`);
+                    //console.log(`SSBGetUrl: ${SSBGetUrl}`);
+                    
                     const responseTableData = await fetch(SSBGetUrl, {
                         method: 'GET',
                         headers: {
@@ -168,29 +180,57 @@ async function run() {
                         throw new Error(`Failed to fetch table data: ${responseTableData.statusText}`);
                     }
                     
-                    const data = (await responseTableData.json()) as PxWebData;
+                    const selection = (await responseTableData.json()) as PxWebData;
                     
                     result = {
                         tableId: selectionBenchmark.tableId,
-                        parameters: {}
+                        parameters: {},
+                        url: SSBGetUrl
                     }
-                    
-                    for (const dimensionKey in data.dimension) {
-                        result.parameters[dimensionKey] = [];
-                        for (const variableKey of Object.keys(data.dimension[dimensionKey].category.label)) {
-                            result.parameters[dimensionKey].push(variableKey);
+
+                    // Check the selected values
+                    for (const dimensionKey in selection.dimension) {
+                        const selectedValues = Object.keys(selection.dimension[dimensionKey].category.label);
+
+                        const correctBenchmarkValues = selectionBenchmark.parameters[dimensionKey] || [];
+                        const correctSelectedValues = correctBenchmarkValues.filter(key => selectedValues.includes(key)).length;
+                        
+                        result.parameters[dimensionKey] = {
+                            correctValues: correctSelectedValues,
+                            extraValues: selectedValues.length - correctSelectedValues,
+                            missingValues: correctBenchmarkValues.length - correctSelectedValues,
+                        };
+                    }
+
+                    // Add missing dimensions from the benchmark
+                    for (const key of Object.keys(selectionBenchmark.parameters)) {
+                        if (!result.parameters[key]) {
+                            result.parameters[key] = {
+                                correctValues: 0,
+                                extraValues: 0,
+                                missingValues: selectionBenchmark.parameters[key].length,
+                            };
                         }
                     }
                 } catch (e) {
+                    const error = e as Error;
+                    console.error(error.message);
+                    
                     result = {
                         tableId: 'error',
                         parameters: {},
-                        errorUrl: SSBGetUrl
+                        url: SSBGetUrl,
                     };
                 }
+                
                 const queryTime = Date.now() - startTime;
 
-                console.log(`Prompt: ${benchmark.userPrompt}, Result: ${JSON.stringify(result)}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
+                const logResult = {
+                    tableId: result.tableId,
+                    parameters: result.parameters,
+                };
+                    
+                console.log(`Prompt: ${benchmark.userPrompt}, Result: ${JSON.stringify(logResult)}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
 
                 // If this configuration and benchmark already exists, add the result to the existing list.
                 const existingConfig = answers.configurations.find(configuration =>
