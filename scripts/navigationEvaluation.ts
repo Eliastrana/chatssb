@@ -19,17 +19,17 @@ async function run() {
     
     // Setuo configurations
     const models = [
-        ModelType.GPT4oMini,
+        ModelType.GeminiFlash2Lite,
         //modelInitializer(ModelType.GeminiFlash2Lite, sendLog),
         //modelInitializer(ModelType.Llama3_1_8b, sendLog),
     ]
     
-    const numFolderNavigation = { start: 3, end: 3, step: 1 };
+    const numFolderNavigation = { start: 3, end: 2, step: 1 };
     const numKeywordSearch = { start: 3, end: 3, step: 1 };
     
     // Reasoning can only be one of these three
     // [false], [true], [false, true]
-    const reasoning: [false] | [true] | [false, true] = [false, true];
+    const reasoning: [false] | [true] | [false, true] = [true];
     
     const configurations: NavigationConfiguration[] = [];
     
@@ -83,13 +83,13 @@ async function run() {
         };
     }
     
+    const tokenUsage = {
+        completionTokens: 0,
+        promptTokens: 0,
+        totalTokens: 0
+    };
+    
     for (const config of configurations) {
-
-        let tokenUsage = {
-            completionTokens: 0,
-            promptTokens: 0,
-            totalTokens: 0
-        };
         
         const model = await modelInitializer(
             config.model,
@@ -99,7 +99,7 @@ async function run() {
         
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
-        for (const benchmark of evaluationBenchmark.slice(0, 5)) {
+        for (const benchmark of evaluationBenchmark) {
             let result;
             
             let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
@@ -177,11 +177,9 @@ async function run() {
                 }
             })
 
-            tokenUsage = {
-                completionTokens: 0,
-                promptTokens: 0,
-                totalTokens: 0
-            };
+            tokenUsage.completionTokens = 0;
+            tokenUsage.promptTokens = 0;
+            tokenUsage.totalTokens = 0;
         }
     }
 }

@@ -34,7 +34,7 @@ async function run() {
 
     const configurations: SelectionConfiguration[] = [];
 
-    const reasoning: [false] | [true] | [false, true] = [true];
+    const reasoning: [false] | [true] | [false, true] = [false];
 
     for (const model of models) {
         for (const isReasoning of reasoning) {
@@ -81,13 +81,14 @@ async function run() {
         };
     }
     
+    const tokenUsage = {
+        completionTokens: 0,
+        promptTokens: 0,
+        totalTokens: 0
+    };
+    
     for (const config of configurations) {
 
-        let tokenUsage = {
-            completionTokens: 0,
-            promptTokens: 0,
-            totalTokens: 0
-        };
 
         const model = await modelInitializer(
             config.model,
@@ -97,7 +98,7 @@ async function run() {
 
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
 
-        for (const benchmark of evaluationBenchmark.slice(1, 2)) {
+        for (const benchmark of evaluationBenchmark) {
             if (!benchmark.selectionBenchmarks) continue;
 
             let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
@@ -237,11 +238,9 @@ async function run() {
                     }
                 });
 
-                tokenUsage = {
-                    completionTokens: 0,
-                    promptTokens: 0,
-                    totalTokens: 0
-                };
+                tokenUsage.completionTokens = 0;
+                tokenUsage.promptTokens = 0;
+                tokenUsage.totalTokens = 0;
             }
         }
     }
