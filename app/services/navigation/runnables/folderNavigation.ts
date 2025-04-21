@@ -6,14 +6,20 @@ export function folderNavigation(
     folderEntriesList: SSBNavigationResponse[],
     maxBreadth: number,
 ): DecoupledRunnable {
+    
+    const ids = folderEntriesList.map(folderEntries => folderEntries.folderContents.map(entry => `${entry.type}:${entry.id}`)).flat();
+    
+    // Smallest of maxBreadth and the number of entries
+    const options = Math.min(maxBreadth, ids.length);
+    
     const folderNavigationSchema = z.object({
         folderContents: z.array(
             z.object({
-                type: z.enum(['Table', 'FolderInformation']),
-                id: z.string(),
+                typeAndId: z.enum([ids[0], ...ids.slice(1)]),
                 label: z.string(),
-            })
-        ).max(maxBreadth)
+            }))
+            .min(1)
+            .max(options)
     });
     
     let entriesPrompt = ``;
@@ -28,7 +34,7 @@ export function folderNavigation(
         }
     }
     
-    const maxBreathPrompt = `You must select ${maxBreadth} entry(ies).`;
+    const maxBreathPrompt = `You must select ${options} entry(ies).`;
     
     return { schema: folderNavigationSchema, systemPrompt: `${folderNavigationPrompt}\n${maxBreathPrompt}\n${entriesPrompt}` };
 }

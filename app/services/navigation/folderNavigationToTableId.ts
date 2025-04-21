@@ -12,67 +12,75 @@ export async function folderNavigationToTableId(
     sendLog: (log: ServerLog) => void,
     baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
 ): Promise<{ id: string }> {
+    
     let depth = 0;
     const maxDepth = 5;
-
-    let currentEntries: SSBNavigationResponse = {
-        folderContents: [{type: 'FolderInformation', id: '', label: 'Root'}],
-    };
-
+    
+    const initialEntry = { type: 'FolderInformation', id: '', label: 'Root' };
+    let responseEntries: SSBNavigationResponse = { folderContents: [initialEntry] };
     const tableEntries: SSBEntry[] = [];
 
+    const fetchOptions = {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+    };
+
     while (depth <= maxDepth) {
+        // Make list distinct by id
+        responseEntries.folderContents = responseEntries.folderContents.filter((entry, index, self) =>
+            index === self.findIndex((e) => e.id === entry.id)
+        );
+        
         sendLog({content: `Nåværende mappedybde: ${depth}`, eventType: 'nav'});
 
-        // For each element in the folder contents array.
-        for (const entry of currentEntries.folderContents) {
-            if (entry.type === 'Table') {
+        // Collect and log table entries.
+        responseEntries.folderContents.forEach(entry => {
+            if (entry.type === "Table") {
                 tableEntries.push(entry);
-                sendLog({
-                    content: `Mulige tabeller funnet: ${entry.id} navngitt '${entry.label}'`,
-                    eventType: 'nav'
-                });
+                sendLog({ content: `Muilig tabell: ${entry.id} som heter '${entry.label}'`, eventType: "nav" });
             }
-        }
+        });
 
-        // Remove table entries from current entries.
-        const folderEntries = currentEntries.folderContents.filter(entry => entry.type !== 'Table');
-
-        // Exit loop if no folders are left to navigate.
+        // Filter folder entries and exit if none are left.
+        const folderEntries = responseEntries.folderContents.filter(entry => entry.type !== "Table");
         if (folderEntries.length === 0) {
-            sendLog({content: `Navigering fullført`, eventType: 'nav'});
+            sendLog({ content: "Navigasjon fullført", eventType: "nav" });
             break;
         }
 
-        // Fetch navigation data for each folder entry.
-        const nextFolderEntries: SSBNavigationResponse[] = [];
-        for (const folderEntry of folderEntries) {
-            sendLog({
-                content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`,
-                eventType: 'nav'
-            });
+        // Fetch and process navigation data for each folder.
+        const nextFolderEntries = await Promise.all(folderEntries.map(async folderEntry => {
+            sendLog({ content: `Valgt mappe: '${folderEntry.id}' navngitt '${folderEntry.label}'`, eventType: "nav" });
 
-            const response: Response = await fetch(`${baseURL}navigation/${folderEntry.id}?lang=en`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                }
-            );
-
+            const response = await fetch(`${baseURL}navigation/${folderEntry.id}?lang=en`, fetchOptions);
             if (!response.ok) {
-                throw new Error('Failed to fetch SSB API navigation data from ID ' + folderEntry.id);
+                throw new Error(`Failed to fetch navigation data from folder ID ${folderEntry.id}`);
             }
+            return (await response.json()) as SSBNavigationResponse;
+        }));
 
-            nextFolderEntries.push(await response.json() as SSBNavigationResponse);
-        }
-
-        currentEntries = await parsingRunnableRetryWrapper(
+        // Process navigation data using the retry wrapper.
+        const tempEntries = await parsingRunnableRetryWrapper(
             model,
             userPrompt,
-            folderNavigation(nextFolderEntries, maxBreadth),
-        ) as SSBNavigationResponse;
+            folderNavigation(nextFolderEntries, maxBreadth)
+        );
+
+        
+        responseEntries = { folderContents: [] };
+        
+        // Add processed entries to folder contents.
+        for (const entry of tempEntries.folderContents) {
+            const [type, id] = entry.typeAndId.split(":");
+            responseEntries.folderContents.push({
+                id,
+                label: entry.label,
+                type: type as "Table" | "FolderInformation",
+            } as SSBEntry);
+        }
 
         depth++;
     }
