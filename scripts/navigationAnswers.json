@@ -1,0 +1,1994 @@
+{
+  "configurations": [
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4o-mini",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 1,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 4341,
+              "tokenUsage": {
+                "completionTokens": 177,
+                "promptTokens": 3065,
+                "totalTokens": 3242
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 3131,
+              "tokenUsage": {
+                "completionTokens": 177,
+                "promptTokens": 3065,
+                "totalTokens": 3242
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09190",
+              "result": "incorrect",
+              "milliseconds": 3930,
+              "tokenUsage": {
+                "completionTokens": 177,
+                "promptTokens": 3065,
+                "totalTokens": 3242
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 4947,
+              "tokenUsage": {
+                "completionTokens": 177,
+                "promptTokens": 3065,
+                "totalTokens": 3242
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 1,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 5734,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 3958,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09190",
+              "result": "incorrect",
+              "milliseconds": 4057,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 4852,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09007",
+              "result": "correct",
+              "milliseconds": 5858,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14483",
+              "result": "correct",
+              "milliseconds": 40329,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 4435,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "10725",
+              "result": "incorrect",
+              "milliseconds": 9371,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 5432,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "14100",
+              "result": "incorrect",
+              "milliseconds": 9679,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 1,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 7508,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 3548,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09190",
+              "result": "incorrect",
+              "milliseconds": 3359,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 4068,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09367",
+              "result": "technicallyCorrect",
+              "milliseconds": 3895,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 35492,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 3947,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "10725",
+              "result": "incorrect",
+              "milliseconds": 8910,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 3591,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 32295,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 3,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 6597,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 4485,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 6416,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 9866,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09007",
+              "result": "correct",
+              "milliseconds": 7730,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "08518",
+              "result": "incorrect",
+              "milliseconds": 15337,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 5730,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "08354",
+              "result": "correct",
+              "milliseconds": 13618,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 7244,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "14100",
+              "result": "incorrect",
+              "milliseconds": 7420,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 3,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 7330,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 3908,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 8027,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 5762,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09007",
+              "result": "correct",
+              "milliseconds": 7841,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "13891",
+              "result": "incorrect",
+              "milliseconds": 8306,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 7524,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "08354",
+              "result": "correct",
+              "milliseconds": 8206,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 5945,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "14100",
+              "result": "incorrect",
+              "milliseconds": 11069,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 5,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 14914,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 4712,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 7211,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 5323,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09007",
+              "result": "correct",
+              "milliseconds": 6223,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14483",
+              "result": "correct",
+              "milliseconds": 13949,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 6361,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 15604,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 5521,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "14100",
+              "result": "incorrect",
+              "milliseconds": 12543,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "folderNavigation",
+        "navigationValue": 5,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "06913",
+              "result": "correct",
+              "milliseconds": 9055,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 5035,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 9231,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 16079,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "08358",
+              "result": "incorrect",
+              "milliseconds": 12215,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14483",
+              "result": "correct",
+              "milliseconds": 10877,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 7345,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 17470,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 7041,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "14100",
+              "result": "incorrect",
+              "milliseconds": 10239,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 1,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 4051,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 3905,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 2915,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 3377,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09367",
+              "result": "technicallyCorrect",
+              "milliseconds": 5528,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 2673,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 4146,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 3567,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 6632,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "error",
+              "result": "error",
+              "milliseconds": 3213,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 1,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "05212",
+              "result": "incorrect",
+              "milliseconds": 2517,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10501",
+              "result": "correct",
+              "milliseconds": 2129,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 2914,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 2371,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09367",
+              "result": "technicallyCorrect",
+              "milliseconds": 2844,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 2525,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 4660,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "03668",
+              "result": "incorrect",
+              "milliseconds": 2627,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 3115,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "04188",
+              "result": "correct",
+              "milliseconds": 2635,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 3,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "05212",
+              "result": "incorrect",
+              "milliseconds": 6058,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10467",
+              "result": "incorrect",
+              "milliseconds": 1991,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09190",
+              "result": "incorrect",
+              "milliseconds": 1319,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 1594,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "11011",
+              "result": "incorrect",
+              "milliseconds": 1387,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 1364,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 1208,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "14022",
+              "result": "incorrect",
+              "milliseconds": 1344,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 3195,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "04188",
+              "result": "correct",
+              "milliseconds": 1610,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 3,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "05212",
+              "result": "incorrect",
+              "milliseconds": 1720,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10467",
+              "result": "incorrect",
+              "milliseconds": 1296,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 1425,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 1373,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "11011",
+              "result": "incorrect",
+              "milliseconds": 1433,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 1681,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 1429,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "10487",
+              "result": "incorrect",
+              "milliseconds": 1251,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 4831,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "04188",
+              "result": "correct",
+              "milliseconds": 6437,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 5,
+        "reasoning": false
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "05212",
+              "result": "incorrect",
+              "milliseconds": 1688,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10467",
+              "result": "incorrect",
+              "milliseconds": 1931,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 1858,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 1587,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "11011",
+              "result": "incorrect",
+              "milliseconds": 1687,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 1864,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 2096,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "14022",
+              "result": "incorrect",
+              "milliseconds": 2011,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 2013,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "04188",
+              "result": "correct",
+              "milliseconds": 1484,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "navigationConfiguration": {
+        "model": "gpt-4.1-nano-2025-04-14",
+        "navigationTechnique": "keywordSearch",
+        "navigationValue": 5,
+        "reasoning": true
+      },
+      "benchmarkAnswers": [
+        {
+          "userPrompt": "Hva var befolkningstallet i Norge i 2022?",
+          "responses": [
+            {
+              "tableId": "04362",
+              "result": "technicallyCorrect",
+              "milliseconds": 1265,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mange het Trygve til fornavn i 2024?",
+          "responses": [
+            {
+              "tableId": "10467",
+              "result": "incorrect",
+              "milliseconds": 1761,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Norges BNP fra 2010-2020?",
+          "responses": [
+            {
+              "tableId": "09189",
+              "result": "correct",
+              "milliseconds": 1564,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Gi meg antall pasienter på sykehus i 2023",
+          "responses": [
+            {
+              "tableId": "10261",
+              "result": "correct",
+              "milliseconds": 1593,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg utviklingen i elektrisitetspriser uten strømstøtte for husholdningene fra 2015-2020",
+          "responses": [
+            {
+              "tableId": "09367",
+              "result": "technicallyCorrect",
+              "milliseconds": 1708,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Vis meg sesongjusterte antall og prosentandel for arbeidsledighet for alle aldre fra i 2023",
+          "responses": [
+            {
+              "tableId": "14454",
+              "result": "incorrect",
+              "milliseconds": 1428,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye ferk oppalen laks ble eksportert mellom i 2004 mellom uke 6 og 30?",
+          "responses": [
+            {
+              "tableId": "03024",
+              "result": "correct",
+              "milliseconds": 1675,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva var Hærens totale utgifter og lønnskostnader i 2010?",
+          "responses": [
+            {
+              "tableId": "10487",
+              "result": "incorrect",
+              "milliseconds": 1626,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hva er det vernede landarealet i Svalbard i 2024?",
+          "responses": [
+            {
+              "tableId": "08936",
+              "result": "correct",
+              "milliseconds": 1768,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        },
+        {
+          "userPrompt": "Hvor mye sprit, øl og vin ble solgt i det 20. århundret?",
+          "responses": [
+            {
+              "tableId": "04188",
+              "result": "correct",
+              "milliseconds": 1681,
+              "tokenUsage": {
+                "completionTokens": 30,
+                "promptTokens": 5377,
+                "totalTokens": 5407
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
