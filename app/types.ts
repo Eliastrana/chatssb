@@ -138,6 +138,10 @@ export enum SelType {
 export enum ModelType {
     GPT4oMini = 'gpt-4o-mini',
     GPTo3Mini = 'o3-mini-2025-01-31',
+    GPT4_1Nano = 'gpt-4.1-nano',
+    GPT4_1 = 'gpt-4.1',
+    GPT4_1Mini = 'gpt-4.1-mini',
+    GeminiFlash2 = 'gemini-2.0-flash',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
     Llama3_3_70b = 'llama-3.3-70b-versatile',
