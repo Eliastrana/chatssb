@@ -2,7 +2,7 @@
 import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
 import {Message, PxWebData} from '@/app/types';
-import {ChartDisplay} from "@/app/components/Graphing/ChartDisplay";
+import ChartDisplay from "@/app/components/Graphing/ChartDisplay";
 
 interface ChatMessagesProps {
     messages: Message[];

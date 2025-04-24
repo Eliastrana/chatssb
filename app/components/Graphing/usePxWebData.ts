@@ -108,6 +108,20 @@ export function usePxWebData(pxData: PxWebData) {
         return result;
     }
 
+    const prettifyCombo = useCallback(
+        (combo: Record<string, string>) => {
+            const pretty: Record<string, string> = {};
+            nonTimeDimensions.forEach((dim) => {
+                const rawCatKey   = combo[dim.name];
+                const dimLabel    = dim.label.toLowerCase();              // e.g. "makrostørrelse"
+                const catLabel    = dim.categoryLabels[rawCatKey] ?? rawCatKey;
+                pretty[dimLabel]  = catLabel;
+            });
+            return pretty;
+        },
+        [nonTimeDimensions]
+    );
+
     const combos = useMemo(() => {
         const arraysOfKeys = nonTimeDimensions.map((dim) => [...selectedCategories[dim.name]]);
         const dimNames = nonTimeDimensions.map((dim) => dim.name);
@@ -124,7 +138,7 @@ export function usePxWebData(pxData: PxWebData) {
                     y: getValue(fullCoords),
                 };
             });
-            return { combo, series };
+            return { combo: prettifyCombo(combo), series };
         });
     }, [timeKeys, startIndex, endIndex, combos, timeDimName, timeLabels, getValue]);
 
@@ -132,7 +146,7 @@ export function usePxWebData(pxData: PxWebData) {
         return combos.map((combo) => {
             const coords = { ...combo, [timeDimName]: selectedTimeKey };
             return {
-                combo,
+                combo: prettifyCombo(combo),
                 value: getValue(coords),
             };
         });
