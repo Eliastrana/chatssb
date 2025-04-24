@@ -100,7 +100,7 @@ async function run() {
         for (const benchmark of evaluationBenchmark) {
             let result;
             
-            let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
+            let prompt = `${benchmark.userPrompt}\nDate: 1 Jul 2024`;
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
             
             const startTime = Date.now();
