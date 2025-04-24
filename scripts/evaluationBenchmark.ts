@@ -93,6 +93,7 @@ export const evaluationBenchmark: EvaluationBenchmark[] = [
         userPrompt: 'Vis meg utviklingen i elektrisitetspriser for husholdningene fra 2015-2020', // Energi og industri
         difficulty: 'medium',
         expectedCorrectTables: ['09007'],
+        technicallyCorrectTables: ['09367'],
         selectionBenchmarks: [
             {
                 tableId: '09007',
