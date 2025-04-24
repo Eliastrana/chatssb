@@ -21,12 +21,6 @@ async function run() {
     const models = [
         ModelType.GPT4_1Nano,
         ModelType.GPT4_1Mini,
-        ModelType.GPT4_1,
-        ModelType.GeminiFlash2Lite,
-        ModelType.GeminiFlash2,
-        ModelType.Llama3_3_70b,
-        ModelType.Llama3Scout,
-        ModelType.Llama3Maverick,
     ]
     
     const numFolderNavigation = { start: 1, end: 5, step: 2 };
@@ -94,6 +88,8 @@ async function run() {
         totalTokens: 0
     };
     
+    const initTime = Date.now();
+    
     for (const config of configurations) {
         
         const model = modelInitializer(
@@ -101,8 +97,19 @@ async function run() {
             sendLog,
             tokenUsage,
         );
-        
-        console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
+
+        const elapsedTime = Date.now() - initTime;
+        const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+        const seconds = Math.floor((elapsedTime / 1000) % 60);
+
+        const remainingConfigs = configurations.length - configurations.indexOf(config) - 1;
+        const estimatedTime = Math.floor((elapsedTime / (configurations.indexOf(config) + 1)) * remainingConfigs);
+        const remainingHours = Math.floor((estimatedTime / (1000 * 60 * 60)) % 24);
+        const remainingMinutes = Math.floor((estimatedTime / (1000 * 60)) % 60);
+        const remainingSeconds = Math.floor((estimatedTime / 1000) % 60);
+
+        console.log(`Elapsed time: ${hours}h ${minutes}m ${seconds}s | Estimated time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s | Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
         for (const benchmark of evaluationBenchmark) {
             let tableId;
@@ -143,7 +150,7 @@ async function run() {
             } else if (benchmark.technicallyCorrectTables?.includes(tableId)) {
                 result = 'technicallyCorrect';
             }
-            
+
             console.log(`Prompt: ${benchmark.userPrompt}, Id: ${tableId}, Result: ${result}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
 
             // If this configuration and benchmark already exists, add the result to the
