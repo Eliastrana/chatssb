@@ -19,9 +19,7 @@ async function run() {
     
     // Setuo configurations
     const models = [
-        ModelType.GeminiFlash2Lite,
-        //modelInitializer(ModelType.GeminiFlash2Lite, sendLog),
-        //modelInitializer(ModelType.Llama3_1_8b, sendLog),
+        ModelType.GPT4oMini
     ]
     
     const numFolderNavigation = { start: 3, end: 2, step: 1 };

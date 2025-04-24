@@ -27,17 +27,15 @@ async function run() {
 
     // Setup configurations
     const models = [
-        ModelType.GeminiFlash2Lite,
-        //modelInitializer(ModelType.GeminiFlash2Lite, sendLog),
-        //modelInitializer(ModelType.Llama3_1_8b, sendLog),
+        ModelType.GPTo3Mini,
     ];
 
     const configurations: SelectionConfiguration[] = [];
     
     const selectionTechniques = {
         expression: false,
-        enum: true,
-        redundant: false,
+        enum: false,
+        redundant: true,
     }
     const reasoning: [false] | [true] | [false, true] = [false];
 
@@ -112,7 +110,7 @@ async function run() {
         for (const benchmark of evaluationBenchmark) {
             if (!benchmark.selectionBenchmarks) continue;
 
-            let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
+            let prompt = `${benchmark.userPrompt}\nDate: 1 Jul 2024`;
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
 
             for (const selectionBenchmark of benchmark.selectionBenchmarks) {
