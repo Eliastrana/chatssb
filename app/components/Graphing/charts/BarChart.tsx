@@ -117,16 +117,19 @@ export const BarChart: React.FC<BarChartProps> = ({
             .attr("fill", (d) => colorScale(String(d.seriesIndex)))
             .on("mouseover", function (event, d) {
                 tooltip.style("display", "block");
-                let comboHtml = "";
-                if (d.combo && Object.keys(d.combo).length > 0) {
-                    comboHtml = Object.entries(d.combo)
-                        .map(([dim, cat]) => `<strong>${dim}:</strong> ${cat}`)
-                        .join("<br/>") + "<br/>";
-                }
-                tooltip.html(
-                    `${comboHtml}<strong>${d.xVal}</strong><br/>Verdi: ${d.value}`
-                );
+
+                const comboHtml = Object.entries(d.combo ?? {})
+                    .map(([dim, cat]) => `<strong>${dim}:</strong> ${cat}`)
+                    .join("<br/>");
+
+                tooltip.html(`
+        <div style="font-size:18px; font-weight:600; margin-bottom:2px;">
+            Verdi: ${(d.value ?? 0).toLocaleString()}
+        </div>
+        ${comboHtml}
+    `);
             })
+
             .on("mousemove", function (event) {
                 tooltip
                     .style("left", event.pageX + 10 + "px")
