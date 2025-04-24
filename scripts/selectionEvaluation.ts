@@ -27,17 +27,17 @@ async function run() {
 
     // Setup configurations
     const models = [
-        ModelType.GPTo3Mini,
+        ModelType.GPT4_1Nano,
     ];
 
     const configurations: SelectionConfiguration[] = [];
     
     const selectionTechniques = {
-        expression: false,
-        enum: false,
+        expression: true,
+        enum: true,
         redundant: true,
     }
-    const reasoning: [false] | [true] | [false, true] = [false];
+    const reasoning: [false] | [true] | [false, true] = [false, true];
 
     for (const model of models) {
         for (const isReasoning of reasoning) {
@@ -99,7 +99,7 @@ async function run() {
     for (const config of configurations) {
 
 
-        const model = await modelInitializer(
+        const model = modelInitializer(
             config.model,
             sendLog,
             tokenUsage,
@@ -114,7 +114,8 @@ async function run() {
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
 
             for (const selectionBenchmark of benchmark.selectionBenchmarks) {
-                let result: SelectionEvaluationParameters;
+                let parameters: SelectionEvaluationParameters;
+                let errorMessage;
 
                 const response = await fetch(`https://data.ssb.no/api/pxwebapi/v2-beta/tables/${selectionBenchmark.tableId}/metadata?lang=en&outputFormat=json-stat2`, {
                     method: "GET",
@@ -127,7 +128,6 @@ async function run() {
 
                 const startTime = Date.now();
                 try {
-                    
                     if (config.selectionTechnique === 'expression') {
                         const parameters = await parsingRunnableRetryWrapper(
                             model,
@@ -180,7 +180,7 @@ async function run() {
                     
                     const selection = (await responseTableData.json()) as PxWebData;
                     
-                    result = {
+                    parameters = {
                         tableId: selectionBenchmark.tableId,
                         parameters: {},
                         url: SSBGetUrl
@@ -193,7 +193,7 @@ async function run() {
                         const correctBenchmarkValues = selectionBenchmark.parameters[dimensionKey] || [];
                         const correctSelectedValues = correctBenchmarkValues.filter(key => selectedValues.includes(key)).length;
                         
-                        result.parameters[dimensionKey] = {
+                        parameters.parameters[dimensionKey] = {
                             correctValues: correctSelectedValues,
                             extraValues: selectedValues.length - correctSelectedValues,
                             missingValues: correctBenchmarkValues.length - correctSelectedValues,
@@ -202,8 +202,8 @@ async function run() {
 
                     // Add missing dimensions from the benchmark
                     for (const key of Object.keys(selectionBenchmark.parameters)) {
-                        if (!result.parameters[key]) {
-                            result.parameters[key] = {
+                        if (!parameters.parameters[key]) {
+                            parameters.parameters[key] = {
                                 correctValues: 0,
                                 extraValues: 0,
                                 missingValues: selectionBenchmark.parameters[key].length,
@@ -211,10 +211,10 @@ async function run() {
                         }
                     }
                 } catch (e) {
-                    const error = e as Error;
-                    console.error(error.message);
+                    errorMessage = (e as Error).message;
+                    console.error(errorMessage);
                     
-                    result = {
+                    parameters = {
                         tableId: 'error',
                         parameters: {},
                         url: SSBGetUrl,
@@ -224,8 +224,8 @@ async function run() {
                 const queryTime = Date.now() - startTime;
 
                 const logResult = {
-                    tableId: result.tableId,
-                    parameters: result.parameters,
+                    tableId: parameters.tableId,
+                    parameters: parameters.parameters,
                 };
                     
                 console.log(`Prompt: ${benchmark.userPrompt}, Result: ${JSON.stringify(logResult)}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
@@ -241,17 +241,27 @@ async function run() {
                 
                 if (existingAnswer) {
                     existingAnswer.responses.push({
-                        selectedParameters: result,
+                        selectedParameters: parameters,
                         milliseconds: queryTime,
-                        tokenUsage: tokenUsage,
+                        tokenUsage: {
+                            completionTokens: tokenUsage.completionTokens,
+                            promptTokens: tokenUsage.promptTokens,
+                            totalTokens: tokenUsage.totalTokens,
+                        },
+                        errorMessage: errorMessage,
                     });
                 } else if (existingConfig) {
                     existingConfig.benchmarkAnswers.push({
                         userPrompt: benchmark.userPrompt,
                         responses: [{
-                            selectedParameters: result,
+                            selectedParameters: parameters,
                             milliseconds: queryTime,
-                            tokenUsage: tokenUsage,
+                            tokenUsage: {
+                                completionTokens: tokenUsage.completionTokens,
+                                promptTokens: tokenUsage.promptTokens,
+                                totalTokens: tokenUsage.totalTokens,
+                            },
+                            errorMessage: errorMessage,
                         }],
                     });
                 } else {
@@ -260,9 +270,14 @@ async function run() {
                         benchmarkAnswers: [{
                             userPrompt: benchmark.userPrompt,
                             responses: [{
-                                selectedParameters: result,
+                                selectedParameters: parameters,
                                 milliseconds: queryTime,
-                                tokenUsage: tokenUsage,
+                                tokenUsage: {
+                                    completionTokens: tokenUsage.completionTokens,
+                                    promptTokens: tokenUsage.promptTokens,
+                                    totalTokens: tokenUsage.totalTokens,
+                                },
+                                errorMessage: errorMessage,
                             }],
                         }]
                     })

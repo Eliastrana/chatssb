@@ -137,11 +137,18 @@ export enum SelType {
 
 export enum ModelType {
     GPT4oMini = 'gpt-4o-mini',
+    GPT4_1Nano = 'gpt-4.1-nano-2025-04-14',
+    GPT4_1Mini = 'gpt-4.1-mini-2025-04-14',
+    GPT4_1 = 'gpt-4.1-2025-04-14',
     GPTo3Mini = 'o3-mini-2025-01-31',
+    GPTo4Mini = 'o4-mini-2025-04-16',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
+    GeminiFlash2 = 'gemini-2.0-flash',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
     Llama3_3_70b = 'llama-3.3-70b-versatile',
     Llama3_1_8b = 'llama-3.1-8b-instant',
+    Llama3Maverick = 'meta-llama/llama-4-maverick-17b-128e-instruct',
+    Llama3Scout = 'meta-llama/llama-4-scout-17b-16e-instruct',
     DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
 }
 

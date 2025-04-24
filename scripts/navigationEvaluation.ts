@@ -19,15 +19,22 @@ async function run() {
     
     // Setuo configurations
     const models = [
-        ModelType.GPT4oMini
+        ModelType.GPT4_1Nano,
+        ModelType.GPT4_1Mini,
+        ModelType.GPT4_1,
+        ModelType.GeminiFlash2Lite,
+        ModelType.GeminiFlash2,
+        ModelType.Llama3_3_70b,
+        ModelType.Llama3Scout,
+        ModelType.Llama3Maverick,
     ]
     
-    const numFolderNavigation = { start: 3, end: 2, step: 1 };
-    const numKeywordSearch = { start: 3, end: 3, step: 1 };
+    const numFolderNavigation = { start: 1, end: 5, step: 2 };
+    const numKeywordSearch = { start: 1, end: 5, step: 2 };
     
     // Reasoning can only be one of these three
     // [false], [true], [false, true]
-    const reasoning: [false] | [true] | [false, true] = [false];
+    const reasoning: [false] | [true] | [false, true] = [true];
     
     const configurations: NavigationConfiguration[] = [];
     
@@ -89,7 +96,7 @@ async function run() {
     
     for (const config of configurations) {
         
-        const model = await modelInitializer(
+        const model = modelInitializer(
             config.model,
             sendLog,
             tokenUsage,
@@ -98,7 +105,8 @@ async function run() {
         console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
         
         for (const benchmark of evaluationBenchmark) {
-            let result;
+            let tableId;
+            let errorMessage;
             
             let prompt = `${benchmark.userPrompt}\nDate: 1 Jul 2024`;
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
@@ -119,13 +127,24 @@ async function run() {
                     sendLog
                 );
                 
-                result = table.id;
+                tableId = table.id;
             } catch (e) {
-                result = 'error';
+                tableId = 'error';
+                errorMessage = (e as Error).message;
             }
+            
             const queryTime = Date.now() - startTime;
             
-            console.log(`Prompt: ${benchmark.userPrompt}, Result: ${result}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
+            let result: 'correct' | 'technicallyCorrect' | 'incorrect' | 'error' = 'incorrect';
+            if (tableId === 'error') {
+                result = 'error';
+            } else if (benchmark.expectedCorrectTables.includes(tableId)) {
+                result = 'correct';
+            } else if (benchmark.technicallyCorrectTables?.includes(tableId)) {
+                result = 'technicallyCorrect';
+            }
+            
+            console.log(`Prompt: ${benchmark.userPrompt}, Id: ${tableId}, Result: ${result}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
 
             // If this configuration and benchmark already exists, add the result to the
             // existing list.
@@ -137,20 +156,32 @@ async function run() {
             const existingAnswer = existingConfig?.benchmarkAnswers.find(answer =>
                 answer.userPrompt === benchmark.userPrompt
             );
-
+            
             if (existingAnswer) {
                 existingAnswer.responses.push({
-                    tableId: result,
+                    tableId: tableId,
+                    result: result,
                     milliseconds: queryTime,
-                    tokenUsage: tokenUsage,
+                    tokenUsage: {
+                        completionTokens: tokenUsage.completionTokens,
+                        promptTokens: tokenUsage.promptTokens,
+                        totalTokens: tokenUsage.totalTokens,
+                    },
+                    errorMessage: errorMessage,
                 });
             } else if (existingConfig) {
                 existingConfig.benchmarkAnswers.push({
                     userPrompt: benchmark.userPrompt,
                     responses: [{
-                        tableId: result,
+                        tableId: tableId,
+                        result: result,
                         milliseconds: queryTime,
-                        tokenUsage: tokenUsage,
+                        tokenUsage: {
+                            completionTokens: tokenUsage.completionTokens,
+                            promptTokens: tokenUsage.promptTokens,
+                            totalTokens: tokenUsage.totalTokens,
+                        },
+                        errorMessage: errorMessage,
                     }],
                 });
             } else {
@@ -159,9 +190,15 @@ async function run() {
                     benchmarkAnswers: [{
                         userPrompt: benchmark.userPrompt,
                         responses: [{
-                            tableId: result,
+                            tableId: tableId,
+                            result: result,
                             milliseconds: queryTime,
-                            tokenUsage: tokenUsage,
+                            tokenUsage: {
+                                completionTokens: tokenUsage.completionTokens,
+                                promptTokens: tokenUsage.promptTokens,
+                                totalTokens: tokenUsage.totalTokens,
+                            },
+                            errorMessage: errorMessage,
                         }],
                     }]
                 })
