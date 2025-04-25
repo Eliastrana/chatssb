@@ -52,10 +52,11 @@ export function modelInitializer(
     };
     
     switch (modelType) {
+        case ModelType.GPTo4Mini:
         case ModelType.GPTo3Mini:
             return new ChatOpenAI({
                 openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPTo3Mini,
+                modelName: modelType,
                 reasoningEffort: 'low',
                 ...defaultLLMConfig
             });
@@ -80,9 +81,10 @@ export function modelInitializer(
             });
         case ModelType.Llama3_3_70b:
         case ModelType.Llama3_1_8b:
-        case ModelType.Llama3Maverick:
-        case ModelType.Llama3Scout:
+        case ModelType.Llama4Maverick:
+        case ModelType.Llama4Scout:
         case ModelType.DeepseekR1_70b:
+        case ModelType.Qwen_QwQ_32b:
             return new ChatGroq({
                 model: modelType,
                 temperature: 0,

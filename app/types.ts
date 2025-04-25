@@ -147,9 +147,10 @@ export enum ModelType {
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
     Llama3_3_70b = 'llama-3.3-70b-versatile',
     Llama3_1_8b = 'llama-3.1-8b-instant',
-    Llama3Maverick = 'meta-llama/llama-4-maverick-17b-128e-instruct',
-    Llama3Scout = 'meta-llama/llama-4-scout-17b-16e-instruct',
+    Llama4Maverick = 'meta-llama/llama-4-maverick-17b-128e-instruct',
+    Llama4Scout = 'meta-llama/llama-4-scout-17b-16e-instruct',
     DeepseekR1_70b = 'deepseek-r1-distill-llama-70b',
+    Qwen_QwQ_32b = 'qwen-qwq-32b'
 }
 
 export interface DecoupledRunnable {

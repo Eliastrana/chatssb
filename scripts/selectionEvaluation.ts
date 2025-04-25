@@ -27,17 +27,23 @@ async function run() {
 
     // Setup configurations
     const models = [
-        ModelType.GPT4_1Nano,
+        ModelType.GPT4_1,
+        ModelType.GPTo4Mini,
+        ModelType.GeminiFlash2,
+        ModelType.Llama3_3_70b,
+        ModelType.Llama4Maverick,
+        ModelType.DeepseekR1_70b,
+        ModelType.Qwen_QwQ_32b,
     ];
 
     const configurations: SelectionConfiguration[] = [];
     
     const selectionTechniques = {
-        expression: true,
+        expression: false,
         enum: true,
-        redundant: true,
+        redundant: false,
     }
-    const reasoning: [false] | [true] | [false, true] = [false, true];
+    const reasoning: [false] | [true] | [false, true] = [true];
 
     for (const model of models) {
         for (const isReasoning of reasoning) {
@@ -65,13 +71,8 @@ async function run() {
         }
     }
 
-    // Sort configurations by model and selectionTechnique
-    configurations.sort((a, b) => {
-        if (a.model !== b.model) {
-            return a.model.localeCompare(b.model);
-        }
-        return a.selectionTechnique.localeCompare(b.selectionTechnique);
-    });
+    // Randomize configuration order
+    configurations.sort(() => Math.random() - 0.5);
 
     console.log(`All configurations\n${JSON.stringify(configurations, null, 2)}`);
 
@@ -95,17 +96,28 @@ async function run() {
         promptTokens: 0,
         totalTokens: 0
     };
-    
+
+    const initTime = Date.now();
+
     for (const config of configurations) {
-
-
         const model = modelInitializer(
             config.model,
             sendLog,
             tokenUsage,
         );
 
-        console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
+        const elapsedTime = Date.now() - initTime;
+        const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+        const seconds = Math.floor((elapsedTime / 1000) % 60);
+
+        const remainingConfigs = configurations.length - configurations.indexOf(config) - 1;
+        const estimatedTime = Math.floor((elapsedTime / (configurations.indexOf(config) + 1)) * remainingConfigs);
+        const remainingHours = Math.floor((estimatedTime / (1000 * 60 * 60)) % 24);
+        const remainingMinutes = Math.floor((estimatedTime / (1000 * 60)) % 60);
+        const remainingSeconds = Math.floor((estimatedTime / 1000) % 60);
+
+        console.log(`\x1b[1mElapsed time: ${hours}h ${minutes}m ${seconds}s | Estimated time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s | Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}\x1b[0m`);
 
         for (const benchmark of evaluationBenchmark) {
             if (!benchmark.selectionBenchmarks) continue;
@@ -127,6 +139,7 @@ async function run() {
                 let SSBGetUrl = `https://data.ssb.no/api/pxwebapi/v2-beta/tables/${selectionBenchmark.tableId}/data?lang=no&format=json-stat2`;
 
                 const startTime = Date.now();
+                let queryTime;
                 try {
                     if (config.selectionTechnique === 'expression') {
                         const parameters = await parsingRunnableRetryWrapper(
@@ -174,6 +187,8 @@ async function run() {
                         }
                     });
                     
+                    queryTime = Date.now() - startTime;
+                    
                     if (!responseTableData.ok) {
                         throw new Error(`Failed to fetch table data: ${responseTableData.statusText}`);
                     }
@@ -211,8 +226,9 @@ async function run() {
                         }
                     }
                 } catch (e) {
+                    queryTime = Date.now() - startTime;
+                    
                     errorMessage = (e as Error).message;
-                    console.error(errorMessage);
                     
                     parameters = {
                         tableId: 'error',
@@ -221,15 +237,16 @@ async function run() {
                     };
                 }
                 
-                const queryTime = Date.now() - startTime;
+                if (parameters.tableId === 'error') {
+                    console.log(`Prompt: ${benchmark.userPrompt}, Time: ${queryTime}ms, Error`);
+                } else {
+                    const correctValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.correctValues, 0);
+                    const extraValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.extraValues, 0);
+                    const missingValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.missingValues, 0);
 
-                const logResult = {
-                    tableId: parameters.tableId,
-                    parameters: parameters.parameters,
-                };
-                    
-                console.log(`Prompt: ${benchmark.userPrompt}, Result: ${JSON.stringify(logResult)}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
-
+                    console.log(`Prompt: ${benchmark.userPrompt}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}, Correct values: ${correctValues}, Extra values: ${extraValues}, Missing values: ${missingValues}`);
+                }
+                
                 // If this configuration and benchmark already exists, add the result to the existing list.
                 const existingConfig = answers.configurations.find(configuration =>
                     _.isEqual(configuration.selectionConfiguration, config),
