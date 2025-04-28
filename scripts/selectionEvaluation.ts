@@ -27,9 +27,13 @@ async function run() {
 
     // Setup configurations
     const models = [
-        ModelType.GeminiFlash2Lite,
-        //modelInitializer(ModelType.GeminiFlash2Lite, sendLog),
-        //modelInitializer(ModelType.Llama3_1_8b, sendLog),
+        ModelType.GPT4_1,
+        ModelType.GPTo4Mini,
+        ModelType.GeminiFlash2,
+        ModelType.Llama3_3_70b,
+        ModelType.Llama4Maverick,
+        ModelType.DeepseekR1_70b,
+        ModelType.Qwen_QwQ_32b,
     ];
 
     const configurations: SelectionConfiguration[] = [];
@@ -39,7 +43,7 @@ async function run() {
         enum: true,
         redundant: false,
     }
-    const reasoning: [false] | [true] | [false, true] = [false];
+    const reasoning: [false] | [true] | [false, true] = [true];
 
     for (const model of models) {
         for (const isReasoning of reasoning) {
@@ -67,13 +71,8 @@ async function run() {
         }
     }
 
-    // Sort configurations by model and selectionTechnique
-    configurations.sort((a, b) => {
-        if (a.model !== b.model) {
-            return a.model.localeCompare(b.model);
-        }
-        return a.selectionTechnique.localeCompare(b.selectionTechnique);
-    });
+    // Randomize configuration order
+    configurations.sort(() => Math.random() - 0.5);
 
     console.log(`All configurations\n${JSON.stringify(configurations, null, 2)}`);
 
@@ -97,26 +96,38 @@ async function run() {
         promptTokens: 0,
         totalTokens: 0
     };
-    
+
+    const initTime = Date.now();
+
     for (const config of configurations) {
-
-
-        const model = await modelInitializer(
+        const model = modelInitializer(
             config.model,
             sendLog,
             tokenUsage,
         );
 
-        console.log(`Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
+        const elapsedTime = Date.now() - initTime;
+        const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+        const seconds = Math.floor((elapsedTime / 1000) % 60);
+
+        const remainingConfigs = configurations.length - configurations.indexOf(config) - 1;
+        const estimatedTime = Math.floor((elapsedTime / (configurations.indexOf(config) + 1)) * remainingConfigs);
+        const remainingHours = Math.floor((estimatedTime / (1000 * 60 * 60)) % 24);
+        const remainingMinutes = Math.floor((estimatedTime / (1000 * 60)) % 60);
+        const remainingSeconds = Math.floor((estimatedTime / 1000) % 60);
+
+        console.log(`\x1b[1mElapsed time: ${hours}h ${minutes}m ${seconds}s | Estimated time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s | Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}\x1b[0m`);
 
         for (const benchmark of evaluationBenchmark) {
             if (!benchmark.selectionBenchmarks) continue;
 
-            let prompt = `${benchmark.userPrompt}\nDate: 6 Jul 2024`;
+            let prompt = `${benchmark.userPrompt}\nDate: 1 Jul 2024`;
             prompt += config.reasoning ? `\n${benchmark.reasoningPrompt}` : '';
 
             for (const selectionBenchmark of benchmark.selectionBenchmarks) {
-                let result: SelectionEvaluationParameters;
+                let parameters: SelectionEvaluationParameters;
+                let errorMessage;
 
                 const response = await fetch(`https://data.ssb.no/api/pxwebapi/v2-beta/tables/${selectionBenchmark.tableId}/metadata?lang=en&outputFormat=json-stat2`, {
                     method: "GET",
@@ -128,8 +139,8 @@ async function run() {
                 let SSBGetUrl = `https://data.ssb.no/api/pxwebapi/v2-beta/tables/${selectionBenchmark.tableId}/data?lang=no&format=json-stat2`;
 
                 const startTime = Date.now();
+                let queryTime;
                 try {
-                    
                     if (config.selectionTechnique === 'expression') {
                         const parameters = await parsingRunnableRetryWrapper(
                             model,
@@ -176,13 +187,15 @@ async function run() {
                         }
                     });
                     
+                    queryTime = Date.now() - startTime;
+                    
                     if (!responseTableData.ok) {
                         throw new Error(`Failed to fetch table data: ${responseTableData.statusText}`);
                     }
                     
                     const selection = (await responseTableData.json()) as PxWebData;
                     
-                    result = {
+                    parameters = {
                         tableId: selectionBenchmark.tableId,
                         parameters: {},
                         url: SSBGetUrl
@@ -195,7 +208,7 @@ async function run() {
                         const correctBenchmarkValues = selectionBenchmark.parameters[dimensionKey] || [];
                         const correctSelectedValues = correctBenchmarkValues.filter(key => selectedValues.includes(key)).length;
                         
-                        result.parameters[dimensionKey] = {
+                        parameters.parameters[dimensionKey] = {
                             correctValues: correctSelectedValues,
                             extraValues: selectedValues.length - correctSelectedValues,
                             missingValues: correctBenchmarkValues.length - correctSelectedValues,
@@ -204,8 +217,8 @@ async function run() {
 
                     // Add missing dimensions from the benchmark
                     for (const key of Object.keys(selectionBenchmark.parameters)) {
-                        if (!result.parameters[key]) {
-                            result.parameters[key] = {
+                        if (!parameters.parameters[key]) {
+                            parameters.parameters[key] = {
                                 correctValues: 0,
                                 extraValues: 0,
                                 missingValues: selectionBenchmark.parameters[key].length,
@@ -213,25 +226,27 @@ async function run() {
                         }
                     }
                 } catch (e) {
-                    const error = e as Error;
-                    console.error(error.message);
+                    queryTime = Date.now() - startTime;
                     
-                    result = {
+                    errorMessage = (e as Error).message;
+                    
+                    parameters = {
                         tableId: 'error',
                         parameters: {},
                         url: SSBGetUrl,
                     };
                 }
                 
-                const queryTime = Date.now() - startTime;
+                if (parameters.tableId === 'error') {
+                    console.log(`Prompt: ${benchmark.userPrompt}, Time: ${queryTime}ms, Error`);
+                } else {
+                    const correctValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.correctValues, 0);
+                    const extraValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.extraValues, 0);
+                    const missingValues = Object.values(parameters.parameters).reduce((sum, value) => sum + value.missingValues, 0);
 
-                const logResult = {
-                    tableId: result.tableId,
-                    parameters: result.parameters,
-                };
-                    
-                console.log(`Prompt: ${benchmark.userPrompt}, Result: ${JSON.stringify(logResult)}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}`);
-
+                    console.log(`Prompt: ${benchmark.userPrompt}, Time: ${queryTime}ms, Total token usage: ${tokenUsage.totalTokens}, Correct values: ${correctValues}, Extra values: ${extraValues}, Missing values: ${missingValues}`);
+                }
+                
                 // If this configuration and benchmark already exists, add the result to the existing list.
                 const existingConfig = answers.configurations.find(configuration =>
                     _.isEqual(configuration.selectionConfiguration, config),
@@ -243,17 +258,27 @@ async function run() {
                 
                 if (existingAnswer) {
                     existingAnswer.responses.push({
-                        selectedParameters: result,
+                        selectedParameters: parameters,
                         milliseconds: queryTime,
-                        tokenUsage: tokenUsage,
+                        tokenUsage: {
+                            completionTokens: tokenUsage.completionTokens,
+                            promptTokens: tokenUsage.promptTokens,
+                            totalTokens: tokenUsage.totalTokens,
+                        },
+                        errorMessage: errorMessage,
                     });
                 } else if (existingConfig) {
                     existingConfig.benchmarkAnswers.push({
                         userPrompt: benchmark.userPrompt,
                         responses: [{
-                            selectedParameters: result,
+                            selectedParameters: parameters,
                             milliseconds: queryTime,
-                            tokenUsage: tokenUsage,
+                            tokenUsage: {
+                                completionTokens: tokenUsage.completionTokens,
+                                promptTokens: tokenUsage.promptTokens,
+                                totalTokens: tokenUsage.totalTokens,
+                            },
+                            errorMessage: errorMessage,
                         }],
                     });
                 } else {
@@ -262,9 +287,14 @@ async function run() {
                         benchmarkAnswers: [{
                             userPrompt: benchmark.userPrompt,
                             responses: [{
-                                selectedParameters: result,
+                                selectedParameters: parameters,
                                 milliseconds: queryTime,
-                                tokenUsage: tokenUsage,
+                                tokenUsage: {
+                                    completionTokens: tokenUsage.completionTokens,
+                                    promptTokens: tokenUsage.promptTokens,
+                                    totalTokens: tokenUsage.totalTokens,
+                                },
+                                errorMessage: errorMessage,
                             }],
                         }]
                     })

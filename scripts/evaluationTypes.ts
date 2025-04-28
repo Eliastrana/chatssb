@@ -49,12 +49,14 @@ export interface NavigationAnswers {
             userPrompt: string,
             responses: {
                 tableId: string,
+                result: 'correct' | 'technicallyCorrect' | 'incorrect' | 'error',
                 milliseconds: number, // Time for response in ms
                 tokenUsage: {
                     completionTokens: number,
                     promptTokens: number,
                     totalTokens: number,
                 }
+                errorMessage?: string, // Error message if the result is 'error'
             }[]
         }[]
     }[]
@@ -73,6 +75,7 @@ export interface SelectionAnswers {
                     promptTokens: number,
                     totalTokens: number,
                 }
+                errorMessage?: string, // Error message if the result is 'error'
             }[]
         }[]
     }[]

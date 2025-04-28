@@ -52,59 +52,45 @@ export function modelInitializer(
     };
     
     switch (modelType) {
-        case ModelType.GPT4oMini:
-            return new ChatOpenAI({
-                openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPT4oMini,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
+        case ModelType.GPTo4Mini:
         case ModelType.GPTo3Mini:
             return new ChatOpenAI({
                 openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPTo3Mini,
+                modelName: modelType,
                 reasoningEffort: 'low',
                 ...defaultLLMConfig
             });
-        case ModelType.GeminiFlash2Lite:
-            return new ChatGoogleGenerativeAI({
-                model: ModelType.GeminiFlash2Lite,
+        case ModelType.GPT4oMini:
+        case ModelType.GPT4_1Nano:
+        case ModelType.GPT4_1Mini:
+        case ModelType.GPT4_1:
+            return new ChatOpenAI({
+                openAIApiKey: process.env.OPENAI_API_KEY,
+                modelName: modelType,
                 temperature: 0,
-                convertSystemMessageToHumanContent: true,
                 ...defaultLLMConfig
             });
+        case ModelType.GeminiFlash2Lite:
+        case ModelType.GeminiFlash2:
         case ModelType.Gemini2_5ProExp:
             return new ChatGoogleGenerativeAI({
-                model: ModelType.Gemini2_5ProExp,
+                model: modelType,
                 temperature: 0,
                 convertSystemMessageToHumanContent: true,
                 ...defaultLLMConfig
             });
         case ModelType.Llama3_3_70b:
-            return new ChatGroq({
-                model: ModelType.Llama3_3_70b,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
         case ModelType.Llama3_1_8b:
-            return new ChatGroq({
-                model: ModelType.Llama3_1_8b,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
+        case ModelType.Llama4Maverick:
+        case ModelType.Llama4Scout:
         case ModelType.DeepseekR1_70b:
+        case ModelType.Qwen_QwQ_32b:
             return new ChatGroq({
-                model: ModelType.DeepseekR1_70b,
+                model: modelType,
                 temperature: 0,
                 ...defaultLLMConfig
             });
         default:
-            console.log('Using GPT-4o-mini from fallback');
-            return new ChatOpenAI({
-                openAIApiKey: process.env.OPENAI_API_KEY,
-                modelName: ModelType.GPT4oMini,
-                temperature: 0,
-                ...defaultLLMConfig
-            });
+            throw new Error(`Model type ${modelType} not supported`);
     }
 }

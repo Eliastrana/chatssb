@@ -29,9 +29,6 @@ export function enumMulti(
                         wildcard: z.string(),
                     }),
                     z.object({
-                        exactMatch: z.string(),
-                    }),
-                    z.object({
                         top: z
                             .object({
                                 n: z.number(),
