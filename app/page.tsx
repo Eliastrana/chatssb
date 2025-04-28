@@ -55,12 +55,12 @@ export default function Home() {
                 const params: BackendAPIParams = {
                     userMessage,
                     dev: true,
-                    reasoning: false,
-                    reasoningModel: ModelType.GeminiFlash2Lite,
-                    navigationTechnique: NavType.FolderNavigation_1,
-                    navigationModel: ModelType.GeminiFlash2Lite,
+                    reasoning: true,
+                    reasoningModel: ModelType.GPT4_1,
+                    navigationTechnique: NavType.KeywordSearch_5,
+                    navigationModel: ModelType.GPT4_1,
                     selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GeminiFlash2Lite,
+                    selectionModel: ModelType.GPTo4Mini,
                     useQAURL: false,
                 };
 
