@@ -15,6 +15,7 @@ export function redundantSingleToURL(
             }
             if (filteredValues.length === 0) {
                 url += `&valueCodes[${key}]=*`;
+                sendLog({ content: `Vi klarte ikke å finne gyldige verdier for variabel: '${key}'. Alle mulige verdier i denne variabelen er derfor valgt.`, eventType: 'wildcard' });
             } else {
                 const selection = filteredValues.join(",");
                 url += `&valueCodes[${key}]=${selection}`;
