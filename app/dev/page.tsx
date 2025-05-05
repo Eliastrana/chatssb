@@ -244,6 +244,17 @@ export default function Home() {
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
+                
+                eventSource.addEventListener('wildcard', (e: MessageEvent) => {
+                    const newLog = replaceNewLines(e.data);
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            sender: 'bot',
+                            text: newLog,
+                        },
+                    ]);
+                });
 
                 eventSource.onerror = (error) => {
                     reject(new Error(error.toString()));

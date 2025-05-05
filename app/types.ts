@@ -78,7 +78,7 @@ export interface SSBSearchResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error';
+    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error' | 'wildcard';
 }
 
 export interface SelectionParamaters {
