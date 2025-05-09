@@ -11,7 +11,7 @@ import HoverInfoModal from "@/app/components/InfoModal";
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?' },
+        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Jeg kan ikke svare på spørsmål om "hvorfor", og kan ikke huske det du sa i den forrige meldingen! Hva kan jeg hjelpe deg med?' },
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
