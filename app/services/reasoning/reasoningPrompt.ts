@@ -12,4 +12,5 @@ Follow this structure in your analysis:
 6. **Potential Relevant Keywords:** Generate keywords or concepts that could be used to search for relevant tables in SSB’s database.
 
 Do not present any data or links at this stage — the goal here is solely to understand what the user is actually asking.
+All text should be in English, and you should not use any Norwegian terms or phrases.
 `

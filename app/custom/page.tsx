@@ -66,6 +66,11 @@ export default function Home() {
 
                 const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
 
+                eventSource.addEventListener('log', (e: MessageEvent) => {
+                    const newLog = replaceNewLines(e.data);
+                    console.log(newLog);
+                });
+                
                 eventSource.addEventListener('nav', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
                     setNavLog(newLog);

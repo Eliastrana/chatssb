@@ -1,10 +1,18 @@
-import {CustomAPIParams, ModelType, PxWebData, ServerLog, SSBTableMetadata} from "@/app/types";
-import {redundantSingle} from "@/app/services/selection/runnables/redundantSingle";
-import {redundantSingleToURL} from "@/app/services/selection/utils/redundantSingleToURL";
+import {
+    CustomAPIParams,
+    ModelType,
+    PxWebData,
+    ServerLog,
+    SSBCodeList,
+    SSBTableMetadata
+} from "@/app/types";
 import {reasoning} from "@/app/services/reasoning/runnables/reasoning";
 import {modelInitializer} from "@/app/services/modelInitializer";
 import {keywordSearchToMetadata} from "@/app/services/navigation/keywordSearchToMetadata";
 import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
+import {valueSelection} from "@/app/custom/valueSelection";
+import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
+import {dimensionSelection} from "@/app/custom/dimensionSelection";
 
 
 export async function invokeHandler(
@@ -52,22 +60,62 @@ export async function invokeHandler(
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
     const selectionModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
+    
+    // if no table has code list or if no table is optional
+    const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {
+        return value.extension.codeLists.length > 0 || value.extension.elimination;
+    });
+    
+    let selectedDimensions = {}
+    
+    if (hasCodeListOrIsOptional) {
+        selectedDimensions =  await parsingRunnableRetryWrapper(
+            selectionModel,
+            userPrompt,
+            dimensionSelection(tableMetadata)
+        )
 
+        console.log(selectedDimensions)
+        
+        for (const [dimension, value] of Object.entries(selectedDimensions)) {
+            if (value === 'OMITTED') {
+                delete tableMetadata.dimension[dimension];
+                continue;
+            }
 
-    const schemaSinglethreadedSelectedVariables = await parsingRunnableRetryWrapper(
+            if (value !== 'INCLUDED') {
+                const response = await fetch(`${baseURL}/codeLists/${value}?lang=en`, {
+                    method: "GET",
+                    headers: {"Content-Type": "application/json"},
+                });
+
+                const codeList = (await response.json()) as SSBCodeList;
+                
+                tableMetadata.dimension[dimension].label += ` (${codeList.label})`;
+                
+                tableMetadata.dimension[dimension].category.label = {};
+
+                for (const item of codeList.values) {
+                    tableMetadata.dimension[dimension].category.label[item.code] = item.label;
+                }
+            }
+        }
+    }
+    
+    const selectedValues = await parsingRunnableRetryWrapper(
         selectionModel,
         userPrompt,
-        redundantSingle(tableMetadata)
+        valueSelection(tableMetadata)
     )
 
-    SSBGetUrl = redundantSingleToURL(
-        schemaSinglethreadedSelectedVariables,
+    SSBGetUrl = customSelectionToURL(
+        selectedValues,
         SSBGetUrl,
         tableMetadata,
+        selectedDimensions,
         sendLog
     );
-
-
+    
     sendLog({ content: SSBGetUrl, eventType: 'log' });
 
     const responseTableData = await fetch(SSBGetUrl, {

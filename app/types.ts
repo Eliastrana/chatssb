@@ -50,7 +50,14 @@ export interface SSBTableMetadata {
             label: Record<string, string>;
             unit?: Record<string, { base: string; decimals: number; }>;
         };
-        extension: { elimination: boolean; };
+        extension: { 
+            elimination: boolean; 
+            codeLists: {
+                id: string;
+                label: string;
+                type: 'Aggregation' | 'Valueset'
+            }[]
+        };
     }>;
     extension: {
         px: {
@@ -58,6 +65,16 @@ export interface SSBTableMetadata {
         }
     };
 }
+
+export interface SSBCodeList {
+    id: string;
+    label: string;
+    values: {
+        code: string;
+        label: string;
+    }[];
+}
+
 
 export interface SSBEntry {
     type: string;
