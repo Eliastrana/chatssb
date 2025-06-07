@@ -1,17 +1,17 @@
 "use client";
 import {useCallback, useEffect, useRef, useState} from 'react';
-import TitleSection from './components/chat_interface/TitleSection';
-import ChatMessages from './components/chat_interface/ChatMessages';
-import ChatInput from './components/chat_interface/ChatInput';
+import TitleSection from '@/app/components/chat_interface/TitleSection';
+import ChatMessages from '@/app/components/chat_interface/ChatMessages';
+import ChatInput from '@/app/components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import {BackendAPIParams, Message, ModelType, NavType, PxWebData, SelType} from './types';
+import {CustomAPIParams, Message, PxWebData} from '@/app/types';
 import HoverInfoModal from "@/app/components/InfoModal";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Jeg kan ikke svare på spørsmål om "hvorfor", og kan ikke huske det du sa i den forrige meldingen! Hva kan jeg hjelpe deg med?' },
+        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?' },
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -52,16 +52,8 @@ export default function Home() {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
                 
-                const params: BackendAPIParams = {
+                const params: CustomAPIParams = {
                     userMessage,
-                    dev: true,
-                    reasoning: true,
-                    reasoningModel: ModelType.GPT4_1,
-                    navigationTechnique: NavType.KeywordSearch_5,
-                    navigationModel: ModelType.GPT4_1,
-                    selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GPTo4Mini,
-                    useQAURL: false,
                 };
 
                 // Convert params to query string
@@ -70,13 +62,9 @@ export default function Home() {
                     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
                     .join('&');
                 
-                const eventSource = new EventSource(`/api/stream?${queryString}`);
+                const eventSource = new EventSource(`/api/custom?${queryString}`);
 
                 const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
-
-                eventSource.addEventListener('log', (e: MessageEvent) => {
-                    console.log("Terminal log:\n", replaceNewLines(e.data));
-                });
 
                 eventSource.addEventListener('nav', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
