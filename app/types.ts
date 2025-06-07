@@ -78,7 +78,7 @@ export interface SSBSearchResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error' | 'wildcard';
+    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error' | 'info';
 }
 
 export interface SelectionParamaters {
@@ -156,4 +156,10 @@ export enum ModelType {
 export interface DecoupledRunnable {
     schema: ZodSchema,
     systemPrompt: string,
+}
+
+// --- CUSTOM SOLUTION ---
+
+export interface CustomAPIParams {
+    userMessage: string;
 }
