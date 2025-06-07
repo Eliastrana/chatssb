@@ -21,6 +21,13 @@ async function run() {
     const models = [
         ModelType.GPT4_1Nano,
         ModelType.GPT4_1Mini,
+        ModelType.GPT4_1,
+        ModelType.GeminiFlash2,
+        ModelType.GeminiFlash2Lite,
+        ModelType.Llama3_3_70b,
+        ModelType.Llama4Maverick,
+        ModelType.Llama4Scout,
+        ModelType.DeepseekR1_70b
     ]
     
     const numFolderNavigation = { start: 1, end: 5, step: 2 };
@@ -53,17 +60,8 @@ async function run() {
             }
         }
     }
-    
-    // sort by models, then by navigationTechnique, then by navigationValue
-    configurations.sort((a, b) => {
-        if (a.model !== b.model) {
-            return a.model.localeCompare(b.model);
-        }
-        if (a.navigationTechnique !== b.navigationTechnique) {
-            return a.navigationTechnique.localeCompare(b.navigationTechnique);
-        }
-        return a.navigationValue - b.navigationValue;
-    });
+
+    configurations.sort(() => Math.random() - 0.5);
 
     console.log(`All configurations\n${JSON.stringify(configurations, null, 2)}`);
     
@@ -109,7 +107,7 @@ async function run() {
         const remainingMinutes = Math.floor((estimatedTime / (1000 * 60)) % 60);
         const remainingSeconds = Math.floor((estimatedTime / 1000) % 60);
 
-        console.log(`Elapsed time: ${hours}h ${minutes}m ${seconds}s | Estimated time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s | Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}`);
+        console.log(`\x1b[1mElapsed time: ${hours}h ${minutes}m ${seconds}s | Estimated time remaining: ${remainingHours}h ${remainingMinutes}m ${remainingSeconds}s | Testing configuration: ${JSON.stringify(config, null, 0).replace(/\n/g, '')}\x1b[0m`);
         
         for (const benchmark of evaluationBenchmark) {
             let tableId;
