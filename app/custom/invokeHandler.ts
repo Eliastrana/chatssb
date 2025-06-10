@@ -12,6 +12,7 @@ import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
 import {dimensionSelection} from "@/app/custom/dimensionSelection";
 import {customKeywordSearch} from "@/app/custom/customKeywordSearch";
 import {customWrapper} from "@/app/custom/customWrapper";
+import {customReasoningPrompt} from "@/app/custom/customReasoningPrompt";
 
 
 export async function invokeHandler(
@@ -19,7 +20,7 @@ export async function invokeHandler(
     sendLog: (log: ServerLog) => void,
 ): Promise<PxWebData> {
 
-    let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
+    let baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/';
     
     // If Weekends or 05.00-08.15 every day:
     const currentDay = new Date().getDay();
@@ -30,8 +31,19 @@ export async function invokeHandler(
     During these times, the test Statbank is used instead.`, eventType: 'info'});
     }
     
-    let tableMetadata: SSBTableMetadata;
     const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
+    
+    sendLog({ content: 'Ressonerer...', eventType: 'nav' });
+    
+    const reasoning = await customWrapper(
+        navigationModel,
+        params,
+        customReasoningPrompt
+    );
+    
+    params.userMessageReflection = reasoning.content;
+    
+    let tableMetadata: SSBTableMetadata;
 
     tableMetadata = await customKeywordSearch(
         navigationModel,

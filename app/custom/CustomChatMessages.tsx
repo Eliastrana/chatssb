@@ -119,8 +119,8 @@ function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: 
             <div key="desc" className="mt-2">
                 <h1 className="text-xl font-semibold mt-2">Tips til å finne det du leter etter:</h1>
                 <p style={{ whiteSpace: 'pre-line' }}>
-                    1. Spissere spørsmål gir spissere svar
-                    2. Inkluder årstall, enten det er et eller flere
+                    1. Spissere spørsmål gir spissere svar<br/>
+                    2. Inkluder årstall, enten det er et eller flere<br/>
                     3. Sett parametre i spørsmålet
                 </p>
             </div>

@@ -22,6 +22,21 @@ export function dimensionSelection(
                         prompt += `"${codeList.id}":"${codeList.label}",`;
                     }
                     prompt = prompt.slice(0, -1) + `}`;
+                } else if (value.extension.elimination) {
+                    prompt += `, values: {`;
+                    
+                    let printedValues = 0;
+                    
+                    for (const variableValue of Object.values(value.category.label)) {
+                        if (printedValues > 10) {
+                            const remainingValues = Object.keys(value.category.label).length - printedValues;
+                            prompt += ` ...(${remainingValues} more)`;
+                            break;
+                        }
+                        prompt += `"${variableValue}",`;
+                        printedValues++;
+                    }
+                    prompt += `}`;
                 }
                 
                 if (value.extension.elimination) {

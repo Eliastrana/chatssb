@@ -33,7 +33,7 @@ export async function customKeywordSearch(
     
     sendLog({content: `Henter tabeller for søkeordene '${keywordStrings}'`, eventType: 'nav'});
 
-    const keywordResponse = await fetch(`${baseURL}/tables?lang=en&query=${keywordParamaters}&pageSize=${numTables}`, {
+    const keywordResponse = await fetch(`${baseURL}/tables?lang=en&pageSize=${numTables}&query=${keywordParamaters}`, {
         method: "GET",
         headers: {"Content-Type": "application/json"},
     });

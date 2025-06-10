@@ -3,7 +3,7 @@ import {HumanMessage, SystemMessage} from "@langchain/core/messages";
 import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
 
-export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, decoupledRunnable: DecoupledRunnable, maxRetries: number = 1) {
+export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, runnableParams: DecoupledRunnable | string, maxRetries: number = 1): Promise<any> {
     let attempts = 0;
     let errors: string[] =  [];
     
@@ -32,6 +32,7 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
                             break;
                         }
                         formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                        printedLabels++;
                     }
                 }
             } else if (message.type === 'error') {
@@ -42,6 +43,8 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
         }
         formattedChatHistory += `\n`;
     }
+    
+    const taskPrompt = typeof runnableParams === 'string' ? runnableParams : runnableParams.systemPrompt || '';
     
     while (attempts < maxRetries) {
         try {
@@ -56,12 +59,12 @@ You are a search engine that fetches statistics from SSB (Statistics Norway) bas
 Although the user may communicate in Norwegian or other languages, you should always respond in English no matter the task or query.
 
 ### Current Task
-${decoupledRunnable.systemPrompt}
+${taskPrompt}
 
 ### Chat History
 ${formattedChatHistory}${errors.length > 0 ? `\n\n### Previous Errors\n${errors.join('\n')}` : ``}`),
-                new HumanMessage(params.userMessage)
-            ]).pipe(model.withStructuredOutput(decoupledRunnable.schema)).invoke({});
+                new HumanMessage(`${params.userMessage}${params.userMessageReflection ? `\n\n### User Message Analysis\n${params.userMessageReflection}` : ''}`),
+            ]).pipe(typeof runnableParams === 'string' ? model : model.withStructuredOutput(runnableParams.schema)).invoke({});
         } catch (error) {
             attempts++;
             errors = [...errors, `Attempt ${attempts}: ${error instanceof Error ? error.message : String(error)}`];
