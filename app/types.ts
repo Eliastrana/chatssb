@@ -1,5 +1,12 @@
 import {ZodSchema} from "zod";
 
+export interface CustomMessage {
+    sender: 'user' | 'bot';
+    text?: string;
+    pxData?: PxWebData;
+    type?: 'normal' | 'warning' | 'error';
+}
+
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
@@ -11,7 +18,6 @@ export interface Message {
     tableid?: string;
     unit?: string;
     pxData?: PxWebData;
-
 }
 
 export interface PxWebData {

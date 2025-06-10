@@ -1,18 +1,19 @@
 "use client";
 import {useCallback, useEffect, useRef, useState} from 'react';
 import TitleSection from '@/app/components/chat_interface/TitleSection';
-import ChatMessages from '@/app/components/chat_interface/ChatMessages';
 import ChatInput from '@/app/components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import {CustomAPIParams, Message, PxWebData} from '@/app/types';
+import {CustomAPIParams, CustomMessage, PxWebData} from '@/app/types';
 import HoverInfoModal from "@/app/components/InfoModal";
+import CustomChatMessages from './CustomChatMessages';
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
-    const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?' },
+    const [messages, setMessages] = useState<CustomMessage[]>([
+        { sender: 'bot', text: `Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?` },
     ]);
+    
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,8 +22,6 @@ export default function Home() {
 
     const [navLog, setNavLog] = useState("");
     const [navLogSteps, setNavLogSteps] = useState<string[]>([]);
-
-
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -42,12 +41,17 @@ export default function Home() {
 
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
+        
         setFullscreenPxData(null);
-        setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
         setInput('');
         setIsLoading(true);
         setError(null);
-
+        
+        const messageHistory = [...messages, { sender: 'user' as const, text: userMessage }];
+        setMessages(messageHistory);
+        
+        console.log(JSON.stringify(messageHistory, null, 2));
+        
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
@@ -106,74 +110,17 @@ export default function Home() {
             
             console.log("Recieved data:", tableData);
             
-            // Litt skitten chat kode som klarer å hente ut prosent
-            const metricKey = tableData.role?.metric?.[0];
-            let baseUnit = '';
-            let categoryLabels: Record<string, string> = {};
 
-            if (metricKey) {
-                const metricDimension = tableData.dimension[metricKey];
-                if (metricDimension) {
-                    const units = metricDimension.category.unit;
-                    const firstUnitKey = Object.keys(units)[0];
-                    baseUnit = units[firstUnitKey].base;
-                    console.log("Base Unit:", baseUnit);
-
-                    categoryLabels = metricDimension.category.label;
-                    const firstCategoryKey = Object.keys(categoryLabels)[0];
-                    const firstCategoryLabel = categoryLabels[firstCategoryKey];
-                    console.log("First Category Label:", firstCategoryLabel);
-                } else {
-                    console.log("Metric dimension not found");
-                }
-            } else {
-                console.log("Metric key not defined");
-            }
-
-            const timeKey = tableData.role?.time?.[0];
-            const allDimensionKeys = Object.keys(tableData.dimension);
-            const groupDimensionKeys = allDimensionKeys.filter(
-                key => key !== metricKey && key !== timeKey
-            );
-
-            const groupKey = groupDimensionKeys[0] || '';
-            let groupLabel = '';
-            if (groupKey) {
-                const groupDimension = tableData.dimension[groupKey];
-                groupLabel = groupDimension.label;
-                console.log("Group Dimension Label:", groupLabel);
-            } else {
-                console.error("No group dimension found");
-            }
-
-            if (Array.isArray(tableData.value) && tableData.value.length === 1) {
-                const variableList: Record<string, string>[] = Object.values(tableData.dimension).map(dimension => {
-                    return { [dimension.label]: Object.values(dimension.category.label)[0] }
-                });
-                
-                setMessages(prev => [
+            setMessages(
+                prev => [
                     ...prev,
                     {
                         sender: 'bot',
-                        text: `Svaret er: `,
-                        underLabel: groupLabel,
-                        label: tableData.label,
-                        tableid: tableData.extension.px.tableid,
-                        value: tableData.value[0],
-                        unit: baseUnit,
-                        variables: variableList
-                    },
-                ]);
-            } else {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        text: "Her er dataen basert på din forespørsel:",
-                        pxData: tableData,
-                    },
-                ]);
-            }
+                        pxData: tableData
+                    }
+                ]
+            )
+            
         } catch (err) {
             console.error(err);
             setMessages(prev => [
@@ -187,8 +134,8 @@ export default function Home() {
                     ...prev,
                     {
                         sender: 'bot',
-                        text: "Tips til å finne det du leter etter:",
-                        description: "1. Spissere spørsmål gir spissere svar \n2. Inkluder årstall, enten det er et eller flere \n3. Sett parametre i spørsmålet "}
+                        type: 'error'
+                    }
                 ]);
                 setHasErrorOccurred(true);
             }
@@ -215,7 +162,7 @@ export default function Home() {
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
-                <ChatMessages
+                <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}
                     messagesEndRef={messagesEndRef}
@@ -223,7 +170,6 @@ export default function Home() {
                     isFullscreen={Boolean(fullscreenPxData)}
                     navLog={navLog}
                     navLogSteps={navLogSteps}
-
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
