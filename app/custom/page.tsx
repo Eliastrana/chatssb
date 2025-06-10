@@ -50,9 +50,7 @@ export default function Home() {
         
         const messageHistory = [...messages, { sender: 'user' as const, text: userMessage }];
         setMessages(messageHistory);
-
-        console.log(JSON.stringify(messageHistory, null, 2));
-
+        
         const data: CustomAPIParams = {
             userMessage,
         };

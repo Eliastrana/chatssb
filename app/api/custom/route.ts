@@ -22,9 +22,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Unknown sessionId' }, { status: 400 });
     }
     
-    console.log(JSON.stringify(data, null, 2));
-    
-    
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({

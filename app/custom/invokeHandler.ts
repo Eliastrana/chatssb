@@ -12,15 +12,13 @@ import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWr
 import {valueSelection} from "@/app/custom/valueSelection";
 import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
 import {dimensionSelection} from "@/app/custom/dimensionSelection";
-import {folderNavigationToMetadata} from "@/app/services/navigation/folderNavigationToMetadata";
+import {customKeywordSearch} from "@/app/custom/customKeywordSearch";
 
 
 export async function invokeHandler(
     params: CustomAPIParams,
     sendLog: (log: ServerLog) => void,
 ): Promise<PxWebData> {
-
-    
 
     let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
@@ -50,10 +48,11 @@ export async function invokeHandler(
     const navigationModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
 
     // TODO, implment custom keyword search that uses a single 100 page search.
-    tableMetadata = await folderNavigationToMetadata(
+    tableMetadata = await customKeywordSearch(
         navigationModel,
         userPrompt,
         3,
+        100,
         sendLog,
         baseURL
     );
