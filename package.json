@@ -11,7 +11,7 @@
     "eval:sel": "tsx scripts/selectionEvaluation.ts"
   },
   "dependencies": {
-    "@langchain/core": "^0.3.43",
+    "@langchain/core": "latest",
     "@langchain/google-genai": "latest",
     "@langchain/groq": "latest",
     "@langchain/openai": "latest",

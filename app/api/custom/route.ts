@@ -2,15 +2,29 @@ import {NextResponse} from 'next/server';
 import {CustomAPIParams, ServerLog} from "@/app/types";
 import {invokeHandler} from "@/app/custom/invokeHandler";
 
+// TODO: This is a temporary in-memory store for sessions.
+// Change to a proper database in production.
+const sessions = new Map<string, CustomAPIParams>();
+
+export async function POST(request: Request) {
+    const body = await request.json() as CustomAPIParams;
+    const sessionId = crypto.randomUUID();
+    sessions.set(sessionId, body);
+    return NextResponse.json({ sessionId });
+}
+
 export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
+    const url       = new URL(request.url);
+    const sessionId = url.searchParams.get('sessionId')!;
+    const data    = sessions.get(sessionId);
 
-    const params: CustomAPIParams = {
-        userMessage: searchParams.get('userMessage') || '',
-    };
+    if (!data) {
+        return NextResponse.json({ error: 'Unknown sessionId' }, { status: 400 });
+    }
     
-    console.log(params);
-
+    console.log(JSON.stringify(data, null, 2));
+    
+    
     const encoder = new TextEncoder();
 
     const stream = new ReadableStream({
@@ -26,7 +40,7 @@ export async function GET(request: Request) {
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
                 
-                const result = await invokeHandler(params, sendLog);
+                const result = await invokeHandler(data, sendLog);
                 
                 sendLog({ content: JSON.stringify(result), eventType: 'final' });
                 controller.close();

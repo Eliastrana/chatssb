@@ -38,7 +38,8 @@ export default function Home() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-
+    
+    
     const sendUserMessage = async (userMessage: string) => {
         if (!userMessage.trim()) return;
         
@@ -49,24 +50,26 @@ export default function Home() {
         
         const messageHistory = [...messages, { sender: 'user' as const, text: userMessage }];
         setMessages(messageHistory);
-        
+
         console.log(JSON.stringify(messageHistory, null, 2));
+
+        const data: CustomAPIParams = {
+            userMessage,
+        };
+        
+        const initRes = await fetch('/api/custom', {
+            method:   'POST',
+            headers:  { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const { sessionId } = await initRes.json();
+        
         
         try {
             const tableData: PxWebData = await new Promise((resolve, reject) => {
                 console.log(`Client sending userMessage:\n`, userMessage);
                 
-                const params: CustomAPIParams = {
-                    userMessage,
-                };
-
-                // Convert params to query string
-                const queryString = Object.entries(params)
-                    .filter(([, value]) => value !== undefined)
-                    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
-                    .join('&');
-                
-                const eventSource = new EventSource(`/api/custom?${queryString}`);
+                const eventSource = new EventSource(`/api/custom?sessionId=${sessionId}`);
 
                 const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
 
@@ -81,25 +84,17 @@ export default function Home() {
                     setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
                     console.log("Navigation log:\n", newLog);
                 });
-
-
-                // Listen for the final event that carries the complete JSON result
+                
                 eventSource.addEventListener('final', (e: MessageEvent) => {
-                    setNavLog("");  // Clear the live feed
-                    setNavLogSteps([]);      // Clear the history (which will hide the dropdown)
+                    setNavLog("");
+                    setNavLogSteps([]);
                     resolve(JSON.parse(e.data) as PxWebData);
                     eventSource.close();
                 });
 
                 eventSource.addEventListener('info', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
-                    setMessages(prev => [
-                        ...prev,
-                        {
-                            sender: 'bot',
-                            text: newLog,
-                        },
-                    ]);
+                    setMessages(prev => [...prev, { sender: 'bot', text: newLog } ]);
                 });
                 
                 eventSource.addEventListener('error', (e: MessageEvent) => {
@@ -111,32 +106,14 @@ export default function Home() {
             console.log("Recieved data:", tableData);
             
 
-            setMessages(
-                prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        pxData: tableData
-                    }
-                ]
-            )
+            setMessages(prev => [...prev, { sender: 'bot', pxData: tableData } ])
             
         } catch (err) {
             console.error(err);
-            setMessages(prev => [
-                ...prev,
-                { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"
-                }
-            ]);
+            setMessages(prev => [...prev, { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"}]);
 
             if (!hasErrorOccurred) {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        type: 'error'
-                    }
-                ]);
+                setMessages(prev => [...prev, { sender: 'bot', type: 'error'}]);
                 setHasErrorOccurred(true);
             }
         } finally {

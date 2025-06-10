@@ -8,11 +8,11 @@ import {
 } from "@/app/types";
 import {reasoning} from "@/app/services/reasoning/runnables/reasoning";
 import {modelInitializer} from "@/app/services/modelInitializer";
-import {keywordSearchToMetadata} from "@/app/services/navigation/keywordSearchToMetadata";
 import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
 import {valueSelection} from "@/app/custom/valueSelection";
 import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
 import {dimensionSelection} from "@/app/custom/dimensionSelection";
+import {folderNavigationToMetadata} from "@/app/services/navigation/folderNavigationToMetadata";
 
 
 export async function invokeHandler(
@@ -21,10 +21,7 @@ export async function invokeHandler(
 ): Promise<PxWebData> {
 
     
-    let baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/';
-    
-    // TODO Implement when prod pxwebapi is fixed
-    /*
+
     let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
     // If Weekends or 05.00-08.15 every day:
@@ -34,7 +31,7 @@ export async function invokeHandler(
         baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
         sendLog({content: `The SSB API is unavailable on weekends and daily from 05:00 to 08:15. 
     During these times, the test Statbank is used instead.`, eventType: 'info'});
-    }*/
+    }
 
     let userPrompt = `${params.userMessage}\nDate: ${new Date().toLocaleDateString('en-GB', {
         day: '2-digit', month: 'long', year: 'numeric'
@@ -43,20 +40,20 @@ export async function invokeHandler(
     sendLog({content: 'Resonnerer...', eventType: 'nav'})
 
     const resonatedContext = await reasoning(
-        modelInitializer(ModelType.GPT4_1, sendLog),
+        modelInitializer(ModelType.GeminiFlash2, sendLog),
         userPrompt
     ).invoke({});
 
     userPrompt += `\n${resonatedContext.content}`;
 
     let tableMetadata: SSBTableMetadata;
-    const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
+    const navigationModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
 
     // TODO, implment custom keyword search that uses a single 100 page search.
-    tableMetadata = await keywordSearchToMetadata(
+    tableMetadata = await folderNavigationToMetadata(
         navigationModel,
         userPrompt,
-        5,
+        3,
         sendLog,
         baseURL
     );
@@ -64,7 +61,7 @@ export async function invokeHandler(
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
-    const selectionModel = modelInitializer(ModelType.GPT4_1, sendLog);
+    const selectionModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
     
     // if no table has code list or if no table is optional
     const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {
