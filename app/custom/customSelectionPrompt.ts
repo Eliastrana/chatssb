@@ -1,7 +1,5 @@
-export const customSelectionPrompt = `
-You are selecting query parameters for a structured API that fetches statistical data from Statistics Norway (SSB).
-
-Your task is to choose the most relevant item values for each variable (dimension) in the dataset, based on the user's request and the metadata.
+export const customSelectionPrompt = 
+`Choose the most relevant item values for each variable (dimension) in the dataset, based on the user's request and the metadata.
 
 Each variable includes:
 - A variable key (unique identifier)

@@ -1,22 +1,31 @@
 import {BaseChatModel} from '@langchain/core/language_models/chat_models';
-import {ServerLog, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
-import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
-import {keywordSearch} from "@/app/services/navigation/runnables/keywordSearch";
-import {tableSelection} from "@/app/services/navigation/runnables/tableSelection";
+import {CustomAPIParams, ServerLog, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
+import {customWrapper} from "@/app/custom/customWrapper";
+import {z} from "zod";
+import {customKeywordSearchPrompt} from "@/app/custom/customKeywordSearchPrompt";
+import {customTableSelectionPrompt} from "@/app/custom/customTableSelectionPrompt";
 
 export async function customKeywordSearch(
     model: BaseChatModel,
-    userPrompt: string,
+    params: CustomAPIParams,
     numKeywords: number,
     numTables: number,
     sendLog: (log: ServerLog) => void,
     baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
 ): Promise<SSBTableMetadata> {
 
-    const keywords = await parsingRunnableRetryWrapper(
+    
+    const keywordSearchSchema = z.object({
+            keywords: z.array(z.string()).max(numKeywords),
+        }
+    );
+
+    const maxBreathPrompt = `You must select ${numKeywords} keyword(s).`;
+    
+    const keywords = await customWrapper(
         model,
-        userPrompt,
-        keywordSearch(numKeywords),
+        params,
+        { schema: keywordSearchSchema, systemPrompt: `${customKeywordSearchPrompt}\n${maxBreathPrompt}` },
     )
     
     const keywordParamaters = keywords.keywords.join(',');
@@ -32,11 +41,23 @@ export async function customKeywordSearch(
     const tableEntries = (await keywordResponse.json()) as SSBSearchResponse;
 
     sendLog({content: `Hentet ${tableEntries.tables.length} tabeller`, eventType: 'nav'});
+    
+    const ids = tableEntries.tables.map(entry => entry.id);
 
-    const selectedTable = await parsingRunnableRetryWrapper(
+    const navigationSchema = z.object({
+        id: z.enum([ids[0], ...ids.slice(1)]),
+    })
+
+    let tableEntriesPrompt = ``;
+
+    for (const entry of tableEntries.tables) {
+        tableEntriesPrompt += `\nid: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}", variableNames: [${entry.variableNames}]`;
+    }
+    
+    const selectedTable = await customWrapper(
         model,
-        userPrompt,
-        tableSelection(tableEntries.tables),
+        params,
+        { schema: navigationSchema, systemPrompt: `${customTableSelectionPrompt}\n${tableEntriesPrompt}` },
     )
     
     const metadataResponse = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {

@@ -6,13 +6,12 @@ import {
     SSBCodeList,
     SSBTableMetadata
 } from "@/app/types";
-import {reasoning} from "@/app/services/reasoning/runnables/reasoning";
 import {modelInitializer} from "@/app/services/modelInitializer";
-import {parsingRunnableRetryWrapper} from "@/app/services/parsingRunnableRetryWrapper";
 import {valueSelection} from "@/app/custom/valueSelection";
 import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
 import {dimensionSelection} from "@/app/custom/dimensionSelection";
 import {customKeywordSearch} from "@/app/custom/customKeywordSearch";
+import {customWrapper} from "@/app/custom/customWrapper";
 
 
 export async function invokeHandler(
@@ -30,28 +29,14 @@ export async function invokeHandler(
         sendLog({content: `The SSB API is unavailable on weekends and daily from 05:00 to 08:15. 
     During these times, the test Statbank is used instead.`, eventType: 'info'});
     }
-
-    let userPrompt = `${params.userMessage}\nDate: ${new Date().toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'long', year: 'numeric'
-    })}`;
-
-    sendLog({content: 'Resonnerer...', eventType: 'nav'})
-
-    const resonatedContext = await reasoning(
-        modelInitializer(ModelType.GeminiFlash2, sendLog),
-        userPrompt
-    ).invoke({});
-
-    userPrompt += `\n${resonatedContext.content}`;
-
+    
     let tableMetadata: SSBTableMetadata;
-    const navigationModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
+    const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
 
-    // TODO, implment custom keyword search that uses a single 100 page search.
     tableMetadata = await customKeywordSearch(
         navigationModel,
-        userPrompt,
-        3,
+        params,
+        5,
         100,
         sendLog,
         baseURL
@@ -60,7 +45,7 @@ export async function invokeHandler(
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
-    const selectionModel = modelInitializer(ModelType.GeminiFlash2, sendLog);
+    const selectionModel = modelInitializer(ModelType.GPTo4Mini, sendLog);
     
     // if no table has code list or if no table is optional
     const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {
@@ -70,9 +55,9 @@ export async function invokeHandler(
     let selectedDimensions = {}
     
     if (hasCodeListOrIsOptional) {
-        selectedDimensions =  await parsingRunnableRetryWrapper(
+        selectedDimensions =  await customWrapper(
             selectionModel,
-            userPrompt,
+            params,
             dimensionSelection(tableMetadata)
         )
         
@@ -101,9 +86,9 @@ export async function invokeHandler(
         }
     }
     
-    const selectedValues = await parsingRunnableRetryWrapper(
+    const selectedValues = await customWrapper(
         selectionModel,
-        userPrompt,
+        params,
         valueSelection(tableMetadata)
     )
 

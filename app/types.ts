@@ -184,5 +184,7 @@ export interface DecoupledRunnable {
 // --- CUSTOM SOLUTION ---
 
 export interface CustomAPIParams {
+    messageHistory: CustomMessage[];
     userMessage: string;
+    userMessageReflection?: string;
 }

@@ -7,6 +7,7 @@ import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
 import {CustomAPIParams, CustomMessage, PxWebData} from '@/app/types';
 import HoverInfoModal from "@/app/components/InfoModal";
 import CustomChatMessages from './CustomChatMessages';
+import _ from "lodash";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
@@ -48,10 +49,11 @@ export default function Home() {
         setIsLoading(true);
         setError(null);
         
-        const messageHistory = [...messages, { sender: 'user' as const, text: userMessage }];
-        setMessages(messageHistory);
+        const messageHistory = _.cloneDeep(messages)
+        setMessages(prev  => [...prev, { sender: 'user' as const, text: userMessage }]);
         
         const data: CustomAPIParams = {
+            messageHistory,
             userMessage,
         };
         
