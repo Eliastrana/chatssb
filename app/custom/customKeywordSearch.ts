@@ -26,7 +26,8 @@ export async function customKeywordSearch(
     const keywords = await customWrapper(
         model,
         params,
-        { schema: keywordSearchSchema, systemPrompt: `${customKeywordSearchPrompt}\n${maxBreathPrompt}` },
+        customKeywordSearchPrompt + "\n"+ maxBreathPrompt,
+        keywordSearchSchema
     )
     
     if (typeof keywords.input === "string") {
@@ -73,7 +74,8 @@ export async function customKeywordSearch(
     const selectedTable = await customWrapper(
         model,
         params,
-        { schema: navigationSchema, systemPrompt: `${customTableSelectionPrompt}\n${tableEntriesPrompt}` },
+        customTableSelectionPrompt + "\n" + tableEntriesPrompt,
+        navigationSchema
     )
     
     const metadataResponse = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {

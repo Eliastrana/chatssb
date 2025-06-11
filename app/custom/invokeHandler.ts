@@ -19,6 +19,7 @@ export async function invokeHandler(
     params: CustomAPIParams,
     sendLog: (log: ServerLog) => void,
 ): Promise<PxWebData> {
+    sendLog({ content: 'Prosseserer...', eventType: 'nav' });
 
     let baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/';
     
@@ -29,6 +30,33 @@ export async function invokeHandler(
         baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
         sendLog({content: `The SSB API is unavailable on weekends and daily from 05:00 to 08:15. 
     During these times, the test Statbank is used instead.`, eventType: 'info'});
+    }
+    
+    // Add totalValues
+    for (const message of params.messageHistory) {
+        if (message.pxData) {
+            const response = await fetch(`${baseURL}/tables/${message.pxData.extension.px.tableid}/metadata?lang=en&outputFormat=json-stat2`, {
+                method: "GET",
+                headers: {"Content-Type": "application/json"},
+            });
+            
+            const tableMetadata = (await response.json()) as SSBTableMetadata;
+
+            for (const [dimension, value] of Object.entries(tableMetadata.dimension)) {
+                if (message.pxData.dimension[dimension]) {
+                    message.pxData.dimension[dimension].totalValues = Object.keys(value.category.label).length;
+                } else {
+                    message.pxData.dimension[dimension] = { // Hatløsning
+                        ...value,
+                        category: {
+                            index: {},
+                            label: {},
+                            unit:  {},
+                        },
+                    };
+                }
+            }
+        }
     }
     
     const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
@@ -49,7 +77,7 @@ export async function invokeHandler(
         navigationModel,
         params,
         5,
-        100,
+        50,
         sendLog,
         baseURL
     );
@@ -70,7 +98,8 @@ export async function invokeHandler(
         selectedDimensions =  await customWrapper(
             selectionModel,
             params,
-            dimensionSelection(tableMetadata)
+            dimensionSelection(tableMetadata).systemPrompt,
+            dimensionSelection(tableMetadata).schema,
         )
         
         for (const [dimension, value] of Object.entries(selectedDimensions)) {
@@ -101,7 +130,8 @@ export async function invokeHandler(
     const selectedValues = await customWrapper(
         selectionModel,
         params,
-        valueSelection(tableMetadata)
+        valueSelection(tableMetadata).systemPrompt,
+        valueSelection(tableMetadata).schema,
     )
 
     SSBGetUrl = customSelectionToURL(

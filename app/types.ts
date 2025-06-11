@@ -35,8 +35,8 @@ export interface PxWebData {
                 index: Record<string, number>;
                 label: Record<string, string>;
                 unit: Record<string, { base: string; decimals: number }>;
-
             };
+            totalValues?: number;
         };
     };
     size: number[];

@@ -1,9 +1,10 @@
-import {CustomAPIParams, DecoupledRunnable} from "@/app/types";
+import {CustomAPIParams} from "@/app/types";
 import {HumanMessage, SystemMessage} from "@langchain/core/messages";
 import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
+import {ZodTypeAny} from "zod";
 
-export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, runnableParams: DecoupledRunnable | string, maxRetries: number = 1): Promise<any> {
+export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, taskPrompt: string, schema?: ZodTypeAny, maxRetries: number = 2): Promise<any> {
     let attempts = 0;
     let errors: string[] =  [];
     
@@ -26,6 +27,10 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
 
                     const labels = Object.entries(value.category.label);
                     const totalLabels = labels.length;
+                    
+                    if (value.totalValues) formattedChatHistory += ` (${totalLabels}/${value.totalValues} available values selected)`;
+                    else formattedChatHistory += ` (OMITTED)`;
+                    
                     if (totalLabels > 10) {
                         for (let i = 0; i < 5; i++) {
                             const [label, index] = labels[i];
@@ -53,8 +58,6 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
         formattedChatHistory += `\n`;
     }
     
-    const taskPrompt = typeof runnableParams === 'string' ? runnableParams : runnableParams.systemPrompt || '';
-    
     while (attempts < maxRetries) {
         try {
             return await ChatPromptTemplate.fromMessages([
@@ -64,7 +67,7 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
 Date: ${new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'long', year: 'numeric'})}
 
 ### System Prompt
-You are a search engine that fetches statistics from SSB (Statistics Norway) based on user queries.
+You are acting as an intelligent search agent for SSB (Statistics Norway). Your job is to translate user requests into precise data-retrieval actions against SSB’s tables.
 Although the user may communicate in Norwegian or other languages, you should always respond in English no matter the task or query.
 
 ### Current Task
@@ -73,7 +76,7 @@ ${taskPrompt}
 ### Chat History
 ${formattedChatHistory}${errors.length > 0 ? `\n\n### Previous Errors\n${errors.join('\n')}` : ``}`),
                 new HumanMessage(`${params.userMessage}${params.userMessageReflection ? `\n\n### User Message Analysis\n${params.userMessageReflection}` : ''}`),
-            ]).pipe(typeof runnableParams === 'string' ? model : model.withStructuredOutput(runnableParams.schema)).invoke({});
+            ]).pipe(schema ? model.withStructuredOutput(schema) : model).invoke({});
         } catch (error) {
             attempts++;
             errors = [...errors, `Attempt ${attempts}: ${error instanceof Error ? error.message : String(error)}`];
