@@ -23,16 +23,25 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
                 
                 for (const [key, value] of Object.entries(message.pxData.dimension)) {
                     formattedChatHistory += `\n${tab}${tab}${key}: ${value.label}`;
-                    
-                    let printedLabels = 0;
-                    for (const [label, index] of Object.entries(value.category.label)) {
-                        if (printedLabels >= 10) {
-                            const remainingLabels = Object.keys(value.category.label).length - printedLabels;
-                            formattedChatHistory += `\n${tab}${tab}${tab}... (${remainingLabels} more)`;
-                            break;
+
+                    const labels = Object.entries(value.category.label);
+                    const totalLabels = labels.length;
+                    if (totalLabels > 10) {
+                        for (let i = 0; i < 5; i++) {
+                            const [label, index] = labels[i];
+                            formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
                         }
-                        formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
-                        printedLabels++;
+                        const remainingLabels = totalLabels - 10;
+                        formattedChatHistory += `\n${tab}${tab}${tab}...(${remainingLabels} more)...`;
+                        for (let i = totalLabels - 5; i < totalLabels; i++) {
+                            const [label, index] = labels[i];
+                            formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                        }
+                    } else {
+                        for (let i = 0; i < totalLabels; i++) {
+                            const [label, index] = labels[i];
+                            formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                        }
                     }
                 }
             } else if (message.type === 'error') {

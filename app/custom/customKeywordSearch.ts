@@ -14,13 +14,14 @@ export async function customKeywordSearch(
     baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
 ): Promise<SSBTableMetadata> {
 
-    
-    const keywordSearchSchema = z.object({
-            keywords: z.array(z.string()).max(numKeywords),
-        }
-    );
 
-    const maxBreathPrompt = `You must select ${numKeywords} keyword(s).`;
+    const keywordSearchSchema = z.object({
+        input: z.array(z.string()).max(numKeywords).describe("Keywords to search for an" +
+            " unknown table").or(z.string().describe("Table ID to" +
+            " select a specific table.")),
+    });
+
+    const maxBreathPrompt = `You can select up to ${numKeywords} keyword(s).`;
     
     const keywords = await customWrapper(
         model,
@@ -28,8 +29,23 @@ export async function customKeywordSearch(
         { schema: keywordSearchSchema, systemPrompt: `${customKeywordSearchPrompt}\n${maxBreathPrompt}` },
     )
     
-    const keywordParamaters = keywords.keywords.join(',');
-    const keywordStrings = keywords.keywords.join(', ');
+    if (typeof keywords.input === "string") {
+        sendLog({content: `Henter tabell med ID '${keywords.input}'`, eventType: 'nav'});
+        
+        const tableResponse = await fetch(`${baseURL}/tables/${keywords.input}/metadata?lang=en&outputFormat=json-stat2`, {
+            method: "GET",
+            headers: {"Content-Type": "application/json"},
+        });
+        
+        const tableMetadata = (await tableResponse.json()) as SSBTableMetadata;
+        
+        sendLog({content: `Valgt tabell '${keywords.input}' navngitt '${tableMetadata.label}'`, eventType: 'nav'});
+        
+        return tableMetadata;
+    }
+    
+    const keywordParamaters = keywords.input.join(',');
+    const keywordStrings = keywords.input.join(', ');
     
     sendLog({content: `Henter tabeller for søkeordene '${keywordStrings}'`, eventType: 'nav'});
 
@@ -51,7 +67,7 @@ export async function customKeywordSearch(
     let tableEntriesPrompt = ``;
 
     for (const entry of tableEntries.tables) {
-        tableEntriesPrompt += `\nid: "${entry.id}", label: "${entry.label}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}", variableNames: [${entry.variableNames}]`;
+        tableEntriesPrompt += `\nid: "${entry.id}", label: "${entry.label}", timeUnit: "${entry.timeUnit}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}", variableNames: [${entry.variableNames}]`;
     }
     
     const selectedTable = await customWrapper(

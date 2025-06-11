@@ -89,6 +89,7 @@ export interface SSBEntry {
     firstPeriod?: string;
     lastPeriod?: string;
     variableNames?: string[];
+    timeUnit?: string;
 }
 
 export interface SSBNavigationResponse {
