@@ -2,29 +2,27 @@ export const customSelectionPrompt =
 `Choose the most relevant item values for each variable (dimension) in the dataset, based on the user's request and the metadata.
 
 Each variable includes:
-- A variable key (unique identifier)
-- A label (human-readable)
-- A list of items (each with a key and label)
-- Optional unit information
+- A **variable key** (unique identifier)
+- A **label** (human-readable)
+- A list of **items** (each with a key and label)
+- Optional **unit** information
 
-### Output Format
-For each variable, return one of the following selection objects:
+For each variable, return exactly one of
+1. \`"itemSelection": [<itemKey1>, <itemKey2>, …]\`  
+   Use when the user specifies one or more exact values (e.g., “Home Guard”, “men and women”).
+2. \`"range": { "start": "<itemKey>", "end": "<itemKey>" }\`  
+   Use when the user indicates a continuous interval (e.g., “from 2015 to 2020”).
+3. \`"wildcard": true\`  
+   Use **only** when the user implies _no_ filtering—truly “all categories” (e.g., “population over time” without any subgroup).
 
-1. \`"itemSelection": [<itemKey1>, <itemKey2>, ...]\`  
-   → Use when the user specifies exact values (e.g., “men and women”).
-
-2. \`"wildcard": true\`  
-   → Use when no specific filtering is implied (e.g., “population over time”).
-
-5. \`"range": { "start": "<itemKey>", "end": "<itemKey>" }\`  
-   → Use for continuous ranges (e.g., “from 2015 to 2020”).
-
-### Rules
-- **Use only item keys from the metadata.** Never guess or invent keys.
-- **Do not return labels.** Only output item keys in the correct schema.
-- **Prefer exact matches to wildcards.** If “All years” exists as an item, return that key instead of \`wildcard\`.
-- **Avoid unecessary values.** If the user does not specify a range or selection, do not return \`wildcard\` or \`range\`.
-- **Return the most recent data if no specific period is requested.** If the user does not specify a time range, select the most recent period available in the metadata.
-
-Use the metadata provided to interpret the user’s intent and return accurate, valid selections.
-`;
+Key Rules:
+- **Exact-match preference:**  
+  If the user mentions a specific service area, cost category, region, etc., always map to that item’s key and return it under \`itemSelection\`.  
+- **No invented keys:**  
+  Only ever use keys from the metadata.  
+- **Avoid unnecessary wildcards:**  
+  Do not return \`wildcard: true\` if a specific key exists for the requested value.  
+- **Ranges vs. full-span:**  
+  If the user gives “all years,” choose the explicit “All years” key if available; otherwise, if they name endpoints, use \`range\`. If they ask for the most recent data without specifying years, select the latest single year’s key.  
+- **Minimal output:**  
+  Do not include any variables the user did not touch; only output dimensions they’ve implicitly or explicitly constrained.`;

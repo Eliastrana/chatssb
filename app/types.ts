@@ -4,6 +4,7 @@ export interface CustomMessage {
     sender: 'user' | 'bot';
     text?: string;
     pxData?: PxWebData;
+    possibleTables?: SSBTableMetadata[];
     type?: 'normal' | 'warning' | 'error';
 }
 
@@ -102,7 +103,7 @@ export interface SSBSearchResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error' | 'info';
+    eventType: 'log' | 'nav' | 'tokens' | 'pxData' | 'error' | 'info' | 'abort';
 }
 
 export interface SelectionParamaters {

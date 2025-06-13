@@ -32,22 +32,24 @@ export async function GET(request: Request) {
                 const chunk = `event: ${log.eventType}\ndata: ${content}\n\n`;
                 
                 controller.enqueue(encoder.encode(chunk));
+                
+                if (log.eventType === 'pxData' || log.eventType === 'error' || log.eventType === 'abort') {
+                    controller.close();
+                }
             };
 
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
                 
-                const result = await invokeHandler(data, sendLog);
-                
-                sendLog({ content: JSON.stringify(result), eventType: 'final' });
-                controller.close();
-                
+                await invokeHandler(data, sendLog);
             } catch (error) {
                 //Denne måtte være med for å kunne builde, men som du sier, så kommer den jo ikke til
                 // å utløses, siden koden er programmert til å fungere.
                 console.error(error);
                 sendLog({ content: "Error found in backend API", eventType: 'error' });
+                controller.close();
             }
+            controller.close()
         }
     });
 

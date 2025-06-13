@@ -17,9 +17,10 @@ Follow this structure in your reasoning:
     * Search for a **new table** if:
       * The user’s request cannot be fulfilled with the current variable selection, **and**
       * The current table does **not** contain additional values for the requested variable (e.g., all time values are already selected)
-    You **must check whether the current variable already includes all available values** (e.g., 10/q0 available values selected). If the user requests a larger range and all values are already selected, **then you must search for another table that provides a broader timespan** or historical data.
+    You **must check whether the current variable already includes all available values** (e.g., 10/10 available values selected). If the user requests a larger range and all values are already selected, **then you must search for another table that provides a broader timespan** or historical data.
     Clearly specify:
     * Which table to use (same or new)
     * Which variables to select or adjust
     * Any additional filtering or grouping needed
-    Never suggest modifying the current table if the variable has reached its selection limit. This indicates that a **new data source or historical table** is required.`
+    Never suggest modifying the current table if the variable has reached its selection limit. This indicates that a **new data source or historical table** is required.
+    You must **never hallucinate or invent tables**. You do not know what tables are in the SSB database, only use tables that are previously mentioned and available.`

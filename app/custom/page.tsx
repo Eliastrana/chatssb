@@ -4,7 +4,7 @@ import TitleSection from '@/app/components/chat_interface/TitleSection';
 import ChatInput from '@/app/components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import {CustomAPIParams, CustomMessage, PxWebData} from '@/app/types';
+import {CustomAPIParams, CustomMessage, PxWebData, SSBTableMetadata} from '@/app/types';
 import HoverInfoModal from "@/app/components/InfoModal";
 import CustomChatMessages from './CustomChatMessages';
 import _ from "lodash";
@@ -63,62 +63,60 @@ export default function Home() {
             body: JSON.stringify(data),
         });
         const { sessionId } = await initRes.json();
+
+
+        const eventSource = new EventSource(`/api/custom?sessionId=${sessionId}`)
+        const replaceNewLines = (s: string) => s.replace(/\\n/g, '\n')
+
+        setIsLoading(true)
         
-        
-        try {
-            const tableData: PxWebData = await new Promise((resolve, reject) => {
-                console.log(`Client sending userMessage:\n`, userMessage);
-                
-                const eventSource = new EventSource(`/api/custom?sessionId=${sessionId}`);
+        const cleanup = () => {
+            setNavLog('')
+            setNavLogSteps([])
+            setIsLoading(false)
+            eventSource.close()
+        }
 
-                const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
+        eventSource.addEventListener('log', (e: MessageEvent) =>
+            console.log(replaceNewLines(e.data))
+        )
 
-                eventSource.addEventListener('log', (e: MessageEvent) => {
-                    const newLog = replaceNewLines(e.data);
-                    console.log(newLog);
-                });
-                
-                eventSource.addEventListener('nav', (e: MessageEvent) => {
-                    const newLog = replaceNewLines(e.data);
-                    setNavLog(newLog);
-                    setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
-                    console.log("Navigation log:\n", newLog);
-                });
-                
-                eventSource.addEventListener('final', (e: MessageEvent) => {
-                    setNavLog("");
-                    setNavLogSteps([]);
-                    resolve(JSON.parse(e.data) as PxWebData);
-                    eventSource.close();
-                });
+        eventSource.addEventListener('info', (e: MessageEvent) =>
+            setMessages(prev => [...prev, { sender: 'bot', text: replaceNewLines(e.data) }])
+        )
 
-                eventSource.addEventListener('info', (e: MessageEvent) => {
-                    const newLog = replaceNewLines(e.data);
-                    setMessages(prev => [...prev, { sender: 'bot', text: newLog } ]);
-                });
-                
-                eventSource.addEventListener('error', (e: MessageEvent) => {
-                    reject(e.data);
-                    eventSource.close();
-                });
-            });
-            
-            console.log("Recieved data:", tableData);
-            
+        eventSource.addEventListener('nav', (e: MessageEvent) => {
+            const nav = replaceNewLines(e.data)
+            setNavLog(nav)
+            setNavLogSteps(prev => [...prev, nav])
+        })
 
-            setMessages(prev => [...prev, { sender: 'bot', pxData: tableData } ])
-            
-        } catch (err) {
-            console.error(err);
+        eventSource.addEventListener('pxData', (e: MessageEvent) => {
+            const data = JSON.parse(e.data) as PxWebData
+            setMessages(prev => [...prev, { sender: 'bot', pxData: data }])
+            cleanup()
+        })
+
+        eventSource.addEventListener('abort', (e: MessageEvent) => {
+            const data = JSON.parse(e.data) as SSBTableMetadata[]
+            setMessages(prev => [...prev, {
+                sender: 'bot',
+                text: `Det ser ikke ut som SSB har statistikk for akkurat det du spør om. Vil du likevel se på en av disse mulige tabellene?`,
+            }]);
+            setMessages(prev => [...prev, { sender: 'bot', possibleTables: data }]);
+            cleanup()
+        })
+
+        eventSource.addEventListener('error', (e: MessageEvent) => {
+            console.error(e);
             setMessages(prev => [...prev, { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"}]);
 
             if (!hasErrorOccurred) {
                 setMessages(prev => [...prev, { sender: 'bot', type: 'error'}]);
                 setHasErrorOccurred(true);
             }
-        } finally {
-            setIsLoading(false);
-        }
+            cleanup()
+        })
     };
 
     return (

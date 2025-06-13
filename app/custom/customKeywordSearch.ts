@@ -2,8 +2,73 @@ import {BaseChatModel} from '@langchain/core/language_models/chat_models';
 import {CustomAPIParams, ServerLog, SSBSearchResponse, SSBTableMetadata} from "@/app/types";
 import {customWrapper} from "@/app/custom/customWrapper";
 import {z} from "zod";
-import {customKeywordSearchPrompt} from "@/app/custom/customKeywordSearchPrompt";
+import {customChooseTablePrompt} from "@/app/custom/customChooseTablePrompt";
+import {keywordsOrIdPrompt} from "@/app/custom/keywordsOrIdPrompt";
+import {keywordsPrompt} from "@/app/custom/keywordsPrompt";
 import {customTableSelectionPrompt} from "@/app/custom/customTableSelectionPrompt";
+
+
+// Schema builders
+const buildKeywordsOrIdSchema = (numKeywords: number) =>
+    z
+        .object({
+            keywords: z.array(z.string()).max(numKeywords).optional(),
+            id: z.string().optional(),
+        })
+        .describe(`Either up to ${numKeywords} keywords or a specific table ID.`);
+
+const buildDecisionSchema = z
+    .object({ decision: z.enum(['ACCEPT', 'NEXT']) })
+    .describe("'ACCEPT' to choose table, 'NEXT' for next candidate.");
+
+// Helpers
+async function fetchMetadata(id: string, baseURL: string): Promise<SSBTableMetadata> {
+    const res = await fetch(`${baseURL}/tables/${id}/metadata?lang=en&outputFormat=json-stat2`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+    });
+    return res.json();
+}
+
+function buildDimensionPrompt(dimensions: SSBTableMetadata['dimension'], limit = 100): string {
+    const lines: string[] = [];
+    const half = limit / 2;
+    const remaining = Object.keys(dimensions).length - limit;
+    
+    for (const [key, value] of Object.entries(dimensions)) {
+        const items = Object.entries(value.category.label);
+        lines.push(`${key}: ${value.label} (${items.length} values)`);
+        const slice = items.length > limit
+            ? [...items.slice(0, half), [`...(${remaining} more)...`,''], ...items.slice(items.length - half)]
+            : items;
+        slice.forEach(([label, index]) => {
+            const unit = value.category.unit?.[label];
+            lines.push(`  ${label}: ${index}${unit ? ` (${unit.base}, decimals: ${unit.decimals})` : ''}`);
+        });
+    }
+    return lines.join('\n');
+}
+
+async function isTableAcceptable(
+    model: BaseChatModel,
+    params: CustomAPIParams,
+    metadata: SSBTableMetadata,
+    sendLog: (log: ServerLog) => void
+): Promise<boolean> {
+    const prompt = [
+        customChooseTablePrompt,
+        `Current table: '${metadata.label}'. Variables:`,
+        buildDimensionPrompt(metadata.dimension)
+    ].join('\n\n');
+
+    sendLog({ content: `Checking table '${metadata.extension.px.tableid}'`, eventType: 'nav' });
+    const { decision } = await customWrapper(model, params, prompt, buildDecisionSchema);
+    if (decision === 'ACCEPT') {
+        sendLog({ content: `Selected table '${metadata.extension.px.tableid}' ('${metadata.label}')`, eventType: 'nav' });
+        return true;
+    }
+    return false;
+}
 
 export async function customKeywordSearch(
     model: BaseChatModel,
@@ -11,81 +76,75 @@ export async function customKeywordSearch(
     numKeywords: number,
     numTables: number,
     sendLog: (log: ServerLog) => void,
-    baseURL: string = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
-): Promise<SSBTableMetadata> {
-
-
-    const keywordSearchSchema = z.object({
-        input: z.array(z.string()).max(numKeywords).describe("Keywords to search for an" +
-            " unknown table").or(z.string().describe("Table ID to" +
-            " select a specific table.")),
-    });
-
-    const maxBreathPrompt = `You can select up to ${numKeywords} keyword(s).`;
-    
-    const keywords = await customWrapper(
+    baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
+): Promise<SSBTableMetadata | undefined> {
+    // 1. Ask user for keywords or ID
+    const keywordsOrId = await customWrapper(
         model,
         params,
-        customKeywordSearchPrompt + "\n"+ maxBreathPrompt,
-        keywordSearchSchema
-    )
-    
-    if (typeof keywords.input === "string") {
-        sendLog({content: `Henter tabell med ID '${keywords.input}'`, eventType: 'nav'});
-        
-        const tableResponse = await fetch(`${baseURL}/tables/${keywords.input}/metadata?lang=en&outputFormat=json-stat2`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
-        });
-        
-        const tableMetadata = (await tableResponse.json()) as SSBTableMetadata;
-        
-        sendLog({content: `Valgt tabell '${keywords.input}' navngitt '${tableMetadata.label}'`, eventType: 'nav'});
-        
-        return tableMetadata;
+        keywordsOrIdPrompt,
+        buildKeywordsOrIdSchema(numKeywords)
+    );
+
+    // 2. If ID provided, fetch & prompt
+    if (keywordsOrId.id) {
+        const metadata = await fetchMetadata(keywordsOrId.id, baseURL);
+        if (await isTableAcceptable(model, params, metadata, sendLog)) {
+            return metadata;
+        }
     }
-    
-    const keywordParamaters = keywords.input.join(',');
-    const keywordStrings = keywords.input.join(', ');
-    
-    sendLog({content: `Henter tabeller for søkeordene '${keywordStrings}'`, eventType: 'nav'});
 
-    const keywordResponse = await fetch(`${baseURL}/tables?lang=en&pageSize=${numTables}&query=${keywordParamaters}`, {
-        method: "GET",
-        headers: {"Content-Type": "application/json"},
-    });
-    
-    const tableEntries = (await keywordResponse.json()) as SSBSearchResponse;
+    // 3. Ensure keywords
+    const keywordsArr = keywordsOrId.keywords ?? (
+        (await customWrapper(model, params, keywordsPrompt,
+            z.object({ keywords: z.array(z.string()).max(numKeywords) })
+        )).keywords
+    );
+    const query = keywordsArr.join(',');
+    sendLog({ content: `Fetching tables for '${keywordsArr.join(', ')}`, eventType: 'nav' });
 
-    sendLog({content: `Hentet ${tableEntries.tables.length} tabeller`, eventType: 'nav'});
-    
-    const ids = tableEntries.tables.map(entry => entry.id);
-
-    const navigationSchema = z.object({
-        id: z.enum([ids[0], ...ids.slice(1)]),
-    })
-
-    let tableEntriesPrompt = ``;
-
-    for (const entry of tableEntries.tables) {
-        tableEntriesPrompt += `\nid: "${entry.id}", label: "${entry.label}", timeUnit: "${entry.timeUnit}", firstPeriod: "${entry.firstPeriod}", lastPeriod: "${entry.lastPeriod}", variableNames: [${entry.variableNames}]`;
+    // 4. Search tables
+    const searchRes = await fetch(
+        `${baseURL}/tables?lang=en&pageSize=${numTables}&query=${encodeURIComponent(query)}`,
+        { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+    );
+    let tables = (await searchRes.json()) as SSBSearchResponse;
+    if (keywordsOrId.id) {
+        tables.tables = tables.tables.filter(t => t.id !== keywordsOrId.id);
     }
-    
-    const selectedTable = await customWrapper(
+    sendLog({ content: `Fetched ${tables.tables.length} tables`, eventType: 'nav' });
+
+    // 5. Select candidates
+    const entriesPrompt = tables.tables.map(t =>
+        `id: "${t.id}", label: "${t.label}", period: ${t.firstPeriod}-${t.lastPeriod}, timeUnit: "${t.timeUnit}${t.variableNames ? `", variables: ${t.variableNames.join(', ')}` : ''}`
+    ).join('\n');
+
+    const ids = tables.tables.map(t => t.id);
+    const selectionSchema = z.object({ ids: z.array(z.enum([ids[0], ...ids.slice(1)])).min(3).max(10) })
+
+    const selectedIds = await customWrapper(
         model,
         params,
-        customTableSelectionPrompt + "\n" + tableEntriesPrompt,
-        navigationSchema
-    )
+        `${customTableSelectionPrompt}\n${entriesPrompt}`,
+        selectionSchema
+    );
     
-    const metadataResponse = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+    let possibleTables: SSBTableMetadata[] = [];
+
+    // 6. Iterate selected
+    for (const id of selectedIds.ids) {
+        const metadata = await fetchMetadata(id, baseURL);
+        if (await isTableAcceptable(model, params, metadata, sendLog)) {
+            return metadata;
+        }
+        possibleTables.push(metadata);
+    }
+
+    // 7. Abort
+    sendLog({
+        content: JSON.stringify(possibleTables),
+        eventType: 'abort'
     });
     
-    const tableMetadata = (await metadataResponse.json()) as SSBTableMetadata;
-    
-    sendLog({ content: `Valgt tabell '${tableMetadata.extension.px.tableid}' navngitt '${tableMetadata.label}'`, eventType: 'nav' });
-    
-    return tableMetadata;
+    return undefined;
 }

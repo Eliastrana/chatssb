@@ -37,7 +37,6 @@ function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: 
     const children: React.ReactNode[] = [];
 
     if (pxData) {
-        
         children.push(
             <button
                 key="expand"
@@ -114,6 +113,41 @@ function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: 
         } else {
             children.push(<MemoizedChartDisplay key="chart" pxData={pxData} />);
         }
+    } else if (message.possibleTables) {
+        children.push(
+            <div key="possible-tables" className="flex flex-col p-2 text-[#274247] gap-2">
+                {message.possibleTables.map((table, index) => (
+                    <div key={index} className="flex items-center gap-4 border border-gray-300 rounded-lg p-3">
+                        <div className="flex flex-col items-center">
+                            <div className="flex items-center">
+                                <a
+                                    href={`https://www.ssb.no/statbank/table/${table.extension.px.tableid}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-gray-400 hover:underline text-xl"
+                                >
+                                    {table.extension.px.tableid}
+                                </a>
+                                <span className="material-symbols-outlined text-gray-400">
+                                    open_in_new
+                                </span>
+                            </div>
+                            <button className="bg-gray-500 text-white p-1 w-24 rounded-md hover:bg-gray-600 transition-colors">
+                                Velg tabell
+                            </button>
+                        </div>
+                        <p className="text-md">
+                            {table.label.split(':')[1]}
+                        </p>
+                        <p>
+                            {Object.values(table.dimension['Tid']?.category.label).slice(-1)[0] || 'Ingen tid'}
+                            <br/>
+                            {Object.values(table.dimension['Tid']?.category.label)[0] || 'Ingen tid'}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        );
     } else if (message.type == 'error') {
         children.push(
             <div key="desc" className="mt-2">

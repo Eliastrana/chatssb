@@ -18,10 +18,10 @@ import {customReasoningPrompt} from "@/app/custom/customReasoningPrompt";
 export async function invokeHandler(
     params: CustomAPIParams,
     sendLog: (log: ServerLog) => void,
-): Promise<PxWebData> {
+): Promise<void> {
     sendLog({ content: 'Prosseserer...', eventType: 'nav' });
 
-    let baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/';
+    let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
     // If Weekends or 05.00-08.15 every day:
     const currentDay = new Date().getDay();
@@ -71,16 +71,19 @@ export async function invokeHandler(
     
     params.userMessageReflection = reasoning.content;
     
-    let tableMetadata: SSBTableMetadata;
 
-    tableMetadata = await customKeywordSearch(
+    const tableMetadata = await customKeywordSearch(
         navigationModel,
         params,
         5,
-        50,
+        100,
         sendLog,
         baseURL
     );
+    
+    if (!tableMetadata) {
+        return;
+    }
 
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
@@ -154,5 +157,7 @@ export async function invokeHandler(
     if (!responseTableData.ok)
         throw new Error('Failed to fetch SSB API table data from table ' + tableId + ' with URL ' + SSBGetUrl);
 
-    return (await responseTableData.json()) as PxWebData;
+    const result = await responseTableData.json() as PxWebData;
+
+    sendLog({ content: JSON.stringify(result), eventType: 'pxData' });
 }

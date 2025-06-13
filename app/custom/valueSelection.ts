@@ -9,7 +9,8 @@ export function valueSelection(
     
     const schema: Record<string, z.ZodTypeAny> = {};
     
-    let parametersPrompt = ``; 
+    let parametersPrompt = `Variables:`; 
+    const tab = '    ';
 
     Object.entries(tableMetadata.dimension).forEach(([key, value]) => {
         schema[key] = z.union([
@@ -18,9 +19,15 @@ export function valueSelection(
             z.object({ range: z.object({ start: z.string(), end: z.string() }) }),
         ]);
         
-        parametersPrompt += `\nvariable: "${key}", label: "${value.label}", item-key-value-pairs: ${JSON.stringify(value.category.label)}`;
-        if (value.category.unit) {
-            parametersPrompt += `, unit: ${JSON.stringify(value.category.unit)}`;
+        parametersPrompt += `\n${tab}${key}: ${value.label}`
+        
+        for (const [itemKey, itemLabel] of Object.entries(value.category.label)) {
+            parametersPrompt += `\n${tab}${tab}${itemKey}: ${itemLabel}`;
+            
+            // Add unit if it exists
+            if (value.category.unit && value.category.unit[itemKey]) {
+                parametersPrompt += ` (${value.category.unit[itemKey].base}, decimals: ${value.category.unit[itemKey].decimals})`;
+            }
         }
     });
     

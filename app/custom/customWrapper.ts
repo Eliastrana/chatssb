@@ -35,19 +35,35 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
                         for (let i = 0; i < 5; i++) {
                             const [label, index] = labels[i];
                             formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                            
+                            if (value.category.unit && value.category.unit[label]) {
+                                formattedChatHistory += ` (${value.category.unit[label].base}, decimals: ${value.category.unit[label].decimals})`;
+                            }
                         }
                         const remainingLabels = totalLabels - 10;
                         formattedChatHistory += `\n${tab}${tab}${tab}...(${remainingLabels} more)...`;
                         for (let i = totalLabels - 5; i < totalLabels; i++) {
                             const [label, index] = labels[i];
                             formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                            if (value.category.unit && value.category.unit[label]) {
+                                formattedChatHistory += ` (${value.category.unit[label].base}, decimals: ${value.category.unit[label].decimals})`;
+                            }
                         }
                     } else {
                         for (let i = 0; i < totalLabels; i++) {
                             const [label, index] = labels[i];
                             formattedChatHistory += `\n${tab}${tab}${tab}${label}: ${index}`;
+                            
+                            if (value.category.unit && value.category.unit[label]) {
+                                formattedChatHistory += ` (${value.category.unit[label].base}, decimals: ${value.category.unit[label].decimals})`;
+                            }
                         }
                     }
+                }
+            } else if (message.possibleTables) {
+                formattedChatHistory += `\nBot: POSSIBLE TABLES`
+                for (const table of message.possibleTables) {
+                    formattedChatHistory += `\n${tab}${table.label}`
                 }
             } else if (message.type === 'error') {
                 formattedChatHistory += `Bot: ERROR`;
