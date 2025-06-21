@@ -245,7 +245,7 @@ export default function Home() {
                     eventSource.close();
                 });
                 
-                eventSource.addEventListener('wildcard', (e: MessageEvent) => {
+                eventSource.addEventListener('info', (e: MessageEvent) => {
                     const newLog = replaceNewLines(e.data);
                     setMessages(prev => [
                         ...prev,

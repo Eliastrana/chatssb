@@ -1,18 +1,20 @@
 "use client";
 import {useCallback, useEffect, useRef, useState} from 'react';
-import TitleSection from './components/chat_interface/TitleSection';
-import ChatMessages from './components/chat_interface/ChatMessages';
-import ChatInput from './components/chat_interface/ChatInput';
+import TitleSection from '@/app/components/chat_interface/TitleSection';
+import ChatInput from '@/app/components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
-import {BackendAPIParams, Message, ModelType, NavType, PxWebData, SelType} from './types';
+import {CustomAPIParams, CustomMessage, PxWebData, SSBTableMetadata} from '@/app/types';
 import HoverInfoModal from "@/app/components/InfoModal";
+import CustomChatMessages from './custom/CustomChatMessages';
+import _ from "lodash";
 
 export default function Home() {
     const [showTitle, setShowTitle] = useState(true);
-    const [messages, setMessages] = useState<Message[]>([
-        { sender: 'bot', text: 'Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Jeg kan ikke svare på spørsmål om "hvorfor", og kan ikke huske det du sa i den forrige meldingen! Hva kan jeg hjelpe deg med?' },
+    const [messages, setMessages] = useState<CustomMessage[]>([
+        { sender: 'bot', text: `Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?` },
     ]);
+    
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -21,8 +23,6 @@ export default function Home() {
 
     const [navLog, setNavLog] = useState("");
     const [navLogSteps, setNavLogSteps] = useState<string[]>([]);
-
-
 
     const handleCloseModal = useCallback(() => {
         setFullscreenPxData(null);
@@ -39,170 +39,96 @@ export default function Home() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-
-    const sendUserMessage = async (userMessage: string) => {
-        if (!userMessage.trim()) return;
+    
+    
+    const sendUserMessage = async (userString: string, forcedTableId?: string) => {
+        if (!userString.trim()) return;
+        
         setFullscreenPxData(null);
-        setMessages(prev => [...prev, { sender: 'user', text: userMessage }]);
         setInput('');
         setIsLoading(true);
         setError(null);
+        
+        const messageHistory = _.cloneDeep(messages)
+        
+        
+        const userMessage: CustomMessage = {
+            sender: 'user',
+            text: userString,
+            forceTableId: forcedTableId,
+        };
+        
+        const data: CustomAPIParams = {
+            messageHistory,
+            userMessage
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+        
+        const initRes = await fetch('/api/custom', {
+            method:   'POST',
+            headers:  { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const { sessionId } = await initRes.json();
+        
+        const eventSource = new EventSource(`/api/custom?sessionId=${sessionId}`)
+        const replaceNewLines = (s: string) => s.replace(/\\n/g, '\n')
 
-        try {
-            const tableData: PxWebData = await new Promise((resolve, reject) => {
-                console.log(`Client sending userMessage:\n`, userMessage);
-                
-                const params: BackendAPIParams = {
-                    userMessage,
-                    dev: true,
-                    reasoning: true,
-                    reasoningModel: ModelType.GPT4_1,
-                    navigationTechnique: NavType.KeywordSearch_5,
-                    navigationModel: ModelType.GPT4_1,
-                    selectionTechnique: SelType.RedundantSingle,
-                    selectionModel: ModelType.GPTo4Mini,
-                    useQAURL: false,
-                };
+        setIsLoading(true)
+        
+        const cleanup = () => {
+            setNavLog('')
+            setNavLogSteps([])
+            setIsLoading(false)
+            eventSource.close()
+        }
 
-                // Convert params to query string
-                const queryString = Object.entries(params)
-                    .filter(([, value]) => value !== undefined)
-                    .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
-                    .join('&');
-                
-                const eventSource = new EventSource(`/api/stream?${queryString}`);
+        eventSource.addEventListener('log', (e: MessageEvent) =>
+            console.log(replaceNewLines(e.data))
+        )
 
-                const replaceNewLines = (data: string) => data.replace(/\\n/g, '\n');
+        eventSource.addEventListener('info', (e: MessageEvent) =>
+            setMessages(prev => [...prev, { sender: 'bot', text: replaceNewLines(e.data) }])
+        )
 
-                eventSource.addEventListener('log', (e: MessageEvent) => {
-                    console.log("Terminal log:\n", replaceNewLines(e.data));
-                });
+        eventSource.addEventListener('nav', (e: MessageEvent) => {
+            const nav = replaceNewLines(e.data)
+            setNavLog(nav)
+            setNavLogSteps(prev => [...prev, nav])
+        })
 
-                eventSource.addEventListener('nav', (e: MessageEvent) => {
-                    const newLog = replaceNewLines(e.data);
-                    setNavLog(newLog);
-                    setNavLogSteps(prev => [...prev, newLog]); // accumulate steps
-                    console.log("Navigation log:\n", newLog);
-                });
+        eventSource.addEventListener('pxData', (e: MessageEvent) => {
+            const data = JSON.parse(e.data) as PxWebData
+            setMessages(prev => [...prev, { sender: 'bot', pxData: data }])
+            cleanup()
+        })
 
+        eventSource.addEventListener('abort', (e: MessageEvent) => {
+            const data = JSON.parse(e.data) as SSBTableMetadata[]
+            setMessages(prev => [...prev, {
+                sender: 'bot',
+                text: `Det ser ikke ut som SSB har statistikk for akkurat det du spør om. Vil du likevel se på en av disse mulige tabellene?`,
+            }]);
+            setMessages(prev => [...prev, { sender: 'bot', possibleTables: data }]);
+            cleanup()
+        })
 
-                // Listen for the final event that carries the complete JSON result
-                eventSource.addEventListener('final', (e: MessageEvent) => {
-                    setNavLog("");  // Clear the live feed
-                    setNavLogSteps([]);      // Clear the history (which will hide the dropdown)
-                    resolve(JSON.parse(e.data) as PxWebData);
-                    eventSource.close();
-                });
-
-                eventSource.addEventListener('wildcard', (e: MessageEvent) => {
-                    const newLog = replaceNewLines(e.data);
-                    setMessages(prev => [
-                        ...prev,
-                        {
-                            sender: 'bot',
-                            text: newLog,
-                        },
-                    ]);
-                });
-                
-                eventSource.addEventListener('error', (e: MessageEvent) => {
-                    reject(e.data);
-                    eventSource.close();
-                });
-            });
-            
-            console.log("Recieved data:", tableData);
-            
-            // Litt skitten chat kode som klarer å hente ut prosent
-            const metricKey = tableData.role?.metric?.[0];
-            let baseUnit = '';
-            let categoryLabels: Record<string, string> = {};
-
-            if (metricKey) {
-                const metricDimension = tableData.dimension[metricKey];
-                if (metricDimension) {
-                    const units = metricDimension.category.unit;
-                    const firstUnitKey = Object.keys(units)[0];
-                    baseUnit = units[firstUnitKey].base;
-                    console.log("Base Unit:", baseUnit);
-
-                    categoryLabels = metricDimension.category.label;
-                    const firstCategoryKey = Object.keys(categoryLabels)[0];
-                    const firstCategoryLabel = categoryLabels[firstCategoryKey];
-                    console.log("First Category Label:", firstCategoryLabel);
-                } else {
-                    console.log("Metric dimension not found");
-                }
-            } else {
-                console.log("Metric key not defined");
-            }
-
-            const timeKey = tableData.role?.time?.[0];
-            const allDimensionKeys = Object.keys(tableData.dimension);
-            const groupDimensionKeys = allDimensionKeys.filter(
-                key => key !== metricKey && key !== timeKey
-            );
-
-            const groupKey = groupDimensionKeys[0] || '';
-            let groupLabel = '';
-            if (groupKey) {
-                const groupDimension = tableData.dimension[groupKey];
-                groupLabel = groupDimension.label;
-                console.log("Group Dimension Label:", groupLabel);
-            } else {
-                console.error("No group dimension found");
-            }
-
-            if (Array.isArray(tableData.value) && tableData.value.length === 1) {
-                const variableList: Record<string, string>[] = Object.values(tableData.dimension).map(dimension => {
-                    return { [dimension.label]: Object.values(dimension.category.label)[0] }
-                });
-                
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        text: `Svaret er: `,
-                        underLabel: groupLabel,
-                        label: tableData.label,
-                        tableid: tableData.extension.px.tableid,
-                        value: tableData.value[0],
-                        unit: baseUnit,
-                        variables: variableList
-                    },
-                ]);
-            } else {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        text: "Her er dataen basert på din forespørsel:",
-                        pxData: tableData,
-                    },
-                ]);
-            }
-        } catch (err) {
-            console.error(err);
-            setMessages(prev => [
-                ...prev,
-                { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"
-                }
-            ]);
+        eventSource.addEventListener('error', (e: MessageEvent) => {
+            console.error(e);
+            setMessages(prev => [...prev, { sender: 'bot', text: "Vi klarte dessverre å finne det du lette etter"}]);
 
             if (!hasErrorOccurred) {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        sender: 'bot',
-                        text: "Tips til å finne det du leter etter:",
-                        description: "1. Spissere spørsmål gir spissere svar \n2. Inkluder årstall, enten det er et eller flere \n3. Sett parametre i spørsmålet "}
-                ]);
+                setMessages(prev => [...prev, { sender: 'bot', type: 'error'}]);
                 setHasErrorOccurred(true);
             }
-        } finally {
-            setIsLoading(false);
-        }
+            cleanup()
+        })
     };
+    
+    const onChooseTable = (table: SSBTableMetadata) => {
+        sendUserMessage(table.label, table.extension.px.tableid);
+    }
 
     return (
         <div className="relative flex items-center justify-center min-h-screen p-4 mb-10">
@@ -222,7 +148,7 @@ export default function Home() {
                     showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
                 }`}
             >
-                <ChatMessages
+                <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}
                     messagesEndRef={messagesEndRef}
@@ -230,7 +156,7 @@ export default function Home() {
                     isFullscreen={Boolean(fullscreenPxData)}
                     navLog={navLog}
                     navLogSteps={navLogSteps}
-
+                    onChooseTable={onChooseTable}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}

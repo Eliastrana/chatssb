@@ -73,10 +73,9 @@ export function modelInitializer(
         case ModelType.GeminiFlash2Lite:
         case ModelType.GeminiFlash2:
         case ModelType.Gemini2_5ProExp:
+        case ModelType.GeminiFlash2_5:
             return new ChatGoogleGenerativeAI({
                 model: modelType,
-                temperature: 0,
-                convertSystemMessageToHumanContent: true,
                 ...defaultLLMConfig
             });
         case ModelType.Llama3_3_70b:

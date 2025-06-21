@@ -1,5 +1,14 @@
 import {ZodSchema} from "zod";
 
+export interface CustomMessage {
+    sender: 'user' | 'bot';
+    text?: string;
+    pxData?: PxWebData;
+    possibleTables?: SSBTableMetadata[];
+    forceTableId?: string;
+    type?: 'normal' | 'warning' | 'error';
+}
+
 export interface Message {
     sender: 'user' | 'bot';
     text: string;
@@ -11,7 +20,6 @@ export interface Message {
     tableid?: string;
     unit?: string;
     pxData?: PxWebData;
-
 }
 
 export interface PxWebData {
@@ -29,8 +37,8 @@ export interface PxWebData {
                 index: Record<string, number>;
                 label: Record<string, string>;
                 unit: Record<string, { base: string; decimals: number }>;
-
             };
+            totalValues?: number;
         };
     };
     size: number[];
@@ -50,7 +58,14 @@ export interface SSBTableMetadata {
             label: Record<string, string>;
             unit?: Record<string, { base: string; decimals: number; }>;
         };
-        extension: { elimination: boolean; };
+        extension: { 
+            elimination: boolean; 
+            codeLists: {
+                id: string;
+                label: string;
+                type: 'Aggregation' | 'Valueset'
+            }[]
+        };
     }>;
     extension: {
         px: {
@@ -59,6 +74,16 @@ export interface SSBTableMetadata {
     };
 }
 
+export interface SSBCodeList {
+    id: string;
+    label: string;
+    values: {
+        code: string;
+        label: string;
+    }[];
+}
+
+
 export interface SSBEntry {
     type: string;
     id: string;
@@ -66,6 +91,7 @@ export interface SSBEntry {
     firstPeriod?: string;
     lastPeriod?: string;
     variableNames?: string[];
+    timeUnit?: string;
 }
 
 export interface SSBNavigationResponse {
@@ -78,7 +104,7 @@ export interface SSBSearchResponse {
 
 export interface ServerLog {
     content: string;
-    eventType: 'log' | 'nav' | 'tokens' | 'final' | 'error' | 'wildcard';
+    eventType: 'log' | 'nav' | 'tokens' | 'pxData' | 'error' | 'info' | 'abort';
 }
 
 export interface SelectionParamaters {
@@ -144,6 +170,7 @@ export enum ModelType {
     GPTo4Mini = 'o4-mini-2025-04-16',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     GeminiFlash2 = 'gemini-2.0-flash',
+    GeminiFlash2_5 = 'gemini-2.5-flash',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
     Llama3_3_70b = 'llama-3.3-70b-versatile',
     Llama3_1_8b = 'llama-3.1-8b-instant',
@@ -156,4 +183,12 @@ export enum ModelType {
 export interface DecoupledRunnable {
     schema: ZodSchema,
     systemPrompt: string,
+}
+
+// --- CUSTOM SOLUTION ---
+
+export interface CustomAPIParams {
+    messageHistory: CustomMessage[];
+    userMessage: CustomMessage;
+    userMessageReflection?: string;
 }
