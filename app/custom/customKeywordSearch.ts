@@ -6,6 +6,7 @@ import {customChooseTablePrompt} from "@/app/custom/customChooseTablePrompt";
 import {keywordsOrIdPrompt} from "@/app/custom/keywordsOrIdPrompt";
 import {keywordsPrompt} from "@/app/custom/keywordsPrompt";
 import {customTableSelectionPrompt} from "@/app/custom/customTableSelectionPrompt";
+import {buildTableDescription} from "@/app/custom/buildTableDescription";
 
 
 // Schema builders
@@ -22,31 +23,12 @@ const buildDecisionSchema = z
     .describe("'ACCEPT' to choose table, 'NEXT' for next candidate.");
 
 // Helpers
-async function fetchMetadata(id: string, baseURL: string): Promise<SSBTableMetadata> {
-    const res = await fetch(`${baseURL}/tables/${id}/metadata?lang=en&outputFormat=json-stat2`, {
+async function fetchMetadata(id: string, baseURL: string, lang: `no` | `en` = `en`): Promise<SSBTableMetadata> {
+    const res = await fetch(`${baseURL}/tables/${id}/metadata?lang=${lang}&outputFormat=json-stat2`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
     });
     return res.json();
-}
-
-function buildDimensionPrompt(dimensions: SSBTableMetadata['dimension'], limit = 100): string {
-    const lines: string[] = [];
-    const half = limit / 2;
-    const remaining = Object.keys(dimensions).length - limit;
-    
-    for (const [key, value] of Object.entries(dimensions)) {
-        const items = Object.entries(value.category.label);
-        lines.push(`${key}: ${value.label} (${items.length} values)`);
-        const slice = items.length > limit
-            ? [...items.slice(0, half), [`...(${remaining} more)...`,''], ...items.slice(items.length - half)]
-            : items;
-        slice.forEach(([label, index]) => {
-            const unit = value.category.unit?.[label];
-            lines.push(`  ${label}: ${index}${unit ? ` (${unit.base}, decimals: ${unit.decimals})` : ''}`);
-        });
-    }
-    return lines.join('\n');
 }
 
 async function isTableAcceptable(
@@ -57,11 +39,10 @@ async function isTableAcceptable(
 ): Promise<boolean> {
     const prompt = [
         customChooseTablePrompt,
-        `Current table: '${metadata.label}'. Variables:`,
-        buildDimensionPrompt(metadata.dimension)
+        buildTableDescription(metadata)
     ].join('\n\n');
 
-    sendLog({ content: `Checking table '${metadata.extension.px.tableid}'`, eventType: 'nav' });
+    sendLog({ content: `Sjekker tabell '${metadata.extension.px.tableid}'`, eventType: 'nav' });
     const { decision } = await customWrapper(model, params, prompt, buildDecisionSchema);
     if (decision === 'ACCEPT') {
         sendLog({ content: `Selected table '${metadata.extension.px.tableid}' ('${metadata.label}')`, eventType: 'nav' });
@@ -77,7 +58,7 @@ export async function customKeywordSearch(
     numTables: number,
     sendLog: (log: ServerLog) => void,
     baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
-): Promise<SSBTableMetadata | undefined> {
+): Promise<SSBTableMetadata | void> {
     // 1. Ask user for keywords or ID
     const keywordsOrId = await customWrapper(
         model,
@@ -101,7 +82,7 @@ export async function customKeywordSearch(
         )).keywords
     );
     const query = keywordsArr.join(',');
-    sendLog({ content: `Fetching tables for '${keywordsArr.join(', ')}`, eventType: 'nav' });
+    sendLog({ content: `Henter tabeller for nøkkelordene '${keywordsArr.join(', ')}`, eventType: 'nav' });
 
     // 4. Search tables
     const searchRes = await fetch(
@@ -112,7 +93,7 @@ export async function customKeywordSearch(
     if (keywordsOrId.id) {
         tables.tables = tables.tables.filter(t => t.id !== keywordsOrId.id);
     }
-    sendLog({ content: `Fetched ${tables.tables.length} tables`, eventType: 'nav' });
+    sendLog({ content: `Hentet ${tables.tables.length} tabeller`, eventType: 'nav' });
 
     // 5. Select candidates
     const entriesPrompt = tables.tables.map(t =>
@@ -129,7 +110,6 @@ export async function customKeywordSearch(
         selectionSchema
     );
     
-    let possibleTables: SSBTableMetadata[] = [];
 
     // 6. Iterate selected
     for (const id of selectedIds.ids) {
@@ -137,14 +117,17 @@ export async function customKeywordSearch(
         if (await isTableAcceptable(model, params, metadata, sendLog)) {
             return metadata;
         }
-        possibleTables.push(metadata);
     }
 
-    // 7. Abort
+    const norwegianMetadata: SSBTableMetadata[] = await Promise.all(
+        selectedIds.ids.map(async (id: string) => {
+            return await fetchMetadata(id, baseURL, 'no');
+        })
+    );
+
+    // 8. Abort
     sendLog({
-        content: JSON.stringify(possibleTables),
+        content: JSON.stringify(norwegianMetadata),
         eventType: 'abort'
     });
-    
-    return undefined;
 }

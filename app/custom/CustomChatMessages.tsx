@@ -1,19 +1,8 @@
 "use client";
 import React, {useEffect, useState} from 'react';
 import Image from 'next/image';
-import {CustomMessage, PxWebData} from '@/app/types';
+import {CustomMessage, PxWebData, SSBTableMetadata} from '@/app/types';
 import ChartDisplay from "@/app/components/Graphing/ChartDisplay";
-
-interface ChatMessagesProps {
-    messages: CustomMessage[];
-    isLoading: boolean;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
-    onOpenFullscreen: (pxData: PxWebData) => void;
-    isFullscreen: boolean;
-    navLog: string;
-    navLogSteps: string[];
-
-}
 
 interface MemoizedChartDisplayProps {
     pxData: PxWebData;
@@ -28,7 +17,7 @@ MemoizedChartDisplay.displayName = "MemoizedChartDisplay";
 
 // inside app/custom/CustomChatMessages.tsx
 
-function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: () => void }) {
+function MessageItem({ message, onExpand, onChooseTable }: { message: CustomMessage; onExpand: () => void, onChooseTable?: (table: SSBTableMetadata) => void }) {
     const isBot = message.sender === 'bot';
     const pxData = message.pxData;
     const singleValue = pxData && pxData.value.length === 1 ? pxData.value[0] : null;
@@ -132,7 +121,9 @@ function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: 
                                     open_in_new
                                 </span>
                             </div>
-                            <button className="bg-gray-500 text-white p-1 w-24 rounded-md hover:bg-gray-600 transition-colors">
+                            <button className="bg-gray-500 text-white p-1 w-24 rounded-md hover:bg-gray-600 transition-colors"
+                                onClick={() => onChooseTable?.(table)}
+                            >
                                 Velg tabell
                             </button>
                         </div>
@@ -174,16 +165,26 @@ function MessageItem({ message, onExpand }: { message: CustomMessage; onExpand: 
     );
 }
 
-function ChatMessagesBase({
-                              messages,
-                              isLoading,
-                              messagesEndRef,
-                              onOpenFullscreen,
-                              isFullscreen,
-                              navLog,
-                              navLogSteps = [],
 
-                          }: ChatMessagesProps) {
+function ChatMessagesBase({
+    messages,
+    isLoading,
+    messagesEndRef,
+    onOpenFullscreen,
+    isFullscreen,
+    navLog,
+    navLogSteps = [],
+    onChooseTable
+                          }:{
+    messages: CustomMessage[];
+    isLoading: boolean;
+    messagesEndRef: React.RefObject<HTMLDivElement | null>;
+    onOpenFullscreen: (pxData: PxWebData) => void;
+    isFullscreen: boolean;
+    navLog: string;
+    navLogSteps: string[];
+    onChooseTable: (table: SSBTableMetadata) => void;
+}) {
     
     const [showDropdown, setShowDropdown] = useState(false);
 
@@ -209,7 +210,7 @@ function ChatMessagesBase({
                 return (
                     <div
                         key={index}
-                        className={`mb-2 z-20 flex ${isBot ? 'justify-start' : 'justify-end'} max-w-full`}
+                        className={`mb-2 z-20 md:flex ${isBot ? 'justify-start' : 'justify-end'} max-w-full`}
                     >
                         {isBot && (
                             <div className="flex items-center mr-2 border-none">
@@ -229,6 +230,7 @@ function ChatMessagesBase({
                                     onOpenFullscreen(message.pxData);
                                 }
                             }}
+                            onChooseTable={onChooseTable}
                         />
                     </div>
                 );

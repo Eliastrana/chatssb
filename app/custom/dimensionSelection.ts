@@ -28,7 +28,7 @@ export function dimensionSelection(
                     let printedValues = 0;
                     
                     for (const variableValue of Object.values(value.category.label)) {
-                        if (printedValues > 10) {
+                        if (printedValues > 50) {
                             const remainingValues = Object.keys(value.category.label).length - printedValues;
                             prompt += ` ...(${remainingValues} more)`;
                             break;

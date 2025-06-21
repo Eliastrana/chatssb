@@ -14,7 +14,7 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
     
     for (const message of params.messageHistory) {
         if (message.sender === 'user') {
-            formattedChatHistory += `Human: ${message.text}`;
+            formattedChatHistory += message.forceTableId ? `Human: USER CLICKED TABLE\n${tab}${message.text}` : `Human: ${message.text}`;
         } else if (message.sender === 'bot') {
             if (message.pxData) {
                 formattedChatHistory += 
@@ -61,7 +61,7 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
                     }
                 }
             } else if (message.possibleTables) {
-                formattedChatHistory += `\nBot: POSSIBLE TABLES`
+                formattedChatHistory += `Bot: POSSIBLE TABLES`
                 for (const table of message.possibleTables) {
                     formattedChatHistory += `\n${tab}${table.label}`
                 }
@@ -74,11 +74,13 @@ export async function customWrapper(model: BaseChatModel, params: CustomAPIParam
         formattedChatHistory += `\n`;
     }
     
+    const humanMessageText = params.userMessage.forceTableId ? `USER CLICKED TABLE\n${tab}${params.userMessage.text}` : params.userMessage.text;
+    
+    const humanMessage = new HumanMessage(`${humanMessageText}${params.userMessageReflection ? `\n\n### User Message Analysis\n${params.userMessageReflection}` : ''}`);
+    
     while (attempts < maxRetries) {
         try {
-            return await ChatPromptTemplate.fromMessages([
-                // There can only be one system message and one human message
-                new SystemMessage(`
+            const systemMessage = new SystemMessage(`
 ### Metadata
 Date: ${new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'long', year: 'numeric'})}
 
@@ -90,8 +92,12 @@ Although the user may communicate in Norwegian or other languages, you should al
 ${taskPrompt}
 
 ### Chat History
-${formattedChatHistory}${errors.length > 0 ? `\n\n### Previous Errors\n${errors.join('\n')}` : ``}`),
-                new HumanMessage(`${params.userMessage}${params.userMessageReflection ? `\n\n### User Message Analysis\n${params.userMessageReflection}` : ''}`),
+${formattedChatHistory}
+${errors.length > 0 ? `\n### Previous Errors\n${errors.join('\n')}` : ``}`)
+            
+            return await ChatPromptTemplate.fromMessages([
+                systemMessage,
+                humanMessage,
             ]).pipe(schema ? model.withStructuredOutput(schema) : model).invoke({});
         } catch (error) {
             attempts++;
@@ -101,3 +107,4 @@ ${formattedChatHistory}${errors.length > 0 ? `\n\n### Previous Errors\n${errors.
 
     throw new Error(`Failed after ${attempts} attempts: ${errors[errors.length - 1]}`);
 }
+

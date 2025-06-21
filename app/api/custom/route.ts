@@ -1,6 +1,6 @@
 import {NextResponse} from 'next/server';
 import {CustomAPIParams, ServerLog} from "@/app/types";
-import {invokeHandler} from "@/app/custom/invokeHandler";
+import {userMessageHandler} from "@/app/custom/userMessageHandler";
 
 // TODO: This is a temporary in-memory store for sessions.
 // Change to a proper database in production.
@@ -40,8 +40,18 @@ export async function GET(request: Request) {
 
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
+
+                let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
+
+                // If Weekends or 05.00-08.15 every day:
+                const currentDay = new Date().getDay();
+                const currentHour = new Date().getHours();
+                if ((currentDay === 0 || currentDay === 6) || (currentHour >= 5 && currentHour < 8)) {
+                    baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
+                    sendLog({content: `SSB API er utilgjengelig i helgene og hver dag fra 05:00 til 08:15. I disse tidsrommene brukes test-Statbank i stedet som kan ha en del manglende data.`, eventType: 'info'});
+                }
                 
-                await invokeHandler(data, sendLog);
+                await userMessageHandler(data, sendLog, baseURL);
             } catch (error) {
                 //Denne måtte være med for å kunne builde, men som du sier, så kommer den jo ikke til
                 // å utløses, siden koden er programmert til å fungere.
@@ -61,3 +71,4 @@ export async function GET(request: Request) {
         }
     });
 }
+

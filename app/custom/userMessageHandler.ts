@@ -12,25 +12,17 @@ import {customSelectionToURL} from "@/app/custom/customSelectionToURL";
 import {dimensionSelection} from "@/app/custom/dimensionSelection";
 import {customKeywordSearch} from "@/app/custom/customKeywordSearch";
 import {customWrapper} from "@/app/custom/customWrapper";
-import {customReasoningPrompt} from "@/app/custom/customReasoningPrompt";
+import {customMessageReasoningPrompt} from "@/app/custom/customMessageReasoningPrompt";
+import {buildTableDescription} from "@/app/custom/buildTableDescription";
+import {customForcedReasoningPrompt} from "@/app/custom/customForcedReasoningPrompt";
 
 
-export async function invokeHandler(
+export async function userMessageHandler(
     params: CustomAPIParams,
     sendLog: (log: ServerLog) => void,
+    baseURL: string
 ): Promise<void> {
     sendLog({ content: 'Prosseserer...', eventType: 'nav' });
-
-    let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
-    
-    // If Weekends or 05.00-08.15 every day:
-    const currentDay = new Date().getDay();
-    const currentHour = new Date().getHours();
-    if ((currentDay === 0 || currentDay === 6) || (currentHour >= 5 && currentHour < 8)) {
-        baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
-        sendLog({content: `The SSB API is unavailable on weekends and daily from 05:00 to 08:15. 
-    During these times, the test Statbank is used instead.`, eventType: 'info'});
-    }
     
     // Add totalValues
     for (const message of params.messageHistory) {
@@ -59,36 +51,57 @@ export async function invokeHandler(
         }
     }
     
-    const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
-    
+    const reasoningModel = modelInitializer(ModelType.GPT4_1Mini, sendLog);
+    const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
+
+
     sendLog({ content: 'Ressonerer...', eventType: 'nav' });
     
-    const reasoning = await customWrapper(
-        navigationModel,
-        params,
-        customReasoningPrompt
-    );
-    
-    params.userMessageReflection = reasoning.content;
-    
+    let tableMetadata: SSBTableMetadata;
 
-    const tableMetadata = await customKeywordSearch(
-        navigationModel,
-        params,
-        5,
-        100,
-        sendLog,
-        baseURL
-    );
-    
-    if (!tableMetadata) {
-        return;
+    if (params.userMessage.forceTableId) {
+        try {
+            const res = await fetch(`${baseURL}/tables/${params.userMessage.forceTableId}/metadata?lang=en&outputFormat=json-stat2`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+            tableMetadata = await res.json() as SSBTableMetadata;
+        } catch {
+            throw new Error(`Failed to fetch SSB API table metadata for table ${params.userMessage.forceTableId}`);
+        }
+        
+        const reasoning = await customWrapper(
+            reasoningModel,
+            params,
+            customForcedReasoningPrompt + `\n\n` + buildTableDescription(tableMetadata)
+        );
+        
+        params.userMessageReflection = reasoning.content;
+    } else {
+        const reasoning = await customWrapper(
+            reasoningModel,
+            params,
+            customMessageReasoningPrompt
+        );
+
+        params.userMessageReflection = reasoning.content;
+        
+        const searchResult = await customKeywordSearch(
+            navigationModel,
+            params,
+            5,
+            100,
+            sendLog,
+            baseURL
+        );
+        if (!searchResult) return;
+        tableMetadata = searchResult;
     }
-
+    
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
-    const selectionModel = modelInitializer(ModelType.GPTo4Mini, sendLog);
+    const selectionModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
     
     // if no table has code list or if no table is optional
     const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {

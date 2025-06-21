@@ -1,4 +1,4 @@
-export const customReasoningPrompt: string = 
+export const customMessageReasoningPrompt: string = 
 `
 Your task is to accurately interpret the user's intent when asking for statistical data from SSB (Statistics Norway), especially in follow-up queries. Always reason step-by-step to determine whether the current request can be fulfilled by modifying or expanding the **existing table and variables**, or whether a **new table** must be located.
 Follow this structure in your reasoning:

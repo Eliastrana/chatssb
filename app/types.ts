@@ -5,6 +5,7 @@ export interface CustomMessage {
     text?: string;
     pxData?: PxWebData;
     possibleTables?: SSBTableMetadata[];
+    forceTableId?: string;
     type?: 'normal' | 'warning' | 'error';
 }
 
@@ -169,6 +170,7 @@ export enum ModelType {
     GPTo4Mini = 'o4-mini-2025-04-16',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     GeminiFlash2 = 'gemini-2.0-flash',
+    GeminiFlash2_5 = 'gemini-2.5-flash',
     Gemini2_5ProExp = 'gemini-2.5-pro-exp-03-25',
     Llama3_3_70b = 'llama-3.3-70b-versatile',
     Llama3_1_8b = 'llama-3.1-8b-instant',
@@ -187,6 +189,6 @@ export interface DecoupledRunnable {
 
 export interface CustomAPIParams {
     messageHistory: CustomMessage[];
-    userMessage: string;
+    userMessage: CustomMessage;
     userMessageReflection?: string;
 }

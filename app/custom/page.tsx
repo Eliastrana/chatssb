@@ -41,8 +41,8 @@ export default function Home() {
     }, [messages]);
     
     
-    const sendUserMessage = async (userMessage: string) => {
-        if (!userMessage.trim()) return;
+    const sendUserMessage = async (userString: string, forcedTableId?: string) => {
+        if (!userString.trim()) return;
         
         setFullscreenPxData(null);
         setInput('');
@@ -50,12 +50,20 @@ export default function Home() {
         setError(null);
         
         const messageHistory = _.cloneDeep(messages)
-        setMessages(prev  => [...prev, { sender: 'user' as const, text: userMessage }]);
+        
+        
+        const userMessage: CustomMessage = {
+            sender: 'user',
+            text: userString,
+            forceTableId: forcedTableId,
+        };
         
         const data: CustomAPIParams = {
             messageHistory,
-            userMessage,
+            userMessage
         };
+        
+        setMessages(prev => [...prev, userMessage]);
         
         const initRes = await fetch('/api/custom', {
             method:   'POST',
@@ -63,8 +71,7 @@ export default function Home() {
             body: JSON.stringify(data),
         });
         const { sessionId } = await initRes.json();
-
-
+        
         const eventSource = new EventSource(`/api/custom?sessionId=${sessionId}`)
         const replaceNewLines = (s: string) => s.replace(/\\n/g, '\n')
 
@@ -118,6 +125,10 @@ export default function Home() {
             cleanup()
         })
     };
+    
+    const onChooseTable = (table: SSBTableMetadata) => {
+        sendUserMessage(table.label, table.extension.px.tableid);
+    }
 
     return (
         <div className="relative flex items-center justify-center min-h-screen p-4 mb-10">
@@ -145,6 +156,7 @@ export default function Home() {
                     isFullscreen={Boolean(fullscreenPxData)}
                     navLog={navLog}
                     navLogSteps={navLogSteps}
+                    onChooseTable={onChooseTable}
                 />
 
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}

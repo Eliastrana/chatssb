@@ -1,7 +1,6 @@
 import type {Metadata} from "next";
 import "./globals.css";
-import IOSToggleButton from "@/app/components/dev/IOSToggleButton";
-import { Analytics } from "@vercel/analytics/react"
+import {Analytics} from "@vercel/analytics/react"
 
 export const metadata: Metadata = {
   title: "ChatSSB",
@@ -48,10 +47,7 @@ export default function RootLayout({
 
       </head>
       <body>
-
-      <div className="fixed right-2 top-2 z-50 hidden md:block">
-          <IOSToggleButton/>
-      </div>
+      
 
       {children}
       <Analytics />
