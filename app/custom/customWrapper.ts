@@ -4,7 +4,8 @@ import {BaseChatModel} from "@langchain/core/language_models/chat_models";
 import {ChatPromptTemplate} from "@langchain/core/prompts";
 import {ZodTypeAny} from "zod";
 
-export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, taskPrompt: string, schema?: ZodTypeAny, maxRetries: number = 2): Promise<any> {
+
+export async function customWrapper(model: BaseChatModel, params: CustomAPIParams, taskPrompt: string, schema?: ZodTypeAny, maxRetries: number = 2): Promise<unknown> {
     let attempts = 0;
     let errors: string[] =  [];
     

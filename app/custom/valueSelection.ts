@@ -9,11 +9,8 @@ export function valueSelection(
 ): DecoupledRunnable {
     
     const schema: Record<string, z.ZodTypeAny> = {};
-    
-    let parametersPrompt = `Variables:`; 
-    const tab = '    ';
 
-    Object.entries(tableMetadata.dimension).forEach(([key, value]) => {
+    Object.entries(tableMetadata.dimension).forEach(([key, ]) => {
         schema[key] = z.union([
             z.object({ itemSelection: z.array(z.string()).min(1) }),
             z.object({ wildcard: z.boolean() }),

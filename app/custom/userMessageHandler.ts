@@ -2,6 +2,7 @@ import {
     CustomAPIParams,
     ModelType,
     PxWebData,
+    SelectionParamaters,
     ServerLog,
     SSBCodeList,
     SSBTableMetadata
@@ -74,7 +75,7 @@ export async function userMessageHandler(
             reasoningModel,
             params,
             customForcedReasoningPrompt + `\n\n` + buildTableDescription(tableMetadata)
-        );
+        ) as { content: string };
         
         params.userMessageReflection = reasoning.content;
     } else {
@@ -82,7 +83,7 @@ export async function userMessageHandler(
             reasoningModel,
             params,
             customMessageReasoningPrompt
-        );
+        ) as { content: string };
 
         params.userMessageReflection = reasoning.content;
         
@@ -116,7 +117,7 @@ export async function userMessageHandler(
             params,
             dimensionSelection(tableMetadata).systemPrompt,
             dimensionSelection(tableMetadata).schema,
-        )
+        ) as Record<string, string>;
         
         for (const [dimension, value] of Object.entries(selectedDimensions)) {
             if (value === 'OMITTED') {
@@ -148,7 +149,7 @@ export async function userMessageHandler(
         params,
         valueSelection(tableMetadata).systemPrompt,
         valueSelection(tableMetadata).schema,
-    )
+    ) as Record<string, SelectionParamaters>;
 
     SSBGetUrl = customSelectionToURL(
         selectedValues,

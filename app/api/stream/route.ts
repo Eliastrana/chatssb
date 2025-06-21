@@ -38,7 +38,7 @@ export async function GET(request: Request) {
                 
                 const result = await userMessageToTableData(params, sendLog);
                 
-                sendLog({ content: JSON.stringify(result), eventType: 'final' });
+                sendLog({ content: JSON.stringify(result), eventType: 'pxData' });
                 controller.close();
                 
             } catch (error) {

@@ -43,7 +43,7 @@ async function isTableAcceptable(
     ].join('\n\n');
 
     sendLog({ content: `Sjekker tabell '${metadata.extension.px.tableid}'`, eventType: 'nav' });
-    const { decision } = await customWrapper(model, params, prompt, buildDecisionSchema);
+    const { decision } = await customWrapper(model, params, prompt, buildDecisionSchema) as { decision: 'ACCEPT' | 'NEXT' };
     if (decision === 'ACCEPT') {
         sendLog({ content: `Selected table '${metadata.extension.px.tableid}' ('${metadata.label}')`, eventType: 'nav' });
         return true;
@@ -65,7 +65,7 @@ export async function customKeywordSearch(
         params,
         keywordsOrIdPrompt,
         buildKeywordsOrIdSchema(numKeywords)
-    );
+    ) as { keywords?: string[], id?: string };
 
     // 2. If ID provided, fetch & prompt
     if (keywordsOrId.id) {
@@ -79,7 +79,8 @@ export async function customKeywordSearch(
     const keywordsArr = keywordsOrId.keywords ?? (
         (await customWrapper(model, params, keywordsPrompt,
             z.object({ keywords: z.array(z.string()).max(numKeywords) })
-        )).keywords
+        ) as { keywords: string[] }
+        ).keywords
     );
     const query = keywordsArr.join(',');
     sendLog({ content: `Henter tabeller for nøkkelordene '${keywordsArr.join(', ')}`, eventType: 'nav' });
@@ -89,7 +90,7 @@ export async function customKeywordSearch(
         `${baseURL}/tables?lang=en&pageSize=${numTables}&query=${encodeURIComponent(query)}`,
         { method: 'GET', headers: { 'Content-Type': 'application/json' } }
     );
-    let tables = (await searchRes.json()) as SSBSearchResponse;
+    const tables = (await searchRes.json()) as SSBSearchResponse;
     if (keywordsOrId.id) {
         tables.tables = tables.tables.filter(t => t.id !== keywordsOrId.id);
     }
@@ -108,7 +109,7 @@ export async function customKeywordSearch(
         params,
         `${customTableSelectionPrompt}\n${entriesPrompt}`,
         selectionSchema
-    );
+    ) as { ids: string[] };
     
 
     // 6. Iterate selected
