@@ -26,16 +26,6 @@ function MessageItem({ message, onExpand, onChooseTable }: { message: CustomMess
     const children: React.ReactNode[] = [];
 
     if (pxData) {
-        children.push(
-            <button
-                key="expand"
-                className="hidden md:block absolute right-2 top-2 text-sm font-medium underline"
-                onClick={onExpand}
-            >
-                <span className="material-symbols-outlined">open_in_full</span>
-            </button>
-        );
-
         if (singleValue) {
             const {
                 extension: { px: { tableid } },
@@ -100,6 +90,15 @@ function MessageItem({ message, onExpand, onChooseTable }: { message: CustomMess
                 </div>
             );
         } else {
+            children.push(
+                <button
+                    key="expand"
+                    className="hidden md:block absolute right-2 top-2 text-sm font-medium underline"
+                    onClick={onExpand}
+                >
+                    <span className="material-symbols-outlined">open_in_full</span>
+                </button>
+            );
             children.push(<MemoizedChartDisplay key="chart" pxData={pxData} />);
         }
     } else if (message.possibleTables) {

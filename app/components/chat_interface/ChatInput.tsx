@@ -35,7 +35,7 @@ export default function ChatInput({
 
     return (
         <div className="fixed bottom-10 w-full flex justify-center items-center px-4 z-20">
-            <div className="w-full md:w-1/2 flex items-center">
+            <div className="w-full lg:w-1/2 flex items-center">
                 <input
                     type="text"
                     className="flex-grow border border-[#C3DCDC] bg-white text-gray-800 rounded-lg shadow-md rounded-r-none px-4 py-2 focus:outline-none"

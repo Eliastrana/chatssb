@@ -102,7 +102,7 @@ export async function customKeywordSearch(
     ).join('\n');
 
     const ids = tables.tables.map(t => t.id);
-    const selectionSchema = z.object({ ids: z.array(z.enum([ids[0], ...ids.slice(1)])).min(3).max(10) })
+    const selectionSchema = z.object({ ids: z.array(z.enum([ids[0], ...ids.slice(1)])).min(3).max(5) })
 
     const selectedIds = await customWrapper(
         model,
