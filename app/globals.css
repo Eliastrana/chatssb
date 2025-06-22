@@ -2,9 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@theme {
+  --background: #F0F8F9;
+  --foreground: #274247;
+  --secondary: #00824D;
+}
+
 :root {
   --background: #F0F8F9;
-  --foreground: #171717;
+  --foreground: #274247;
+  --secondary: #00824D;
 }
 
 body {

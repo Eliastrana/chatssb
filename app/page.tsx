@@ -1,6 +1,5 @@
 "use client";
 import {useCallback, useEffect, useRef, useState} from 'react';
-import TitleSection from '@/app/components/chat_interface/TitleSection';
 import ChatInput from '@/app/components/chat_interface/ChatInput';
 import FullscreenChartModal from '@/app/components/fullscreen/FullscreenChartModal';
 import ExamplePrompts from "@/app/components/chat_interface/ExamplePrompts";
@@ -10,7 +9,6 @@ import CustomChatMessages from './custom/CustomChatMessages';
 import _ from "lodash";
 
 export default function Home() {
-    const [showTitle, setShowTitle] = useState(true);
     const [messages, setMessages] = useState<CustomMessage[]>([
         { sender: 'bot', text: `Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?` },
     ]);
@@ -141,13 +139,29 @@ export default function Home() {
 
             <HoverInfoModal />
 
-            <TitleSection showTitle={showTitle} setShowTitle={setShowTitle} />
 
             <div
-                className={`w-full md:w-1/2 flex flex-col transition-opacity duration-500 ${
-                    showTitle ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
-                }`}
+                className="w-full lg:w-1/2 flex flex-col transition-opacity duration-500 opacity-100 pointer-events-auto"
             >
+                <div className="grid grid-cols-2 gap-1 my-10 sm:m-10 self-center">
+                    {[
+                        { href: "https://eliastrana.no", text: "eliastrana.no", extra: "rounded-l-full p-1 px-3 text-right" },
+                        { href: "https://trygvejorgensen.no", text: "trygvejorgensen.no", extra: "rounded-r-full p-1 px-3 text-left" }
+                    ].map(({ href, text, extra }) => (
+                        <a
+                            key={href}
+                            href={href}
+                            target="_blank"
+                            className={`bg-[#00824D] hover:bg-foreground ${extra} text-white hover:text-[#B6E8B8] font-light italic tracking-widest text-xs sm:text-base md:text-lg hover:shadow-lg transition-all ease-in-out`}
+                        >
+                            {text}
+                        </a>
+                    ))}
+                </div>
+                
+                <hr className="border-t-2 border-[#C3DCDC] rounded-full mb-10 shadow-lg" />
+
+                
                 <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}

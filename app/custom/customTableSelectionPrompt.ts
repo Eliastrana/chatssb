@@ -5,7 +5,7 @@ export const customTableSelectionPrompt =
 - 'firstPeriod' and 'lastPeriod': the time range of the data
 - 'variableNames': list of variables included in the table
 
-Your task is to select the **most relevant** (3-10) tables that best match the user's request, with the most relevant table listed first.
+Your task is to select the **most relevant** (3-5) tables that best match the user's request, with the most relevant table listed first.
 
 Use the following criteria:
 - Prioritize semantic alignment between the user’s request and the table’s label or variables.

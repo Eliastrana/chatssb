@@ -23,7 +23,7 @@ export async function userMessageHandler(
     sendLog: (log: ServerLog) => void,
     baseURL: string
 ): Promise<void> {
-    sendLog({ content: 'Prosseserer...', eventType: 'nav' });
+    sendLog({ content: 'Prosesserer...', eventType: 'nav' });
     
     // Add totalValues
     for (const message of params.messageHistory) {
@@ -56,7 +56,7 @@ export async function userMessageHandler(
     const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
 
 
-    sendLog({ content: 'Ressonerer...', eventType: 'nav' });
+    sendLog({ content: 'Resonnerer...', eventType: 'nav' });
     
     let tableMetadata: SSBTableMetadata;
 
