@@ -143,25 +143,36 @@ export default function Home() {
             <div
                 className="w-full lg:w-1/2 flex flex-col transition-opacity duration-500 opacity-100 pointer-events-auto"
             >
-                <div className="grid grid-cols-2 gap-1 my-10 sm:m-10 self-center">
-                    {[
-                        { href: "https://eliastrana.no", text: "eliastrana.no", extra: "rounded-l-full p-1 px-3 text-right" },
-                        { href: "https://trygvejorgensen.no", text: "trygvejorgensen.no", extra: "rounded-r-full p-1 px-3 text-left" }
-                    ].map(({ href, text, extra }) => (
-                        <a
-                            key={href}
-                            href={href}
-                            target="_blank"
-                            className={`bg-[#00824D] hover:bg-foreground ${extra} text-white hover:text-[#B6E8B8] font-light italic tracking-widest text-xs sm:text-base md:text-lg hover:shadow-lg transition-all ease-in-out`}
-                        >
-                            {text}
-                        </a>
-                    ))}
-                </div>
-                
-                <hr className="border-t-2 border-[#C3DCDC] rounded-full mb-10 shadow-lg" />
 
-                
+                {messages.filter(m => m.sender === "user").length === 0 && (
+                    <div className="flex flex-col items-center text-2xl">
+                        <div className="flex items-center gap-2 my-4 text-[#274247]">
+                            <a
+                                href="https://eliastrana.no"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline text-xs sm:text-base md:text-lg transition-all ease-in-out"
+                            >
+                                Elias Trana
+                            </a>
+
+                            <span aria-hidden="true" className="text-xs sm:text-base md:text-lg">•</span>
+
+                            <a
+                                href="https://trygvejorgensen.no"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline text-xs sm:text-base md:text-lg transition-all ease-in-out"
+                            >
+                                Trygve Jørgensen
+                            </a>
+                        </div>
+
+                        <hr className="w-fit border-t-2 border-[#C3DCDC] rounded-full mb-4 shadow-lg" />
+                    </div>
+                )}
+
+
                 <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}
@@ -176,7 +187,7 @@ export default function Home() {
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
 
                 {messages.filter(msg => msg.sender === "user").length === 0 && (
-                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
+                    <ExamplePrompts onSelectPrompt={sendUserMessage}/>
                 )}
             </div>
 
