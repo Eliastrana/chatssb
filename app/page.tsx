@@ -172,7 +172,7 @@ export default function Home() {
                     </div>
                 )}
 
-
+                
                 <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}
@@ -187,7 +187,7 @@ export default function Home() {
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
 
                 {messages.filter(msg => msg.sender === "user").length === 0 && (
-                    <ExamplePrompts onSelectPrompt={sendUserMessage}/>
+                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
                 )}
             </div>
 

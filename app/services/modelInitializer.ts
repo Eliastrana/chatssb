@@ -52,8 +52,16 @@ export function modelInitializer(
     };
     
     switch (modelType) {
+        case ModelType.GPT5_rMedium:
+            return new ChatOpenAI({
+                openAIApiKey: process.env.OPENAI_API_KEY,
+                modelName: modelType,
+                reasoningEffort: 'medium',
+                ...defaultLLMConfig
+            });
         case ModelType.GPTo4Mini:
         case ModelType.GPTo3Mini:
+        case ModelType.GPT5_rLow:
             return new ChatOpenAI({
                 openAIApiKey: process.env.OPENAI_API_KEY,
                 modelName: modelType,
