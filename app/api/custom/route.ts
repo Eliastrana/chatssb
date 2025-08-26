@@ -41,17 +41,22 @@ export async function GET(request: Request) {
             try {
                 sendLog({ content: 'Starting LLM response generation', eventType: 'log' });
 
-                let baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
+                if (!data.baseURL) {
+                    data.baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/';
 
-                // If Weekends or 05.00-08.15 every day:
-                const currentDay = new Date().getDay();
-                const currentHour = new Date().getHours();
-                if ((currentDay === 0 || currentDay === 6) || (currentHour >= 5 && currentHour < 8)) {
-                    baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
-                    sendLog({content: `SSB API er utilgjengelig i helgene og hver dag fra 05:00 til 08:15. I disse tidsrommene brukes test-Statbank i stedet som kan ha en del manglende data.`, eventType: 'info'});
+                    // If Weekends or 05.00-08.15 every day:
+                    const currentDay = new Date().getDay();
+                    const currentHour = new Date().getHours();
+                    if ((currentDay === 0 || currentDay === 6) || (currentHour >= 5 && currentHour < 8)) {
+                        data.baseURL = 'https://data.qa.ssb.no/api/pxwebapi/v2-beta/'
+                        sendLog({
+                            content: `SSB API er utilgjengelig i helgene og hver dag fra 05:00 til 08:15. I disse tidsrommene brukes test-Statbank i stedet som kan ha en del manglende data.`,
+                            eventType: 'info'
+                        });
+                    }
                 }
                 
-                await userMessageHandler(data, sendLog, baseURL);
+                await userMessageHandler(data, sendLog);
             } catch (error) {
                 //Denne måtte være med for å kunne builde, men som du sier, så kommer den jo ikke til
                 // å utløses, siden koden er programmert til å fungere.

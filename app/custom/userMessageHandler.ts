@@ -21,8 +21,9 @@ import {customForcedReasoningPrompt} from "@/app/custom/customForcedReasoningPro
 export async function userMessageHandler(
     params: CustomAPIParams,
     sendLog: (log: ServerLog) => void,
-    baseURL: string
 ): Promise<void> {
+    
+    const baseURL = params.baseURL || 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
     const reasoningModel = modelInitializer(ModelType.GPT4_1Mini, sendLog);
     const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);

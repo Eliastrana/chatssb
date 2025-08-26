@@ -192,4 +192,5 @@ export interface CustomAPIParams {
     messageHistory: CustomMessage[];
     userMessage: CustomMessage;
     userMessageReflection?: string;
+    baseURL?: string;
 }
