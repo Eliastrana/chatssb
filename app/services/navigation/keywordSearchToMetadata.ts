@@ -11,7 +11,7 @@ export async function keywordSearchToMetadata(
 ): Promise<SSBTableMetadata> {
     const selectedTable = await keywordSearchToTableId(model, userPrompt, numKeywords, sendLog, baseURL);
 
-    const response = await fetch(`${baseURL}/tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
+    const response = await fetch(`${baseURL}tables/${selectedTable.id}/metadata?lang=en&outputFormat=json-stat2`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });

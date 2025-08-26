@@ -24,7 +24,7 @@ export async function keywordSearchToTableId(
         keywords.keywords.map(async (keyword: string) => {
             sendLog({content: `Henter tabeller for søkeord '${keyword}'`, eventType: 'nav'});
 
-            const response = await fetch(`${baseURL}/tables?lang=en&query=${keyword}`, {
+            const response = await fetch(`${baseURL}tables?lang=en&query=${keyword}`, {
                 method: "GET",
                 headers: {"Content-Type": "application/json"},
             });
