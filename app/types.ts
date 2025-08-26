@@ -169,7 +169,6 @@ export enum ModelType {
     GPTo3Mini = 'o3-mini-2025-01-31',
     GPTo4Mini = 'o4-mini-2025-04-16',
     GPT5_rMedium = 'gpt-5-2025-08-07',
-    GPT5_rLow = 'gpt-5-2025-08-07',
     GeminiFlash2Lite = 'gemini-2.0-flash-lite',
     GeminiFlash2 = 'gemini-2.0-flash',
     GeminiFlash2_5 = 'gemini-2.5-flash',

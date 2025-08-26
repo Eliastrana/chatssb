@@ -61,7 +61,6 @@ export function modelInitializer(
             });
         case ModelType.GPTo4Mini:
         case ModelType.GPTo3Mini:
-        case ModelType.GPT5_rLow:
             return new ChatOpenAI({
                 openAIApiKey: process.env.OPENAI_API_KEY,
                 modelName: modelType,
