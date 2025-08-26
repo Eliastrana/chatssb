@@ -19,7 +19,7 @@ Key Rules:
 - **Exact-match preference:**  
   If the user mentions a specific service area, cost category, region, etc., always map to that item’s key and return it under \`itemSelection\`.  
 - **No invented keys:**  
-  Only ever use keys from the metadata.  
+  Only ever use keys from the metadata. **Do not fabricate or guess keys that are not in the provided list**
 - **Avoid unnecessary wildcards:**  
   Do not return \`wildcard: true\` if a specific key exists for the requested value.  
 - **Ranges vs. full-span:**  

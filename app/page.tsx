@@ -9,6 +9,24 @@ import CustomChatMessages from './custom/CustomChatMessages';
 import _ from "lodash";
 
 export default function Home() {
+
+    // Get the 'country' URL parameter and map it to a code if needed
+    const country = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("country") || ""
+        : "";
+    
+    const baseURL = (() => {
+        switch (country.toLowerCase()) {
+            case "sweden":
+                const isAfterSeptember2025 = new Date() >= new Date('2025-09-01');
+                return isAfterSeptember2025
+                    ? "https://statistikdatabasen.scb.se/api/v2"
+                    : "https://api.scb.se/ov0104/v2beta/api/v2";
+            default:
+                return undefined;
+        }
+    })();
+    
     const [messages, setMessages] = useState<CustomMessage[]>([
         { sender: 'bot', text: `Hei! Jeg er en smart søkemotor som lar deg spørre om all statistikken til SSB. Hva kan jeg hjelpe deg med?` },
     ]);
@@ -58,7 +76,8 @@ export default function Home() {
         
         const data: CustomAPIParams = {
             messageHistory,
-            userMessage
+            userMessage,
+            baseURL: baseURL,
         };
         
         setMessages(prev => [...prev, userMessage]);
@@ -139,7 +158,6 @@ export default function Home() {
 
             <HoverInfoModal />
 
-
             <div
                 className="w-full lg:w-1/2 flex flex-col transition-opacity duration-500 opacity-100 pointer-events-auto"
             >
@@ -172,7 +190,7 @@ export default function Home() {
                     </div>
                 )}
 
-
+                
                 <CustomChatMessages
                     messages={messages}
                     isLoading={isLoading}
@@ -187,7 +205,7 @@ export default function Home() {
                 {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
 
                 {messages.filter(msg => msg.sender === "user").length === 0 && (
-                    <ExamplePrompts onSelectPrompt={sendUserMessage}/>
+                    <ExamplePrompts onSelectPrompt={sendUserMessage} />
                 )}
             </div>
 

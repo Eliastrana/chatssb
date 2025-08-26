@@ -6,6 +6,7 @@ import {buildTableDescription} from "@/app/custom/buildTableDescription";
 
 export function valueSelection(
     tableMetadata: SSBTableMetadata,
+    limit = 100,
 ): DecoupledRunnable {
     
     const schema: Record<string, z.ZodTypeAny> = {};
@@ -20,5 +21,5 @@ export function valueSelection(
     
     const finalSchema = z.object(schema);
 
-    return { schema: finalSchema, systemPrompt: `${customSelectionPrompt}\n\n${buildTableDescription(tableMetadata)}` }
+    return { schema: finalSchema, systemPrompt: `${customSelectionPrompt}\n\n${buildTableDescription(tableMetadata, limit)}` }
 }
