@@ -25,7 +25,7 @@ SSB som offentlig etat kan ikke ytre subjektive tolkninger på objektiv data. Fo
 ChatSSB er konfigurert med 10 navigasjonsteknikker, 3 seleksjonsteknikker og 9 språkmodeller. Dette oppnår en høy grad av fleksibilitet og tilpasningsevne rundt effektivitet og pris. 
 
 
-## Bruk
+## Bruk av applikasjon 
 | ![Alt 1](/public/readme_images/screenshot_process.png) | ![Alt 2](/public/readme_images/svar_tile.png) | ![Alt 3](/public/readme_images/linegraph.png) |
 |:---------------------------------:|:---------------------------------:|:---------------------------------------------:|
 
