@@ -23,6 +23,12 @@ export async function userMessageHandler(
     sendLog: (log: ServerLog) => void,
     baseURL: string
 ): Promise<void> {
+    
+    const reasoningModel = modelInitializer(ModelType.GPT4_1Mini, sendLog);
+    const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
+    const selectDimensionsModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
+    const selectionModel = modelInitializer(ModelType.GPT5_rMedium, sendLog);
+
     sendLog({ content: 'Prosesserer...', eventType: 'nav' });
     
     // Add totalValues
@@ -51,10 +57,6 @@ export async function userMessageHandler(
             }
         }
     }
-    
-    const reasoningModel = modelInitializer(ModelType.GPT4_1Mini, sendLog);
-    const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
-
 
     sendLog({ content: 'Resonnerer...', eventType: 'nav' });
     
@@ -74,7 +76,7 @@ export async function userMessageHandler(
         const reasoning = await customWrapper(
             reasoningModel,
             params,
-            customForcedReasoningPrompt + `\n\n` + buildTableDescription(tableMetadata)
+            customForcedReasoningPrompt + `\n\n` + buildTableDescription(tableMetadata, 500)
         ) as { content: string };
         
         params.userMessageReflection = reasoning.content;
@@ -91,9 +93,10 @@ export async function userMessageHandler(
             navigationModel,
             params,
             5,
-            100,
+            40,
             sendLog,
-            baseURL
+            baseURL,
+            500
         );
         if (!searchResult) return;
         tableMetadata = searchResult;
@@ -102,8 +105,6 @@ export async function userMessageHandler(
     const tableId = tableMetadata.extension.px.tableid;
     let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
-    const selectionModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
-    
     // if no table has code list or if no table is optional
     const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {
         return value.extension.codeLists.length > 0 || value.extension.elimination;
@@ -113,7 +114,7 @@ export async function userMessageHandler(
     
     if (hasCodeListOrIsOptional) {
         selectedDimensions =  await customWrapper(
-            selectionModel,
+            selectDimensionsModel,
             params,
             dimensionSelection(tableMetadata).systemPrompt,
             dimensionSelection(tableMetadata).schema,
@@ -144,11 +145,13 @@ export async function userMessageHandler(
         }
     }
     
+    const valueSelectionResult = valueSelection(tableMetadata, 2000)
+    
     const selectedValues = await customWrapper(
         selectionModel,
         params,
-        valueSelection(tableMetadata).systemPrompt,
-        valueSelection(tableMetadata).schema,
+        valueSelectionResult.systemPrompt,
+        valueSelectionResult.schema,
     ) as Record<string, SelectionParamaters>;
 
     SSBGetUrl = customSelectionToURL(

@@ -35,11 +35,12 @@ async function isTableAcceptable(
     model: BaseChatModel,
     params: CustomAPIParams,
     metadata: SSBTableMetadata,
-    sendLog: (log: ServerLog) => void
+    sendLog: (log: ServerLog) => void,
+    limit = 100
 ): Promise<boolean> {
     const prompt = [
         customChooseTablePrompt,
-        buildTableDescription(metadata)
+        buildTableDescription(metadata, limit),
     ].join('\n\n');
 
     sendLog({ content: `Sjekker tabell '${metadata.extension.px.tableid}'`, eventType: 'nav' });
@@ -57,9 +58,10 @@ export async function customKeywordSearch(
     numKeywords: number,
     numTables: number,
     sendLog: (log: ServerLog) => void,
-    baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/'
+    baseURL = 'https://data.ssb.no/api/pxwebapi/v2-beta/',
+    limit = 100,
 ): Promise<SSBTableMetadata | void> {
-    // 1. Ask user for keywords or ID
+    // 1. Ask AI for keywords or ID
     const keywordsOrId = await customWrapper(
         model,
         params,
@@ -70,7 +72,7 @@ export async function customKeywordSearch(
     // 2. If ID provided, fetch & prompt
     if (keywordsOrId.id) {
         const metadata = await fetchMetadata(keywordsOrId.id, baseURL);
-        if (await isTableAcceptable(model, params, metadata, sendLog)) {
+        if (await isTableAcceptable(model, params, metadata, sendLog, limit)) {
             return metadata;
         }
     }
@@ -115,7 +117,7 @@ export async function customKeywordSearch(
     // 6. Iterate selected
     for (const id of selectedIds.ids) {
         const metadata = await fetchMetadata(id, baseURL);
-        if (await isTableAcceptable(model, params, metadata, sendLog)) {
+        if (await isTableAcceptable(model, params, metadata, sendLog, limit)) {
             return metadata;
         }
     }
