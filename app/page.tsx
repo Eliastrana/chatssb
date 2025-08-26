@@ -20,8 +20,8 @@ export default function Home() {
             case "sweden":
                 const isAfterSeptember2025 = new Date() >= new Date('2025-09-01');
                 return isAfterSeptember2025
-                    ? "https://statistikdatabasen.scb.se/api/v2"
-                    : "https://api.scb.se/ov0104/v2beta/api/v2";
+                    ? "https://statistikdatabasen.scb.se/api/v2/"
+                    : "https://api.scb.se/ov0104/v2beta/api/v2/";
             default:
                 return undefined;
         }

@@ -24,7 +24,7 @@ const buildDecisionSchema = z
 
 // Helpers
 async function fetchMetadata(id: string, baseURL: string, lang: `no` | `en` = `en`): Promise<SSBTableMetadata> {
-    const res = await fetch(`${baseURL}/tables/${id}/metadata?lang=${lang}&outputFormat=json-stat2`, {
+    const res = await fetch(`${baseURL}tables/${id}/metadata?lang=${lang}&outputFormat=json-stat2`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
     });
@@ -89,7 +89,7 @@ export async function customKeywordSearch(
 
     // 4. Search tables
     const searchRes = await fetch(
-        `${baseURL}/tables?lang=en&pageSize=${numTables}&query=${encodeURIComponent(query)}`,
+        `${baseURL}tables?lang=en&pageSize=${numTables}&query=${encodeURIComponent(query)}`,
         { method: 'GET', headers: { 'Content-Type': 'application/json' } }
     );
     const tables = (await searchRes.json()) as SSBSearchResponse;

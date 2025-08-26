@@ -25,9 +25,9 @@ export async function userMessageHandler(
     
     const baseURL = params.baseURL || 'https://data.ssb.no/api/pxwebapi/v2-beta/';
     
-    const reasoningModel = modelInitializer(ModelType.GPT4_1Mini, sendLog);
-    const navigationModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
-    const selectDimensionsModel = modelInitializer(ModelType.GeminiFlash2_5, sendLog);
+    const reasoningModel = modelInitializer(ModelType.GPT4_1, sendLog);
+    const navigationModel = modelInitializer(ModelType.GPT4_1, sendLog);
+    const selectDimensionsModel = modelInitializer(ModelType.GPT4_1, sendLog);
     const selectionModel = modelInitializer(ModelType.GPT5_rMedium, sendLog);
 
     sendLog({ content: 'Prosesserer...', eventType: 'nav' });
@@ -35,7 +35,7 @@ export async function userMessageHandler(
     // Add totalValues
     for (const message of params.messageHistory) {
         if (message.pxData) {
-            const response = await fetch(`${baseURL}/tables/${message.pxData.extension.px.tableid}/metadata?lang=en&outputFormat=json-stat2`, {
+            const response = await fetch(`${baseURL}tables/${message.pxData.extension.px.tableid}/metadata?lang=en&outputFormat=json-stat2`, {
                 method: "GET",
                 headers: {"Content-Type": "application/json"},
             });
@@ -65,7 +65,7 @@ export async function userMessageHandler(
 
     if (params.userMessage.forceTableId) {
         try {
-            const res = await fetch(`${baseURL}/tables/${params.userMessage.forceTableId}/metadata?lang=en&outputFormat=json-stat2`, {
+            const res = await fetch(`${baseURL}tables/${params.userMessage.forceTableId}/metadata?lang=en&outputFormat=json-stat2`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
@@ -104,8 +104,15 @@ export async function userMessageHandler(
     }
     
     const tableId = tableMetadata.extension.px.tableid;
-    let SSBGetUrl = baseURL + 'tables/' + tableId + '/data?lang=no&format=json-stat2';
 
+
+    let SSBGetUrl: string;
+
+    if (baseURL.includes("ssb.no")) {
+        SSBGetUrl = `${baseURL}tables/${tableId}/data?format=json-stat2`;
+    } else {
+        SSBGetUrl = `${baseURL}tables/${tableId}/data?outputFormat=json-stat2`;
+    }
     // if no table has code list or if no table is optional
     const hasCodeListOrIsOptional = Object.entries(tableMetadata.dimension).some(([, value]) => {
         return value.extension.codeLists.length > 0 || value.extension.elimination;

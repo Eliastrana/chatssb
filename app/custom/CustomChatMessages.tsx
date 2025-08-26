@@ -109,7 +109,7 @@ function MessageItem({ message, onExpand, onChooseTable }: { message: CustomMess
                         <div className="flex flex-col items-center">
                             <div className="flex items-center">
                                 <a
-                                    href={`https://www.ssb.no/statbank/table/${table.extension.px.tableid}`}
+                                    href={`https://www.ssb.no/statbank/table/${table.extension.px?.tableid}`}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-gray-400 hover:underline text-xl"
