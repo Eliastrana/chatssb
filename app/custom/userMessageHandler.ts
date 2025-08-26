@@ -93,7 +93,7 @@ export async function userMessageHandler(
             navigationModel,
             params,
             5,
-            40,
+            100,
             sendLog,
             baseURL,
             500
